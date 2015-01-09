@@ -22,13 +22,33 @@
 {
     const char* bytes = self.inputBuffer.bytes;
     NSString* read = [NSString stringWithUTF8String:bytes];
-    NSLog(@"Read: %@", read);
     
+    JSValue* result = [self.jsContext evaluateScript:read];
+    NSDictionary* rv = nil;
+    // TODO get any exception that occurred when evaluating
+    if (![result isUndefined] && ![result isNull]) {
+        rv = @{@"status": @"success",
+               @"value": result.description};
+    } else {
+        rv = @{@"status": @"success",
+               @"value": [NSNull null]};
+    }
+    
+    NSError *error;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:rv
+                                                       options:0
+                                                         error:&error];
+    // TODO check error
+    
+    [self.outputStream write:jsonData.bytes maxLength:jsonData.length];
+    uint8_t terminator[1] = {0};
+    [self.outputStream write:terminator maxLength:1];
+    // TODO check length written and handle that case
+    
+    // Discard initial segment of the buffer prior to \0 character
     size_t i =0;
     while (bytes[i++] != 0) {}
-    
     NSMutableData* newBuffer = [NSMutableData dataWithBytes:bytes+i length:self.inputBuffer.length - i];
-    
     self.inputBuffer = newBuffer;
 }
 
@@ -53,7 +73,7 @@
             NSLog(@"no buffer!");
         }
     } else if (eventCode == NSStreamEventHasSpaceAvailable) {
-        // TODO
+        //[self.outputStream write:self.outputBuffer.bytes maxLength:10];
     } else if (eventCode == NSStreamEventEndEncountered) {
         [stream close];
         [stream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
