@@ -1,6 +1,6 @@
 Ambly
 =======
-ClojureScript REPL into embedded JavaScriptCore
+ClojureScript REPL into embedded JavaScriptCore.
 
 License
 =======
