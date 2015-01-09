@@ -12,13 +12,57 @@
 @property (strong, nonatomic) NSOutputStream* outputStream;
 @property (strong, nonatomic) JSContext* jsContext;
 
+@property (strong, nonatomic) NSMutableData* inputBuffer;
+
 @end
 
 @implementation ABYServer
 
-- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode
+- (void)processInputBuffer
 {
+    const char* bytes = self.inputBuffer.bytes;
+    NSString* read = [NSString stringWithUTF8String:bytes];
+    NSLog(@"Read: %@", read);
     
+    size_t i =0;
+    while (bytes[i++] != 0) {}
+    
+    NSMutableData* newBuffer = [NSMutableData dataWithBytes:bytes+i length:self.inputBuffer.length - i];
+    
+    self.inputBuffer = newBuffer;
+}
+
+- (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode
+{
+    if (eventCode == NSStreamEventHasBytesAvailable) {
+        if(!self.inputBuffer) {
+            self.inputBuffer = [NSMutableData data];
+        }
+        uint8_t buf[1024];
+        unsigned int len = 0;
+        len = [(NSInputStream *)stream read:buf maxLength:1024];
+        if(len) {
+            [self.inputBuffer appendBytes:(const void *)buf length:len];
+            for (size_t i=0; i<len; i++) {
+                if (buf[i] == 0) {
+                    [self processInputBuffer];
+                    break;
+                }
+            }
+        } else {
+            NSLog(@"no buffer!");
+        }
+    } else if (eventCode == NSStreamEventHasSpaceAvailable) {
+        // TODO
+    } else if (eventCode == NSStreamEventEndEncountered) {
+        [stream close];
+        [stream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        if (stream == self.inputStream) {
+            self.inputStream = nil;
+        } else {
+            self.outputStream = nil;
+        }
+    }
 }
 
 void handleConnect (
@@ -42,12 +86,20 @@ void handleConnect (
         
         ABYServer* server = (__bridge ABYServer*)info;
         
-        server.inputStream = (__bridge NSInputStream*)clientInput;
-        server.outputStream = (__bridge NSOutputStream*)clientOutput;
+        NSInputStream* inputStream = (__bridge NSInputStream*)clientInput;
+        NSOutputStream* outputStream = (__bridge NSOutputStream*)clientOutput;
         
-        [server.inputStream setDelegate:server];
-        [server.inputStream setDelegate:server];
+        [inputStream setDelegate:server];
+        [inputStream setDelegate:server];
+        
+        [inputStream  scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        [outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
 
+        server.inputStream = inputStream;
+        server.outputStream = outputStream;
+        
+        [inputStream  open];
+        [outputStream open];
     }
 }
 
