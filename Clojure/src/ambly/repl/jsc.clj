@@ -1,4 +1,4 @@
-(ns cljs.repl.jsc
+(ns ambly.repl.jsc
   (:require [clojure.string :as string]
             [clojure.java.io :as io]
             [cljs.analyzer :as ana]
@@ -39,8 +39,8 @@
                (.append sb (char c))
                (recur sb (.read in)))))))
 
-(defn node-eval
-  "Evaluate a JavaScript string in the Node REPL process."
+(defn jsc-eval
+  "Evaluate a JavaScript string in the JSC REPL process."
   [repl-env js]
   (let [{:keys [in out]} @(:socket repl-env)]
     (write out js)
@@ -56,9 +56,9 @@
          :value (:value result)}))))
 
 (defn load-javascript
-  "Load a Closure JavaScript file into the Node REPL process."
+  "Load a Closure JavaScript file into the JSC REPL process."
   [repl-env provides url]
-  (node-eval repl-env
+  (jsc-eval repl-env
     (str "goog.require('" (comp/munge (first provides)) "')")))
 
 (defn setup
@@ -66,17 +66,6 @@
   ([repl-env opts]
     (let [output-dir (io/file (:output-dir opts))
           _    (.mkdirs output-dir)
-          of   (io/file output-dir "node_repl.js")
-          _   (spit of
-                (string/replace (slurp (io/resource "cljs/repl/node_repl.js"))
-                  "var PORT = 5001;"
-                  (str "var PORT = " (:port repl-env) ";")))
-          bldr (ProcessBuilder. (into-array ["node"]))
-          _    (-> bldr
-                 (.redirectInput of)
-                 (.redirectOutput ProcessBuilder$Redirect/INHERIT)
-                 (.redirectError ProcessBuilder$Redirect/INHERIT))
-          proc (.start bldr)
           env  (ana/empty-env)
           core (io/resource "cljs/core.cljs")
           root-path (.getCanonicalFile output-dir)
@@ -86,7 +75,6 @@
       (Thread/sleep 300)
       (reset! (:socket repl-env)
         (socket (:host repl-env) (:port repl-env)))
-      (reset! (:proc repl-env) proc)
       ;; compile cljs.core & its dependencies, goog/base.js must be available
       ;; for bootstrap to load, use new closure/compile as it can handle
       ;; resources in JARs
@@ -101,11 +89,11 @@
         ;; for all compiled namespaces
         (apply closure/output-unoptimized
           (assoc opts
-            :output-to (.getPath (io/file output-dir "node_repl_deps.js")))
+            :output-to (.getPath (io/file output-dir "ambly_repl_deps.js")))
           deps))
       ;; bootstrap, replace __dirname as __dirname won't be set
       ;; properly due to how we are running it - David
-      (node-eval repl-env
+      #_(jsc-eval repl-env
         (-> (slurp (io/resource "cljs/bootstrap_node.js"))
           (string/replace "__dirname"
             (str "\"" (str rewrite-path File/separator "bootstrap") "\""))
@@ -114,12 +102,12 @@
             "var CLJS_ROOT = \"./\";"
             (str "var CLJS_ROOT = \"" (.getPath root-path) "/\";"))))
       ;; load the deps file so we can goog.require cljs.core etc.
-      (node-eval repl-env
+      (jsc-eval repl-env
         (str "require('"
           (.getPath root-path)
-          File/separator "node_repl_deps.js')"))
+          File/separator "ambly_repl_deps.js')"))
       ;; monkey-patch isProvided_ to avoid useless warnings - David
-      (node-eval repl-env
+      (jsc-eval repl-env
         (str "goog.isProvided_ = function(x) { return false; };"))
       ;; monkey-patch goog.require, skip all the loaded checks
       (repl/evaluate-form repl-env env "<cljs repl>"
@@ -142,12 +130,12 @@
                  (aget (.. js/goog -dependencies_ -nameToPath) name))))))
       )))
 
-(defrecord NodeEnv [host port socket proc]
+(defrecord JscEnv [host port socket proc]
   repl/IJavaScriptEnv
   (-setup [this opts]
     (setup this opts))
   (-evaluate [this filename line js]
-    (node-eval this js))
+    (jsc-eval this js))
   (-load [this provides url]
     (load-javascript this provides url))
   (-tear-down [this]
@@ -158,10 +146,24 @@
   (let [{:keys [host port]}
         (merge
           {:host "localhost"
-           :port (+ 49000 (rand-int 10000))}
+           :port 9999}
           options)]
-    (NodeEnv. host port (atom nil) (atom nil))))
+    (JscEnv. host port (atom nil) (atom nil))))
 
 (defn repl-env
   [& {:as options}]
   (repl-env* options))
+
+(comment
+
+  (require
+    '[cljs.repl :as repl]
+    '[ambly.repl.jsc :as jsc])
+
+  (repl/repl* (jsc/repl-env)
+    {:output-dir "out"
+     :optimizations :none
+     :cache-analysis true
+     :source-map true})
+
+  )

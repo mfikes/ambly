@@ -3,3 +3,5 @@ ObjectiveC/Ambly Demo/Ambly Demo.xcodeproj/project.xcworkspace/xcuserdata
 pom.xml
 Clojure/target
 ambly.iml
+.nrepl-port
+Clojure/out
