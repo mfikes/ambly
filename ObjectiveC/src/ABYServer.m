@@ -20,13 +20,28 @@
 
 - (void)processInputBuffer
 {
+    // Read the bytes in the input buffer, up to the first \0
     const char* bytes = self.inputBuffer.bytes;
     NSString* read = [NSString stringWithUTF8String:bytes];
     
+    // Temporarily install an exception handler
+    id currentExceptionHandler = self.jsContext.exceptionHandler;
+    self.jsContext.exceptionHandler = ^(JSContext *context, JSValue *exception) {
+        context.exception = exception;
+    };
+    
+    // Evaluate the JavaScript
     JSValue* result = [self.jsContext evaluateScript:read];
+    
+    // Restore the previous excepiton handler
+    self.jsContext.exceptionHandler =currentExceptionHandler;
+    
+    // Construct response dictionary
     NSDictionary* rv = nil;
-    // TODO get any exception that occurred when evaluating
-    if (![result isUndefined] && ![result isNull]) {
+    if (self.jsContext.exception) {
+        rv = @{@"status": @"exception",
+               @"value": self.jsContext.exception.description};
+    } else if (![result isUndefined] && ![result isNull]) {
         rv = @{@"status": @"success",
                @"value": result.description};
     } else {
@@ -34,12 +49,14 @@
                @"value": [NSNull null]};
     }
     
+    // Convert response dictionary to JSON
     NSError *error;
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:rv
                                                        options:0
                                                          error:&error];
     // TODO check error
     
+    // Send response to REPL
     [self.outputStream write:jsonData.bytes maxLength:jsonData.length];
     uint8_t terminator[1] = {0};
     [self.outputStream write:terminator maxLength:1];
