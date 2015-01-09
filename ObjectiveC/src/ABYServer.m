@@ -4,7 +4,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #import <JavaScriptCore/JavaScriptCore.h>
-#import "JSContextManager.h"
 
 @interface ABYServer()
 
@@ -140,9 +139,9 @@ void handleConnect (
     }
 }
 
--(void)startListening:(short)port {
+-(void)startListening:(short)port forContext:(JSContext*)jsContext {
     
-    self.jsContext = [JSContextManager createJSContext];
+    self.jsContext = jsContext;
 
     CFSocketContext socketCtxt = {0, (__bridge void *)self, NULL, NULL, NULL};
     

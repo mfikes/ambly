@@ -1,6 +1,7 @@
 #import "AppDelegate.h"
 
 #import "ABYServer.h"
+#import "JSContextManager.h"
 
 @interface AppDelegate ()
 
@@ -14,7 +15,7 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     self.abyServer = [[ABYServer alloc] init];
-    [self.abyServer startListening:9999];
+    [self.abyServer startListening:9999 forContext:[JSContextManager createJSContext]];
     return YES;
 }
 
