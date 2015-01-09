@@ -2,6 +2,6 @@
 
 @interface ABYServer : NSObject
 
-+(void)startListening;
++(void)startListening:(short)port;
 
 @end

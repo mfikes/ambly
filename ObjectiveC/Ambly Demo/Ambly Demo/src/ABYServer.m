@@ -33,7 +33,7 @@ void handleConnect (
     }
 }
 
-+(void)startListening {
++(void)startListening:(short)port {
 
     CFSocketRef myipv4cfsock = CFSocketCreate(
                                               kCFAllocatorDefault,
@@ -54,7 +54,7 @@ void handleConnect (
     memset(&sin, 0, sizeof(sin));
     sin.sin_len = sizeof(sin);
     sin.sin_family = AF_INET; /* Address family */
-    sin.sin_port = htons(0); /* Or a specific port */
+    sin.sin_port = htons(port);
     sin.sin_addr.s_addr= INADDR_ANY;
     
     CFDataRef sincfd = CFDataCreate(
@@ -70,7 +70,7 @@ void handleConnect (
     memset(&sin6, 0, sizeof(sin6));
     sin6.sin6_len = sizeof(sin6);
     sin6.sin6_family = AF_INET6; /* Address family */
-    sin6.sin6_port = htons(0); /* Or a specific port */
+    sin6.sin6_port = htons(port);
     sin6.sin6_addr = in6addr_any;
     
     CFDataRef sin6cfd = CFDataCreate(
