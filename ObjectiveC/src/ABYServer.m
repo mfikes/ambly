@@ -3,8 +3,23 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#import <JavaScriptCore/JavaScriptCore.h>
+#import "JSContextManager.h"
+
+@interface ABYServer()
+
+@property (strong, nonatomic) NSInputStream* inputStream;
+@property (strong, nonatomic) NSOutputStream* outputStream;
+@property (strong, nonatomic) JSContext* jsContext;
+
+@end
 
 @implementation ABYServer
+
+- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode
+{
+    
+}
 
 void handleConnect (
                     CFSocketRef s,
@@ -25,28 +40,35 @@ void handleConnect (
         
         CFStreamCreatePairWithSocket(kCFAllocatorDefault, nativeSocketHandle, &clientInput, &clientOutput);
         
-        NSInputStream *inputStream = (__bridge NSInputStream*)clientInput;
-        NSOutputStream *outputStream = (__bridge NSOutputStream*)clientOutput;
+        ABYServer* server = (__bridge ABYServer*)info;
         
-        [inputStream close];
-        [outputStream close];
+        server.inputStream = (__bridge NSInputStream*)clientInput;
+        server.outputStream = (__bridge NSOutputStream*)clientOutput;
+        
+        [server.inputStream setDelegate:server];
+        [server.inputStream setDelegate:server];
+
     }
 }
 
-+(void)startListening:(short)port {
+-(void)startListening:(short)port {
+    
+    self.jsContext = [JSContextManager createJSContext];
 
+    CFSocketContext socketCtxt = {0, (__bridge void *)self, NULL, NULL, NULL};
+    
     CFSocketRef myipv4cfsock = CFSocketCreate(
                                               kCFAllocatorDefault,
                                               PF_INET,
                                               SOCK_STREAM,
                                               IPPROTO_TCP,
-                                              kCFSocketAcceptCallBack, handleConnect, NULL);
+                                              kCFSocketAcceptCallBack, handleConnect, &socketCtxt);
     CFSocketRef myipv6cfsock = CFSocketCreate(
                                               kCFAllocatorDefault,
                                               PF_INET6,
                                               SOCK_STREAM,
                                               IPPROTO_TCP,
-                                              kCFSocketAcceptCallBack, handleConnect, NULL);
+                                              kCFSocketAcceptCallBack, handleConnect, &socketCtxt);
     
     
     struct sockaddr_in sin;

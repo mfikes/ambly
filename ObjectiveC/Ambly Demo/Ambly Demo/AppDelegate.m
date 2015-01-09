@@ -4,6 +4,8 @@
 
 @interface AppDelegate ()
 
+@property (strong, nonatomic) ABYServer* abyServer;
+
 @end
 
 @implementation AppDelegate
@@ -11,7 +13,8 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
-    [ABYServer startListening:9999];
+    self.abyServer = [[ABYServer alloc] init];
+    [self.abyServer startListening:9999];
     return YES;
 }
 

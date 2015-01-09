@@ -1,7 +1,7 @@
-#import <JavaScriptCore/JavaScriptCore.h>
+#import <Foundation/Foundation.h>
 
-@interface ABYServer : NSObject
+@interface ABYServer : NSObject<NSStreamDelegate>
 
-+(void)startListening:(short)port;
+-(void)startListening:(short)port;
 
 @end
