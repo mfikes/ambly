@@ -13,8 +13,8 @@
 		ED387D281A602B56007E40A2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ED387D261A602B56007E40A2 /* Main.storyboard */; };
 		ED387D2A1A602B56007E40A2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ED387D291A602B56007E40A2 /* Images.xcassets */; };
 		ED387D2D1A602B56007E40A2 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = ED387D2B1A602B56007E40A2 /* LaunchScreen.xib */; };
-		ED387D451A60324B007E40A2 /* ABYServer.m in Sources */ = {isa = PBXBuildFile; fileRef = ED387D441A60324B007E40A2 /* ABYServer.m */; };
 		ED387D481A603303007E40A2 /* JSContextManager.m in Sources */ = {isa = PBXBuildFile; fileRef = ED387D471A603303007E40A2 /* JSContextManager.m */; };
+		EDEF2D2A1A605D8A00AEDFF6 /* ABYServer.m in Sources */ = {isa = PBXBuildFile; fileRef = EDEF2D291A605D8A00AEDFF6 /* ABYServer.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,10 +28,10 @@
 		ED387D271A602B56007E40A2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		ED387D291A602B56007E40A2 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		ED387D2C1A602B56007E40A2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
-		ED387D431A60324B007E40A2 /* ABYServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ABYServer.h; sourceTree = "<group>"; };
-		ED387D441A60324B007E40A2 /* ABYServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ABYServer.m; sourceTree = "<group>"; };
 		ED387D461A603303007E40A2 /* JSContextManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSContextManager.h; sourceTree = "<group>"; };
 		ED387D471A603303007E40A2 /* JSContextManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JSContextManager.m; sourceTree = "<group>"; };
+		EDEF2D281A605D8A00AEDFF6 /* ABYServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ABYServer.h; sourceTree = "<group>"; };
+		EDEF2D291A605D8A00AEDFF6 /* ABYServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ABYServer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,7 +64,7 @@
 		ED387D1B1A602B56007E40A2 /* Ambly Demo */ = {
 			isa = PBXGroup;
 			children = (
-				ED387D421A60324B007E40A2 /* Ambly src */,
+				EDEF2D271A605D8A00AEDFF6 /* Ambly src */,
 				ED387D201A602B56007E40A2 /* AppDelegate.h */,
 				ED387D211A602B56007E40A2 /* AppDelegate.m */,
 				ED387D231A602B56007E40A2 /* ViewController.h */,
@@ -88,14 +88,14 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		ED387D421A60324B007E40A2 /* Ambly src */ = {
+		EDEF2D271A605D8A00AEDFF6 /* Ambly src */ = {
 			isa = PBXGroup;
 			children = (
-				ED387D431A60324B007E40A2 /* ABYServer.h */,
-				ED387D441A60324B007E40A2 /* ABYServer.m */,
+				EDEF2D281A605D8A00AEDFF6 /* ABYServer.h */,
+				EDEF2D291A605D8A00AEDFF6 /* ABYServer.m */,
 			);
 			name = "Ambly src";
-			path = src;
+			path = ../../src;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -169,9 +169,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				ED387D251A602B56007E40A2 /* ViewController.m in Sources */,
-				ED387D451A60324B007E40A2 /* ABYServer.m in Sources */,
 				ED387D481A603303007E40A2 /* JSContextManager.m in Sources */,
 				ED387D221A602B56007E40A2 /* AppDelegate.m in Sources */,
+				EDEF2D2A1A605D8A00AEDFF6 /* ABYServer.m in Sources */,
 				ED387D1F1A602B56007E40A2 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
