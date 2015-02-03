@@ -56,9 +56,12 @@
 
 + (void)setUpGoogBootstrap:(JSContext*)context
 {
-    [context evaluateScript:@"var goog = {}"];
-    context[@"goog"][@"CLOSURE_IMPORT_SCRIPT"] = ^(NSString *src) {
+    context[@"CLOSURE_IMPORT_SCRIPT"] = ^(NSString *src) {
         NSLog(@"CLOSURE_IMPORT_SCRIPT: %@", src);
+        // TODO un-hardcode this path
+        src = [NSString stringWithFormat:@"/Users/mfikes/Documents/Projects/ambly/Clojure/out/goog/%@", src];
+        NSLog(@"CLOSURE_IMPORT_SCRIPT renamed: %@", src);
+
         // TODO, deal with cache and invalidation
         [[JSContext currentContext] evaluateScript:[NSString stringWithContentsOfFile:src encoding:NSUTF8StringEncoding error:nil]];
     };
