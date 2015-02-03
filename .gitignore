@@ -5,3 +5,4 @@ Clojure/target
 ambly.iml
 .nrepl-port
 Clojure/out
+.lein-repl-history

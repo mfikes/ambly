@@ -29,6 +29,8 @@
         context.exception = exception;
     };
     
+    NSLog(@"%@", read);
+    
     // Evaluate the JavaScript
     JSValue* result = [self.jsContext evaluateScript:read];
     
