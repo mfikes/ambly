@@ -59,7 +59,7 @@
     context[@"CLOSURE_IMPORT_SCRIPT"] = ^(NSString *src) {
         NSLog(@"CLOSURE_IMPORT_SCRIPT: %@", src);
         // TODO un-hardcode this path
-        src = [NSString stringWithFormat:@"/Users/mfikes/Documents/Projects/ambly/Clojure/out/goog/%@", src];
+        src = [NSString stringWithFormat:@"/Users/changeme/ambly/Clojure/out/goog/%@", src];
         NSLog(@"CLOSURE_IMPORT_SCRIPT renamed: %@", src);
 
         // TODO, deal with cache and invalidation
