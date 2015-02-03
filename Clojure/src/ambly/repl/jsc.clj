@@ -101,6 +101,13 @@
           (string/replace
             "var CLJS_ROOT = \"./\";"
             (str "var CLJS_ROOT = \"" (.getPath root-path) "/\";"))))
+
+      ;; bootstrap
+      (jsc-eval repl-env
+                (str "require('"
+                     (.getPath root-path)
+                     File/separator "goog"
+                     File/separator "base.js')"))
       ;; load the deps file so we can goog.require cljs.core etc.
       (jsc-eval repl-env
         (str "require('"

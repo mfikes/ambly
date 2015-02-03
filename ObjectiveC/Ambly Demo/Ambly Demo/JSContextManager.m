@@ -45,12 +45,33 @@
     };
 }
 
++ (void)setUpRequire:(JSContext*)context
+{
+    context[@"require"] = ^(NSString *path) {
+        NSLog(@"Asked to require: %@", path);
+        // TODO deal with paths in various forms (relative, URLs?)
+        [[JSContext currentContext] evaluateScript:[NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil]];
+    };
+}
+
++ (void)setUpGoogBootstrap:(JSContext*)context
+{
+    [context evaluateScript:@"var goog = {}"];
+    context[@"goog"][@"CLOSURE_IMPORT_SCRIPT"] = ^(NSString *src) {
+        NSLog(@"CLOSURE_IMPORT_SCRIPT: %@", src);
+        // TODO, deal with cache and invalidation
+        [[JSContext currentContext] evaluateScript:[NSString stringWithContentsOfFile:src encoding:NSUTF8StringEncoding error:nil]];
+    };
+}
+
 + (JSContext*)createJSContext
 {
     JSContext* context = [[JSContext alloc] init];
     [self setUpExceptionLogging:context];
     [self setUpConsoleLog:context];
     [self setUpTimerFunctionality:context];
+    [self setUpRequire:context];
+    [self setUpGoogBootstrap:context];
     return context;
 }
 
