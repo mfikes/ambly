@@ -132,7 +132,7 @@
                  (aget (.. js/goog -dependencies_ -nameToPath) name))))))
       )))
 
-(defrecord JscEnv [host port socket proc]
+(defrecord JscEnv [host port socket]
   repl/IJavaScriptEnv
   (-setup [this opts]
     (setup this opts))
@@ -141,7 +141,6 @@
   (-load [this provides url]
     (load-javascript this provides url))
   (-tear-down [this]
-    (.destroy ^Process @proc)
     (close-socket @socket)))
 
 (defn repl-env* [options]
@@ -150,7 +149,7 @@
           {:host "localhost"
            :port 9999}
           options)]
-    (JscEnv. host port (atom nil) (atom nil))))
+    (JscEnv. host port (atom nil))))
 
 (defn repl-env
   [& {:as options}]
