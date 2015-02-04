@@ -91,17 +91,12 @@
           (assoc opts
             :output-to (.getPath (io/file output-dir "ambly_repl_deps.js")))
           deps))
-      ;; bootstrap, replace __dirname as __dirname won't be set
-      ;; properly due to how we are running it - David
-      #_(jsc-eval repl-env
-        (-> (slurp (io/resource "cljs/bootstrap_node.js"))
-          (string/replace "__dirname"
-            (str "\"" (str rewrite-path File/separator "bootstrap") "\""))
-          (string/replace "./.." rewrite-path)
-          (string/replace
-            "var CLJS_ROOT = \"./\";"
-            (str "var CLJS_ROOT = \"" (.getPath root-path) "/\";"))))
-      
+      ;; Set up CLOSURE_IMPORT_SCRIPT function, injecting path
+      (jsc-eval repl-env (str "CLOSURE_IMPORT_SCRIPT = function(src) {
+        require('" (.getPath root-path)
+                              File/separator "goog" File/separator "' + src);
+                                      return true;
+                                      };"))
       ;; bootstrap
       (jsc-eval repl-env
                 (str "require('"

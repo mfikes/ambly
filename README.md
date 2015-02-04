@@ -7,10 +7,9 @@ Running
 
 Currently, the embedded JavaScriptCore instance is hosted inside an iOS simulator instance. Ideally this will be revised to be hosted in a command-line OS X executable instead.
 
-1. There is currently a hardcoded path in [line 62](https://github.com/mfikes/ambly/blob/master/ObjectiveC/Ambly%20Demo/Ambly%20Demo/JSContextManager.m#L62) of `JSContextManager.m` that will need to be revised to reflect where you have things checked out. Edit that first.
-2. Open the Xcode project in the Ambly Demo directory and run it in the simulator.
-3. In `ambly/Clojure` run `lein repl`
-4. Then issue the following two forms
+1. Open the Xcode project in the Ambly Demo directory and run it in the simulator.
+2. In `ambly/Clojure` run `lein repl`
+3. Then issue the following two forms
 
 ```clojure
 (require

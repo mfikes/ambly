@@ -54,19 +54,6 @@
     };
 }
 
-+ (void)setUpGoogBootstrap:(JSContext*)context
-{
-    context[@"CLOSURE_IMPORT_SCRIPT"] = ^(NSString *src) {
-        NSLog(@"CLOSURE_IMPORT_SCRIPT: %@", src);
-        // TODO un-hardcode this path
-        src = [NSString stringWithFormat:@"/Users/changeme/ambly/Clojure/out/goog/%@", src];
-        NSLog(@"CLOSURE_IMPORT_SCRIPT renamed: %@", src);
-
-        // TODO, deal with cache and invalidation
-        [[JSContext currentContext] evaluateScript:[NSString stringWithContentsOfFile:src encoding:NSUTF8StringEncoding error:nil]];
-    };
-}
-
 + (JSContext*)createJSContext
 {
     JSContext* context = [[JSContext alloc] init];
@@ -74,7 +61,6 @@
     [self setUpConsoleLog:context];
     [self setUpTimerFunctionality:context];
     [self setUpRequire:context];
-    [self setUpGoogBootstrap:context];
     return context;
 }
 
