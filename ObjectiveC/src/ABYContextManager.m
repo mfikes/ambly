@@ -46,9 +46,23 @@
 
 + (void)setUpRequire:(JSContext*)context
 {
+    // TODO deal with paths in various forms (relative, URLs?)
+    
     context[@"require"] = ^(NSString *path) {
-        // TODO deal with paths in various forms (relative, URLs?)
-        [[JSContext currentContext] evaluateScript:[NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil]];
+        
+        JSContext* currentContext = [JSContext currentContext];
+        
+        NSError* error = nil;
+        NSString* sourceText = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&error];
+
+        if (!error && sourceText) {
+            [currentContext evaluateScript:sourceText withSourceURL:[NSURL fileURLWithPath:path]];
+            JSValue* rv = currentContext[@"module.exports"];
+            return rv;
+        } else {
+            return [JSValue valueWithUndefinedInContext:currentContext];
+        }
+        
     };
 }
 
