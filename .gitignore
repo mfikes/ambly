@@ -6,3 +6,4 @@ ambly.iml
 .nrepl-port
 Clojure/out
 .lein-repl-history
+.lein-failures
