@@ -29,8 +29,6 @@
         context.exception = exception;
     };
     
-    NSLog(@"%@", read);
-    
     // Evaluate the JavaScript
     JSValue* result = [self.jsContext evaluateScript:read];
     
@@ -112,9 +110,7 @@ void handleConnect (
                     )
 {
     if( callbackType & kCFSocketAcceptCallBack)
-    {
-        NSLog(@"Accepted a socket connection from remote host.");
-        
+    {        
         CFReadStreamRef clientInput = NULL;
         CFWriteStreamRef clientOutput = NULL;
         

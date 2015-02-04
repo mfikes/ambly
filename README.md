@@ -31,20 +31,6 @@ ClojureScript:cljs.user> (+ 1 1)
 2
 ```
 
-For diagnostics, the log in Xcode is currently showing what the is being sent to JSC. For the above:
-```
-2015-02-03 14:05:48.752 Ambly Demo[5165:475166] cljs.core.pr_str.call(null,(function (){var ret__4579__auto__ = ((1) + (1));
-cljs.core._STAR_3 = cljs.core._STAR_2;
-
-cljs.core._STAR_2 = cljs.core._STAR_1;
-
-cljs.core._STAR_1 = ret__4579__auto__;
-
-return ret__4579__auto__;
-})())
-```
-  
-
 License
 =======
 

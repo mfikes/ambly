@@ -48,7 +48,6 @@
 + (void)setUpRequire:(JSContext*)context
 {
     context[@"require"] = ^(NSString *path) {
-        NSLog(@"Asked to require: %@", path);
         // TODO deal with paths in various forms (relative, URLs?)
         [[JSContext currentContext] evaluateScript:[NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil]];
     };
