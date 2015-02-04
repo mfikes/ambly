@@ -2,7 +2,7 @@
 
 @class JSContext;
 
-@interface JSContextManager : NSObject
+@interface ABYContextManager : NSObject
 
 + (JSContext*)createJSContext;
 
