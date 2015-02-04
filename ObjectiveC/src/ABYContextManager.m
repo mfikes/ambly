@@ -3,33 +3,54 @@
 #include <libkern/OSAtomic.h>
 #import <JavaScriptCore/JavaScriptCore.h>
 
+@interface ABYContextManager()
+
+@property (strong, nonatomic) JSContext* context;
+@property (strong, nonatomic) NSMutableDictionary* requiredPaths;
+
+@end
+
 @implementation ABYContextManager
 
-+ (void)setUpExceptionLogging:(JSContext*)context
+-(id)init
 {
-    context.exceptionHandler = ^(JSContext *context, JSValue *exception) {
+    if (self = [super init]) {
+        self.requiredPaths = [[NSMutableDictionary alloc] init];
+        self.context = [[JSContext alloc] init];
+        
+        [self setUpExceptionLogging];
+        [self setUpConsoleLog];
+        [self setUpTimerFunctionality];
+        [self setUpRequire];
+    }
+    return self;
+}
+
+- (void)setUpExceptionLogging
+{
+    self.context.exceptionHandler = ^(JSContext *context, JSValue *exception) {
         NSString* errorString = [NSString stringWithFormat:@"[%@:%@:%@] %@\n%@", exception[@"sourceURL"], exception[@"line"], exception[@"column"], exception, [exception[@"stack"] toObject]];
         NSLog(@"%@", errorString);
     };
 }
 
-+ (void)setUpConsoleLog:(JSContext*)context
+- (void)setUpConsoleLog
 {
-    [context evaluateScript:@"var console = {}"];
-    context[@"console"][@"log"] = ^(NSString *message) {
+    [self.context evaluateScript:@"var console = {}"];
+    self.context[@"console"][@"log"] = ^(NSString *message) {
         NSLog(@"JS: %@", message);
     };
 }
 
-+ (void)setUpTimerFunctionality:(JSContext*)context
+- (void)setUpTimerFunctionality
 {
     static volatile int32_t counter = 0;
     
     NSString* callbackImpl = @"var callbackstore = {};\nvar setTimeout = function( fn, ms ) {\ncallbackstore[setTimeoutFn(ms)] = fn;\n}\nvar runTimeout = function( id ) {\nif( callbackstore[id] )\ncallbackstore[id]();\ncallbackstore[id] = nil;\n}\n";
     
-    [context evaluateScript:callbackImpl];
+    [self.context evaluateScript:callbackImpl];
     
-    context[@"setTimeoutFn"] = ^( int ms ) {
+    self.context[@"setTimeoutFn"] = ^( int ms ) {
         
         int32_t incremented = OSAtomicIncrement32(&counter);
         
@@ -44,34 +65,29 @@
     };
 }
 
-+ (void)setUpRequire:(JSContext*)context
+- (void)setUpRequire
 {
     // TODO deal with paths in various forms (relative, URLs?)
     
-    context[@"require"] = ^(NSString *path) {
+    __weak typeof(self) weakSelf = self;
+    
+    self.context[@"require"] = ^(NSString *path) {
         
         JSContext* currentContext = [JSContext currentContext];
         
-        NSError* error = nil;
-        NSString* sourceText = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&error];
-
-        if (!error && sourceText) {
-            [currentContext evaluateScript:sourceText withSourceURL:[NSURL fileURLWithPath:path]];
+        if (!weakSelf.requiredPaths[path]) {
+            
+            NSError* error = nil;
+            NSString* sourceText = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&error];
+            
+            if (!error && sourceText) {
+                [currentContext evaluateScript:sourceText withSourceURL:[NSURL fileURLWithPath:path]];
+                weakSelf.requiredPaths[path] = @(YES);
+            }
         }
-        
         return [JSValue valueWithUndefinedInContext:currentContext];
         
     };
-}
-
-+ (JSContext*)createJSContext
-{
-    JSContext* context = [[JSContext alloc] init];
-    [self setUpExceptionLogging:context];
-    [self setUpConsoleLog:context];
-    [self setUpTimerFunctionality:context];
-    [self setUpRequire:context];
-    return context;
 }
 
 @end

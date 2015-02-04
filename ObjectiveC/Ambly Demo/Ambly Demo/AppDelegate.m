@@ -5,17 +5,17 @@
 
 @interface AppDelegate ()
 
-@property (strong, nonatomic) ABYServer* abyServer;
+@property (strong, nonatomic) ABYContextManager* contextManager;
+@property (strong, nonatomic) ABYServer* server;
 
 @end
 
 @implementation AppDelegate
 
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
-    self.abyServer = [[ABYServer alloc] init];
-    [self.abyServer startListening:9999 forContext:[ABYContextManager createJSContext]];
+    self.contextManager = [[ABYContextManager alloc] init];
+    self.server = [[ABYServer alloc] init];
+    [self.server startListening:9999 forContext:self.contextManager.context];
     return YES;
 }
 
