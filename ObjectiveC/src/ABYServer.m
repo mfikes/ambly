@@ -32,14 +32,12 @@
     // Evaluate the JavaScript
     JSValue* result = [self.jsContext evaluateScript:read];
     
-    // Restore the previous excepiton handler
-    self.jsContext.exceptionHandler =currentExceptionHandler;
-    
     // Construct response dictionary
     NSDictionary* rv = nil;
     if (self.jsContext.exception) {
         rv = @{@"status": @"exception",
                @"value": self.jsContext.exception.description};
+        self.jsContext.exception = nil;
     } else if (![result isUndefined] && ![result isNull]) {
         rv = @{@"status": @"success",
                @"value": result.description};
@@ -47,6 +45,9 @@
         rv = @{@"status": @"success",
                @"value": [NSNull null]};
     }
+    
+    // Restore the previous excepiton handler
+    self.jsContext.exceptionHandler = currentExceptionHandler;
     
     // Convert response dictionary to JSON
     NSError *error;
