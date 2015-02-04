@@ -5,7 +5,7 @@ ClojureScript REPL into embedded JavaScriptCore.
 Running
 =======
 
-Currently, the embedded JavaScriptCore instance is hosted inside an iOS simulator instance. Ideally this will be revised to be hosted in a command-line OS X executable instead.
+The embedded JavaScriptCore instance is hosted inside an iOS simulator instance.
 
 1. Open the Xcode project in the Ambly Demo directory and run it in the simulator.
 2. In `ambly/Clojure` run `lein repl`
