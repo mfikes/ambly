@@ -54,7 +54,12 @@
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:rv
                                                        options:0
                                                          error:&error];
-    // TODO check error
+    if (error) {
+        jsonData = [NSJSONSerialization dataWithJSONObject:@{@"status": @"error",
+                                                             @"value": @"Failed to serialize result."}
+                                                   options:0
+                                                     error:nil];
+    }
     
     // Send response to REPL
     [self.outputStream write:jsonData.bytes maxLength:jsonData.length];

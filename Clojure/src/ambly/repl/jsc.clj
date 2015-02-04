@@ -46,14 +46,8 @@
     (write out js)
     (let [result (json/read-str
                    (read-response in) :key-fn keyword)]
-      (condp = (:status result)
-        "success"
-        {:status :success
-         :value (:value result)}
-
-        "exception"
-        {:status :exception
-         :value (:value result)}))))
+      {:status (keyword (:status result))
+       :value  (:value result)})))
 
 (defn load-javascript
   "Load a Closure JavaScript file into the JSC REPL process."
