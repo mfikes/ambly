@@ -17,6 +17,12 @@
 
 @implementation ABYServer
 
+- (void)logIfBytesWritten:(NSInteger)bytesWritten notExpected:(NSInteger)expected {
+    if (bytesWritten != expected) {
+        NSLog(@"Failed to stream result back to REPL!");
+    }
+}
+
 - (void)processInputBuffer
 {
     // Read the bytes in the input buffer, up to the first \0
@@ -62,10 +68,11 @@
     }
     
     // Send response to REPL
-    [self.outputStream write:jsonData.bytes maxLength:jsonData.length];
+    NSInteger bytesWritten = [self.outputStream write:jsonData.bytes maxLength:jsonData.length];
+    [self logIfBytesWritten:bytesWritten notExpected:jsonData.length];
     uint8_t terminator[1] = {0};
-    [self.outputStream write:terminator maxLength:1];
-    // TODO check length written and handle that case
+    bytesWritten = [self.outputStream write:terminator maxLength:1];
+    [self logIfBytesWritten:bytesWritten notExpected:1];
     
     // Discard initial segment of the buffer prior to \0 character
     size_t i =0;
