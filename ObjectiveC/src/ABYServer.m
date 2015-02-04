@@ -19,7 +19,7 @@
 
 - (void)logIfBytesWritten:(NSInteger)bytesWritten notExpected:(NSInteger)expected {
     if (bytesWritten != expected) {
-        NSLog(@"Failed to stream result back to REPL!");
+        NSLog(@"Failed to stream result back to REPL! Written=%ld Expected=%ld", (long)bytesWritten, (long)expected);
     }
 }
 
