@@ -57,11 +57,9 @@
 
         if (!error && sourceText) {
             [currentContext evaluateScript:sourceText withSourceURL:[NSURL fileURLWithPath:path]];
-            JSValue* rv = currentContext[@"module.exports"];
-            return rv;
-        } else {
-            return [JSValue valueWithUndefinedInContext:currentContext];
         }
+        
+        return [JSValue valueWithUndefinedInContext:currentContext];
         
     };
 }
