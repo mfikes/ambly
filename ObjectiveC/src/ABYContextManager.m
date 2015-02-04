@@ -1,7 +1,6 @@
 #import "ABYContextManager.h"
 
 #include <libkern/OSAtomic.h>
-#import <UIKit/UIKit.h>
 #import <JavaScriptCore/JavaScriptCore.h>
 
 @implementation ABYContextManager
