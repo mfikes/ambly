@@ -17,9 +17,10 @@
 
 @implementation ABYServer
 
-- (void)logIfBytesWritten:(NSInteger)bytesWritten notExpected:(NSInteger)expected {
-    if (bytesWritten != expected) {
-        NSLog(@"Failed to stream result back to REPL! Written=%ld Expected=%ld", (long)bytesWritten, (long)expected);
+- (void)sleepUntilSpaceAvailable
+{
+    while (!self.outputStream.hasSpaceAvailable) {
+        [NSThread sleepForTimeInterval:0.1];
     }
 }
 
@@ -68,12 +69,27 @@
     }
     
     // Send response to REPL
-    NSInteger bytesWritten = [self.outputStream write:jsonData.bytes maxLength:jsonData.length];
-    [self logIfBytesWritten:bytesWritten notExpected:jsonData.length];
-    uint8_t terminator[1] = {0};
-    bytesWritten = [self.outputStream write:terminator maxLength:1];
-    [self logIfBytesWritten:bytesWritten notExpected:1];
+    NSUInteger bytesWritten = 0;
+    NSUInteger bytesToWrite = jsonData.length;
     
+    const uint8_t * outBytes = jsonData.bytes;
+    while (bytesWritten < bytesToWrite) {
+        [self sleepUntilSpaceAvailable];
+        NSInteger result = [self.outputStream write:outBytes + bytesWritten
+                                          maxLength:bytesToWrite - bytesWritten];
+        if (result <= 0) {
+            NSLog(@"Error writing to output stream!");
+            break;
+        } else {
+            bytesWritten += result;
+        }
+    }
+    
+    uint8_t terminator[1] = {0};
+ 
+    [self sleepUntilSpaceAvailable];
+    bytesWritten = [self.outputStream write:terminator maxLength:1];
+       
     // Discard initial segment of the buffer prior to \0 character
     size_t i =0;
     while (bytes[i++] != 0) {}
