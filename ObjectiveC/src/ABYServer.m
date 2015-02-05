@@ -7,22 +7,20 @@
 
 @interface ABYServer()
 
-@property (strong, nonatomic) NSInputStream* inputStream;
-@property (strong, nonatomic) NSOutputStream* outputStream;
 @property (strong, nonatomic) JSContext* jsContext;
 
+@property (strong, nonatomic) NSInputStream* inputStream;
+@property (strong, nonatomic) NSOutputStream* outputStream;
+
 @property (strong, nonatomic) NSMutableData* inputBuffer;
+
+@property (nonatomic) NSUInteger bytesWritten;
+@property (nonatomic) NSUInteger bytesToWrite;
+@property (strong, nonatomic) NSData* outJsonData;
 
 @end
 
 @implementation ABYServer
-
-- (void)sleepUntilSpaceAvailable
-{
-    while (!self.outputStream.hasSpaceAvailable) {
-        [NSThread sleepForTimeInterval:0.1];
-    }
-}
 
 - (void)processInputBuffer
 {
@@ -56,45 +54,58 @@
     // Restore the previous excepiton handler
     self.jsContext.exceptionHandler = currentExceptionHandler;
     
-    // Convert response dictionary to JSON
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:rv
-                                                       options:0
-                                                         error:&error];
-    if (error) {
-        jsonData = [NSJSONSerialization dataWithJSONObject:@{@"status": @"error",
-                                                             @"value": @"Failed to serialize result."}
-                                                   options:0
-                                                     error:nil];
-    }
+    if (self.outJsonData != nil) {
+        NSLog(@"Haven't finished streaming out previous response!");
+    } else {
     
-    // Send response to REPL
-    NSUInteger bytesWritten = 0;
-    NSUInteger bytesToWrite = jsonData.length;
-    
-    const uint8_t * outBytes = jsonData.bytes;
-    while (bytesWritten < bytesToWrite) {
-        [self sleepUntilSpaceAvailable];
-        NSInteger result = [self.outputStream write:outBytes + bytesWritten
-                                          maxLength:bytesToWrite - bytesWritten];
-        if (result <= 0) {
-            NSLog(@"Error writing to REPL output stream");
-            break;
-        } else {
-            bytesWritten += result;
+        // Convert response dictionary to JSON
+        NSError *error;
+        self.outJsonData = [NSJSONSerialization dataWithJSONObject:rv
+                                                           options:0
+                                                             error:&error];
+        if (error) {
+            self.outJsonData = [NSJSONSerialization dataWithJSONObject:@{@"status": @"error",
+                                                                         @"value": @"Failed to serialize result."}
+                                                               options:0
+                                                                 error:nil];
         }
     }
     
-    uint8_t terminator[1] = {0};
- 
-    [self sleepUntilSpaceAvailable];
-    bytesWritten = [self.outputStream write:terminator maxLength:1];
-       
+    // Send response to REPL
+    self.bytesWritten = 0;
+    self.bytesToWrite = self.outJsonData.length;
+    if (self.outputStream.hasSpaceAvailable) {
+        [self writeSomeData];
+    }
+    
     // Discard initial segment of the buffer prior to \0 character
     size_t i =0;
     while (bytes[i++] != 0) {}
     NSMutableData* newBuffer = [NSMutableData dataWithBytes:bytes+i length:self.inputBuffer.length - i];
     self.inputBuffer = newBuffer;
+}
+
+- (void)writeSomeData {
+    NSInteger result = [self.outputStream write:self.outJsonData.bytes + self.bytesWritten
+                                      maxLength:self.bytesToWrite - self.bytesWritten];
+    if (result <= 0) {
+        NSLog(@"Error writing bytes to REPL output stream");
+    } else {
+        self.bytesWritten += result;
+    }
+    
+    if (self.bytesWritten == self.bytesToWrite) {
+        [self writeTerminator];
+    }
+}
+
+- (void)writeTerminator {
+    uint8_t terminator[1] = {0};
+    NSInteger bytesWritten = [self.outputStream write:terminator maxLength:1];
+    if (bytesWritten != 1) {
+        NSLog(@"Error writing terminator to REPL output stream");
+    }
+    self.outJsonData = nil;
 }
 
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode
@@ -118,7 +129,13 @@
             }
         }
     } else if (eventCode == NSStreamEventHasSpaceAvailable) {
-        //[self.outputStream write:self.outputBuffer.bytes maxLength:10];
+        if (self.outJsonData) {
+            if (self.bytesWritten < self.bytesToWrite) {
+                [self writeSomeData];
+            } else {
+                [self writeTerminator];
+            }
+        }
     } else if (eventCode == NSStreamEventEndEncountered) {
         [stream close];
         [stream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
@@ -153,7 +170,7 @@ void handleConnect (
         NSOutputStream* outputStream = (__bridge NSOutputStream*)clientOutput;
         
         [inputStream setDelegate:server];
-        [inputStream setDelegate:server];
+        [outputStream setDelegate:server];
         
         [inputStream  scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
         [outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
