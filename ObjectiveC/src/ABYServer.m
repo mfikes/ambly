@@ -78,7 +78,7 @@
         NSInteger result = [self.outputStream write:outBytes + bytesWritten
                                           maxLength:bytesToWrite - bytesWritten];
         if (result <= 0) {
-            NSLog(@"Error writing to output stream!");
+            NSLog(@"Error writing to REPL output stream");
             break;
         } else {
             bytesWritten += result;
@@ -106,7 +106,9 @@
         uint8_t buf[1024];
         NSInteger len = 0;
         len = [(NSInputStream *)stream read:buf maxLength:1024];
-        if(len > 0) {
+        if (len == -1) {
+            NSLog(@"Error reading from REPL input stream");
+        } else if (len > 0) {
             [self.inputBuffer appendBytes:(const void *)buf length:len];
             for (size_t i=0; i<len; i++) {
                 if (buf[i] == 0) {
@@ -114,8 +116,6 @@
                     break;
                 }
             }
-        } else {
-            NSLog(@"no buffer!");
         }
     } else if (eventCode == NSStreamEventHasSpaceAvailable) {
         //[self.outputStream write:self.outputBuffer.bytes maxLength:10];
