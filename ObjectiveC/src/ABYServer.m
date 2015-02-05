@@ -14,13 +14,76 @@
 
 @property (strong, nonatomic) NSMutableData* inputBuffer;
 
-@property (nonatomic) NSUInteger bytesWritten;
-@property (nonatomic) NSUInteger bytesToWrite;
-@property (strong, nonatomic) NSData* outJsonData;
+// Data currently being transmitted. (In flight iff outJsonData != nil)
+@property (atomic) NSUInteger bytesWritten;
+@property (atomic) NSUInteger bytesToWrite;
+@property (strong, atomic) NSData* outJsonData;
+@property (atomic) uint8_t outTerminator;
+
+// Subsequent data queued to be transmitted in FIFO order
+@property (strong, nonatomic) NSMutableArray* outJsonDataQueue;
+@property (strong, nonatomic) NSMutableArray* outTerminatorQueue;
 
 @end
 
 @implementation ABYServer
+
+
+- (void)sendResponseData:(NSData*)data terminator:(uint8_t)terminator
+{
+    @synchronized (self) {
+        if (self.outJsonData == nil) {
+            self.outJsonData = data;
+            self.outTerminator = terminator;
+            self.bytesWritten = 0;
+            self.bytesToWrite = self.outJsonData.length;
+            if (self.outputStream.hasSpaceAvailable) {
+                [self writeSomeData];
+            }
+        } else {
+            // Something is in flight. Queue data.
+            if (!self.outJsonDataQueue) {
+                self.outJsonDataQueue = [[NSMutableArray alloc] init];
+                self.outTerminatorQueue = [[NSMutableArray alloc] init];
+            }
+            [self.outJsonDataQueue addObject:data];
+            [self.outTerminatorQueue addObject:@(terminator)];
+        }
+    }
+}
+
+-(void)dequeAndSend
+{
+    @synchronized (self) {
+        if (self.outJsonDataQueue && self.outJsonDataQueue.count) {
+            NSData* data = self.outJsonDataQueue[0];
+            uint8_t terminator = ((NSNumber*)self.outTerminatorQueue[0]).intValue;
+            if (self.outJsonDataQueue.count > 1) {
+                NSMutableArray* newOutJsonDataQueue = [[NSMutableArray alloc] init];
+                NSMutableArray* newOutTerminatorQueue = [[NSMutableArray alloc] init];
+                for (int i=1; i<self.outJsonDataQueue.count; i++) {
+                    [newOutJsonDataQueue addObject:self.outJsonDataQueue[i]];
+                    [newOutTerminatorQueue addObject:self.outTerminatorQueue[i]];
+                }
+                self.outJsonDataQueue = newOutJsonDataQueue;
+                self.outTerminatorQueue = newOutTerminatorQueue;
+            } else {
+                self.outJsonDataQueue = nil;
+                self.outTerminatorQueue = nil;
+            }
+            [self sendResponseData:data terminator:terminator];
+        }
+    }
+}
+
+- (void)setUpPrintCapability
+{
+    [self.jsContext evaluateScript:@"var out = {}"];
+    self.jsContext[@"out"][@"write"] = ^(NSString *message) {
+        NSData* messageData = [message dataUsingEncoding:NSUTF8StringEncoding];
+        [self sendResponseData:messageData terminator:1];
+    };
+}
 
 - (void)processInputBuffer
 {
@@ -54,29 +117,19 @@
     // Restore the previous excepiton handler
     self.jsContext.exceptionHandler = currentExceptionHandler;
     
-    if (self.outJsonData != nil) {
-        NSLog(@"Haven't finished streaming out previous response!");
-    } else {
-    
-        // Convert response dictionary to JSON
-        NSError *error;
-        self.outJsonData = [NSJSONSerialization dataWithJSONObject:rv
-                                                           options:0
-                                                             error:&error];
-        if (error) {
-            self.outJsonData = [NSJSONSerialization dataWithJSONObject:@{@"status": @"error",
-                                                                         @"value": @"Failed to serialize result."}
-                                                               options:0
-                                                                 error:nil];
-        }
+    // Convert response dictionary to JSON
+    NSError *error;
+    NSData* data = [NSJSONSerialization dataWithJSONObject:rv
+                                                   options:0
+                                                     error:&error];
+    if (error) {
+        data = [NSJSONSerialization dataWithJSONObject:@{@"status": @"error",
+                                                         @"value": @"Failed to serialize result."}
+                                               options:0
+                                                 error:nil];
     }
     
-    // Send response to REPL
-    self.bytesWritten = 0;
-    self.bytesToWrite = self.outJsonData.length;
-    if (self.outputStream.hasSpaceAvailable) {
-        [self writeSomeData];
-    }
+    [self sendResponseData:data terminator:0];
     
     // Discard initial segment of the buffer prior to \0 character
     size_t i =0;
@@ -95,17 +148,18 @@
     }
     
     if (self.bytesWritten == self.bytesToWrite) {
-        [self writeTerminator];
+        [self writeTerminator:self.outTerminator];
     }
 }
 
-- (void)writeTerminator {
-    uint8_t terminator[1] = {0};
+- (void)writeTerminator:(uint8_t)value {
+    uint8_t terminator[1] = {value};
     NSInteger bytesWritten = [self.outputStream write:terminator maxLength:1];
     if (bytesWritten != 1) {
         NSLog(@"Error writing terminator to REPL output stream");
     }
     self.outJsonData = nil;
+    [self dequeAndSend];
 }
 
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode
@@ -133,7 +187,7 @@
             if (self.bytesWritten < self.bytesToWrite) {
                 [self writeSomeData];
             } else {
-                [self writeTerminator];
+                [self writeTerminator:self.outTerminator];
             }
         }
     } else if (eventCode == NSStreamEventEndEncountered) {
@@ -186,6 +240,8 @@ void handleConnect (
 -(void)startListening:(short)port forContext:(JSContext*)jsContext {
     
     self.jsContext = jsContext;
+    
+    [self setUpPrintCapability];
 
     CFSocketContext socketCtxt = {0, (__bridge void *)self, NULL, NULL, NULL};
     
