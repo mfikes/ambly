@@ -104,9 +104,9 @@
             self.inputBuffer = [NSMutableData data];
         }
         uint8_t buf[1024];
-        unsigned int len = 0;
+        NSInteger len = 0;
         len = [(NSInputStream *)stream read:buf maxLength:1024];
-        if(len) {
+        if(len > 0) {
             [self.inputBuffer appendBytes:(const void *)buf length:len];
             for (size_t i=0; i<len; i++) {
                 if (buf[i] == 0) {
