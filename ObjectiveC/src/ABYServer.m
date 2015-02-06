@@ -104,7 +104,9 @@
     NSDictionary* rv = nil;
     if (self.jsContext.exception) {
         rv = @{@"status": @"exception",
-               @"value": self.jsContext.exception.description};
+               @"value": [NSString stringWithFormat:@"%@\n%@",
+                          self.jsContext.exception.description,
+                          ([self.jsContext.exception valueForProperty:@"stack"]).description]};
         self.jsContext.exception = nil;
     } else if (![result isUndefined] && ![result isNull]) {
         rv = @{@"status": @"success",
