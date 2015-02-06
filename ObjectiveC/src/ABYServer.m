@@ -14,6 +14,7 @@
 @property (strong, nonatomic) NSOutputStream* outputStream;
 
 @property (strong, nonatomic) NSMutableData* inputBuffer;
+@property (atomic) NSUInteger inputBufferBytesScanned;
 
 // Message currently being sent. (In flight iff messageBeingSent != nil)
 @property (strong, atomic) ABYMessage* messageBeingSent;
@@ -66,12 +67,8 @@
     };
 }
 
-- (void)processInputBuffer
+- (void)evaluateJavaScriptAndSendResponse:(NSString*)javaScript
 {
-    // Read the bytes in the input buffer, up to the first \0
-    const char* bytes = self.inputBuffer.bytes;
-    NSString* read = [NSString stringWithUTF8String:bytes];
-    
     // Temporarily install an exception handler
     id currentExceptionHandler = self.jsContext.exceptionHandler;
     self.jsContext.exceptionHandler = ^(JSContext *context, JSValue *exception) {
@@ -79,7 +76,7 @@
     };
     
     // Evaluate the JavaScript
-    JSValue* result = [self.jsContext evaluateScript:read];
+    JSValue* result = [self.jsContext evaluateScript:javaScript];
     
     // Construct response dictionary
     NSDictionary* rv = nil;
@@ -114,11 +111,6 @@
     
     [self sendMessage:[[ABYMessage alloc] initWithPayload:payload terminator:0]];
     
-    // Discard initial segment of the buffer prior to \0 character
-    size_t i =0;
-    while (bytes[i++] != 0) {}
-    NSMutableData* newBuffer = [NSMutableData dataWithBytes:bytes+i length:self.inputBuffer.length - i];
-    self.inputBuffer = newBuffer;
 }
 
 - (void)sendPayload {
@@ -145,24 +137,48 @@
     [self dequeAndSend];
 }
 
+-(void)processInputBuffer:(NSUInteger)terminatorIndex
+{
+    // Read the bytes in the input buffer, up to the first \0
+    const char* bytes = self.inputBuffer.bytes;
+    NSString* read = [NSString stringWithUTF8String:bytes];
+    
+    // Discard initial segment of the buffer up to and including the \0 character
+    NSMutableData* newBuffer = [NSMutableData dataWithBytes:bytes + terminatorIndex + 1
+                                                     length:self.inputBuffer.length - terminatorIndex - 1];
+    self.inputBuffer = newBuffer;
+    
+    [self evaluateJavaScriptAndSendResponse:read];
+}
+
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode
 {
     if (eventCode == NSStreamEventHasBytesAvailable) {
         if(!self.inputBuffer) {
             self.inputBuffer = [NSMutableData data];
+            self.inputBufferBytesScanned = 0;
         }
-        uint8_t buf[1024];
+        const size_t BUFFER_SIZE = 1024;
+        uint8_t buf[BUFFER_SIZE];
         NSInteger len = 0;
-        len = [(NSInputStream *)stream read:buf maxLength:1024];
+        len = [(NSInputStream *)stream read:buf maxLength:BUFFER_SIZE];
         if (len == -1) {
             NSLog(@"Error reading from REPL input stream");
         } else if (len > 0) {
             [self.inputBuffer appendBytes:(const void *)buf length:len];
+            
+            BOOL found = NO;
             for (size_t i=0; i<len; i++) {
                 if (buf[i] == 0) {
-                    [self processInputBuffer];
+                    found = YES;
+                    [self processInputBuffer:self.inputBufferBytesScanned + i];
                     break;
                 }
+            }
+            if (found) {
+                self.inputBufferBytesScanned = 0;
+            } else {
+                self.inputBufferBytesScanned += BUFFER_SIZE;
             }
         }
     } else if (eventCode == NSStreamEventHasSpaceAvailable) {
