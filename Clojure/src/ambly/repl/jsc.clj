@@ -1,5 +1,6 @@
 (ns ambly.repl.jsc
-  (:require [clojure.java.io :as io]
+  (:require [clojure.string :as string]
+            [clojure.java.io :as io]
             [cljs.analyzer :as ana]
             [cljs.compiler :as comp]
             [cljs.repl :as repl]
@@ -37,15 +38,42 @@
                (.append sb (char c))
                (recur sb (.read in)))))))
 
+(defn stack-line->frame
+  "Parses a stack line into a frame representation, returning nil
+  if parse failed."
+  [stack-line]
+  (let [[function file line column]
+        (rest (re-matches #"(.*)@file://(.*):([0-9]+):([0-9]+)"
+                     stack-line))]
+    (if (and function file line column)
+      {:function function
+       :file     file
+       :line (Long/parseLong line)
+       :column (Long/parseLong column)})))
+
+(defn process-exception
+  "Process a JSC stack representation, optionally parsing it into
+  stack frames if normalize? is true."
+  [normalize? stack]
+  (merge {:stack stack}
+         (when normalize?
+           {:frames (remove nil?
+                            (map stack-line->frame
+                                 (rest (string/split-lines stack))))})))
+
 (defn jsc-eval
   "Evaluate a JavaScript string in the JSC REPL process."
   [repl-env js]
   (let [{:keys [in out]} @(:socket repl-env)]
     (write out js)
     (let [result (json/read-str
-                   (read-response in) :key-fn keyword)]
-      {:status (keyword (:status result))
-       :value  (:value result)})))
+                   (read-response in) :key-fn keyword)
+          status (keyword (:status result))
+          value (:value result)]
+      {:status status
+       :value (if (= :exception status)
+                (process-exception true value)              ; TODO determine when to normalize based on REPL flag
+                value)})))
 
 (defn load-javascript
   "Load a Closure JavaScript file into the JSC REPL process."
