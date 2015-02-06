@@ -49,17 +49,9 @@
 -(void)dequeAndSend
 {
     @synchronized (self) {
-        if (self.queuedMessages && self.queuedMessages.count) {
+        if (self.queuedMessages.count) {
             ABYMessage* message = self.queuedMessages[0];
-            if (self.queuedMessages.count > 1) {
-                NSMutableArray* newQueuedMessages = [[NSMutableArray alloc] init];
-                for (int i=1; i<self.queuedMessages.count; i++) {
-                    [newQueuedMessages addObject:self.queuedMessages[i]];
-                }
-                self.queuedMessages = newQueuedMessages;
-            } else {
-                self.queuedMessages = nil;
-            }
+            [self.queuedMessages removeObjectAtIndex:0];
             [self sendMessage:message];
         }
     }
