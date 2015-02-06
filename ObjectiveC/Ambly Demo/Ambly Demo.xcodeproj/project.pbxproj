@@ -14,6 +14,7 @@
 		ED387D281A602B56007E40A2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ED387D261A602B56007E40A2 /* Main.storyboard */; };
 		ED387D2A1A602B56007E40A2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ED387D291A602B56007E40A2 /* Images.xcassets */; };
 		ED387D2D1A602B56007E40A2 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = ED387D2B1A602B56007E40A2 /* LaunchScreen.xib */; };
+		EDB9B8531A84FABD00B02878 /* ABYMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = EDB9B8521A84FABD00B02878 /* ABYMessage.m */; };
 		EDEF2D2A1A605D8A00AEDFF6 /* ABYServer.m in Sources */ = {isa = PBXBuildFile; fileRef = EDEF2D291A605D8A00AEDFF6 /* ABYServer.m */; };
 /* End PBXBuildFile section */
 
@@ -30,6 +31,8 @@
 		ED387D271A602B56007E40A2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		ED387D291A602B56007E40A2 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		ED387D2C1A602B56007E40A2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
+		EDB9B8511A84FABD00B02878 /* ABYMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ABYMessage.h; sourceTree = "<group>"; };
+		EDB9B8521A84FABD00B02878 /* ABYMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ABYMessage.m; sourceTree = "<group>"; };
 		EDEF2D281A605D8A00AEDFF6 /* ABYServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ABYServer.h; sourceTree = "<group>"; };
 		EDEF2D291A605D8A00AEDFF6 /* ABYServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ABYServer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -91,6 +94,8 @@
 			children = (
 				ED0928C71A81C67E00DB90BE /* ABYContextManager.h */,
 				ED0928C81A81C67E00DB90BE /* ABYContextManager.m */,
+				EDB9B8511A84FABD00B02878 /* ABYMessage.h */,
+				EDB9B8521A84FABD00B02878 /* ABYMessage.m */,
 				EDEF2D281A605D8A00AEDFF6 /* ABYServer.h */,
 				EDEF2D291A605D8A00AEDFF6 /* ABYServer.m */,
 			);
@@ -168,6 +173,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EDB9B8531A84FABD00B02878 /* ABYMessage.m in Sources */,
 				ED387D251A602B56007E40A2 /* ViewController.m in Sources */,
 				ED387D221A602B56007E40A2 /* AppDelegate.m in Sources */,
 				EDEF2D2A1A605D8A00AEDFF6 /* ABYServer.m in Sources */,

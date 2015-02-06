@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <CoreFoundation/CoreFoundation.h>
 #import <JavaScriptCore/JavaScriptCore.h>
+#import "ABYMessage.h"
 
 @interface ABYServer()
 
@@ -14,40 +15,33 @@
 
 @property (strong, nonatomic) NSMutableData* inputBuffer;
 
-// Data currently being transmitted. (In flight iff outJsonData != nil)
-@property (atomic) NSUInteger bytesWritten;
-@property (atomic) NSUInteger bytesToWrite;
-@property (strong, atomic) NSData* outJsonData;
-@property (atomic) uint8_t outTerminator;
+// Message currently being sent. (In flight iff messageBeingSent != nil)
+@property (strong, atomic) ABYMessage* messageBeingSent;
+@property (atomic) NSUInteger messagePayloadBytesSent;
 
-// Subsequent data queued to be transmitted in FIFO order
-@property (strong, nonatomic) NSMutableArray* outJsonDataQueue;
-@property (strong, nonatomic) NSMutableArray* outTerminatorQueue;
+// Subsequent messages to be transmitted in FIFO order
+@property (strong, nonatomic) NSMutableArray* queuedMessages;
 
 @end
 
 @implementation ABYServer
 
 
-- (void)sendResponseData:(NSData*)data terminator:(uint8_t)terminator
+- (void)sendMessage:(ABYMessage*)message
 {
     @synchronized (self) {
-        if (self.outJsonData == nil) {
-            self.outJsonData = data;
-            self.outTerminator = terminator;
-            self.bytesWritten = 0;
-            self.bytesToWrite = self.outJsonData.length;
+        if (self.messageBeingSent == nil) {
+            self.messageBeingSent = message;
+            self.messagePayloadBytesSent = 0;
             if (self.outputStream.hasSpaceAvailable) {
-                [self writeSomeData];
+                [self sendPayload];
             }
         } else {
-            // Something is in flight. Queue data.
-            if (!self.outJsonDataQueue) {
-                self.outJsonDataQueue = [[NSMutableArray alloc] init];
-                self.outTerminatorQueue = [[NSMutableArray alloc] init];
+            // Something is in flight. Queue message.
+            if (!self.queuedMessages) {
+                self.queuedMessages = [[NSMutableArray alloc] init];
             }
-            [self.outJsonDataQueue addObject:data];
-            [self.outTerminatorQueue addObject:@(terminator)];
+            [self.queuedMessages addObject:message];
         }
     }
 }
@@ -55,23 +49,18 @@
 -(void)dequeAndSend
 {
     @synchronized (self) {
-        if (self.outJsonDataQueue && self.outJsonDataQueue.count) {
-            NSData* data = self.outJsonDataQueue[0];
-            uint8_t terminator = ((NSNumber*)self.outTerminatorQueue[0]).intValue;
-            if (self.outJsonDataQueue.count > 1) {
-                NSMutableArray* newOutJsonDataQueue = [[NSMutableArray alloc] init];
-                NSMutableArray* newOutTerminatorQueue = [[NSMutableArray alloc] init];
-                for (int i=1; i<self.outJsonDataQueue.count; i++) {
-                    [newOutJsonDataQueue addObject:self.outJsonDataQueue[i]];
-                    [newOutTerminatorQueue addObject:self.outTerminatorQueue[i]];
+        if (self.queuedMessages && self.queuedMessages.count) {
+            ABYMessage* message = self.queuedMessages[0];
+            if (self.queuedMessages.count > 1) {
+                NSMutableArray* newQueuedMessages = [[NSMutableArray alloc] init];
+                for (int i=1; i<self.queuedMessages.count; i++) {
+                    [newQueuedMessages addObject:self.queuedMessages[i]];
                 }
-                self.outJsonDataQueue = newOutJsonDataQueue;
-                self.outTerminatorQueue = newOutTerminatorQueue;
+                self.queuedMessages = newQueuedMessages;
             } else {
-                self.outJsonDataQueue = nil;
-                self.outTerminatorQueue = nil;
+                self.queuedMessages = nil;
             }
-            [self sendResponseData:data terminator:terminator];
+            [self sendMessage:message];
         }
     }
 }
@@ -80,8 +69,8 @@
 {
     [self.jsContext evaluateScript:@"var out = {}"];
     self.jsContext[@"out"][@"write"] = ^(NSString *message) {
-        NSData* messageData = [message dataUsingEncoding:NSUTF8StringEncoding];
-        [self sendResponseData:messageData terminator:1];
+        NSData* payload = [message dataUsingEncoding:NSUTF8StringEncoding];
+        [self sendMessage:[[ABYMessage alloc] initWithPayload:payload terminator:1]];
     };
 }
 
@@ -121,17 +110,17 @@
     
     // Convert response dictionary to JSON
     NSError *error;
-    NSData* data = [NSJSONSerialization dataWithJSONObject:rv
-                                                   options:0
-                                                     error:&error];
+    NSData* payload = [NSJSONSerialization dataWithJSONObject:rv
+                                                      options:0
+                                                        error:&error];
     if (error) {
-        data = [NSJSONSerialization dataWithJSONObject:@{@"status": @"error",
-                                                         @"value": @"Failed to serialize result."}
-                                               options:0
-                                                 error:nil];
+        payload = [NSJSONSerialization dataWithJSONObject:@{@"status": @"error",
+                                                            @"value": @"Failed to serialize result."}
+                                                  options:0
+                                                    error:nil];
     }
     
-    [self sendResponseData:data terminator:0];
+    [self sendMessage:[[ABYMessage alloc] initWithPayload:payload terminator:0]];
     
     // Discard initial segment of the buffer prior to \0 character
     size_t i =0;
@@ -140,27 +129,27 @@
     self.inputBuffer = newBuffer;
 }
 
-- (void)writeSomeData {
-    NSInteger result = [self.outputStream write:self.outJsonData.bytes + self.bytesWritten
-                                      maxLength:self.bytesToWrite - self.bytesWritten];
+- (void)sendPayload {
+    NSInteger result = [self.outputStream write:self.messageBeingSent.payload.bytes + self.messagePayloadBytesSent
+                                      maxLength:self.messageBeingSent.payload.length - self.messagePayloadBytesSent];
     if (result <= 0) {
         NSLog(@"Error writing bytes to REPL output stream");
     } else {
-        self.bytesWritten += result;
+        self.messagePayloadBytesSent += result;
     }
     
-    if (self.bytesWritten == self.bytesToWrite) {
-        [self writeTerminator:self.outTerminator];
+    if (self.messagePayloadBytesSent == self.messageBeingSent.payload.length) {
+        [self sendTerminator:self.messageBeingSent.terminator];
     }
 }
 
-- (void)writeTerminator:(uint8_t)value {
+- (void)sendTerminator:(uint8_t)value {
     uint8_t terminator[1] = {value};
     NSInteger bytesWritten = [self.outputStream write:terminator maxLength:1];
     if (bytesWritten != 1) {
         NSLog(@"Error writing terminator to REPL output stream");
     }
-    self.outJsonData = nil;
+    self.messageBeingSent = nil;
     [self dequeAndSend];
 }
 
@@ -185,11 +174,11 @@
             }
         }
     } else if (eventCode == NSStreamEventHasSpaceAvailable) {
-        if (self.outJsonData) {
-            if (self.bytesWritten < self.bytesToWrite) {
-                [self writeSomeData];
+        if (self.messageBeingSent) {
+            if (self.messagePayloadBytesSent < self.messageBeingSent.payload.length) {
+                [self sendPayload];
             } else {
-                [self writeTerminator:self.outTerminator];
+                [self sendTerminator:self.messageBeingSent.terminator];
             }
         }
     } else if (eventCode == NSStreamEventEndEncountered) {
