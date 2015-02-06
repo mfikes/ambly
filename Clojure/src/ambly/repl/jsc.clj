@@ -1,6 +1,5 @@
 (ns ambly.repl.jsc
-  (:require [clojure.string :as string]
-            [clojure.java.io :as io]
+  (:require [clojure.java.io :as io]
             [cljs.analyzer :as ana]
             [cljs.compiler :as comp]
             [cljs.repl :as repl]
@@ -8,8 +7,7 @@
             [clojure.data.json :as json])
   (:import java.net.Socket
            java.lang.StringBuilder
-           [java.io File BufferedReader BufferedWriter]
-           [java.lang ProcessBuilder ProcessBuilder$Redirect]))
+           [java.io File BufferedReader BufferedWriter]))
 
 (defn socket [host port]
   (let [socket (Socket. host port)
@@ -74,8 +72,7 @@
           _    (.mkdirs output-dir)
           env  (ana/empty-env)
           core (io/resource "cljs/core.cljs")
-          root-path (.getCanonicalFile output-dir)
-          rewrite-path (str (.getPath root-path) File/separator "goog")]
+          root-path (.getCanonicalFile output-dir)]
       ;; TODO: temporary hack, should wait till we can read the start string
       ;; from the process - David
       (Thread/sleep 300)
