@@ -8,7 +8,7 @@
             [clojure.data.json :as json])
   (:import java.net.Socket
            java.lang.StringBuilder
-           [java.io File BufferedReader BufferedWriter]))
+           [java.io File BufferedReader BufferedWriter IOException]))
 
 (defn socket [host port]
   (let [socket (Socket. host port)
@@ -26,17 +26,36 @@
   (.write out (int 0)) ;; terminator
   (.flush out))
 
-(defn read-response [^BufferedReader in]
-  (let [sb (StringBuilder.)]
-    (loop [sb sb c (.read in)]
-      (cond
-       (= c 1) (let [ret (str sb)]
-                 (print ret)
-                 (recur (StringBuilder.) (.read in)))
-       (= c 0) (str sb)
-       :else (do
-               (.append sb (char c))
-               (recur sb (.read in)))))))
+(defn read-messages [^BufferedReader in response-channel]
+  (loop [sb (StringBuilder.) c (.read in)]
+    (cond
+      (= c -1) (do
+                 (when-let [ch @response-channel]
+                   (deliver ch :eof))
+                 :eof)
+      (= c 1) (do
+                (print (str sb))
+                (flush)
+                (recur (StringBuilder.) (.read in)))
+      (= c 0) (do
+                (deliver @response-channel (str sb))
+                (recur (StringBuilder.) (.read in)))
+      :else (do
+              (.append sb (char c))
+              (recur sb (.read in))))))
+
+(defn start-reading-messages
+  "Starts a thread reading inbound messages."
+  [repl-env]
+  (.start
+        (Thread.
+          #(try
+            (let [rv (read-messages (:in @(:socket repl-env)) (:response-channel repl-env))]
+              (when (= :eof rv)
+                (close-socket @(:socket repl-env))))
+            (catch IOException e
+              (when-not (.isClosed (:socket @(:socket repl-env)))
+                (.printStackTrace e)))))))
 
 (defn stack-line->frame
   "Parses a stack line into a frame representation, returning nil
@@ -62,15 +81,21 @@
 (defn jsc-eval
   "Evaluate a JavaScript string in the JSC REPL process."
   [repl-env js]
-  (let [{:keys [in out]} @(:socket repl-env)]
+  (let [{:keys [out]} @(:socket repl-env)
+        response-promise (promise)]
+    (reset! (:response-channel repl-env) response-promise)
     (write out js)
-    (let [result (json/read-str
-                   (read-response in) :key-fn keyword)]
-      (merge
-        {:status (keyword (:status result))
-         :value  (:value result)}
-        (when-let [raw-stacktrace (:stacktrace result)]
-          {:stacktrace (raw-stacktrace->frames raw-stacktrace)})))))
+    (let [response @response-promise]
+      (if (= :eof response)
+        {:status :error
+         :value  "Connection to JavaScriptCore closed."}
+        (let [result (json/read-str response
+                       :key-fn keyword)]
+          (merge
+            {:status (keyword (:status result))
+             :value  (:value result)}
+            (when-let [raw-stacktrace (:stacktrace result)]
+              {:stacktrace (raw-stacktrace->frames raw-stacktrace)})))))))
 
 (defn load-javascript
   "Load a Closure JavaScript file into the JSC REPL process."
@@ -102,6 +127,9 @@
     (Thread/sleep 300)
     (reset! (:socket repl-env)
       (socket (:host repl-env) (:port repl-env)))
+    ;; Start dedicated thread to read messages from socket
+    (start-reading-messages repl-env)
+
     ;; compile cljs.core & its dependencies, goog/base.js must be available
     ;; for bootstrap to load, use new closure/compile as it can handle
     ;; resources in JARs
@@ -153,7 +181,7 @@
              (js/CLOSURE_IMPORT_SCRIPT
                (aget (.. js/goog -dependencies_ -nameToPath) name))))))))
 
-(defrecord JscEnv [host port socket]
+(defrecord JscEnv [host port socket response-channel]
   repl/IJavaScriptEnv
   (-setup [this opts]
     (setup this opts))
@@ -170,7 +198,7 @@
           {:host "localhost"
            :port 9999}
           options)]
-    (JscEnv. host port (atom nil))))
+    (JscEnv. host port (atom nil) (atom nil))))
 
 (defn repl-env
   [& {:as options}]
