@@ -11,11 +11,14 @@
 // All calls on this class should be confined to this single thread
 @property (strong, nonatomic) NSThread* confinedThread;
 
+// The context this server is wrapping
 @property (strong, nonatomic) JSContext* jsContext;
 
+// The streams to the REPL. Non-nil iff connected.
 @property (strong, nonatomic) NSInputStream* inputStream;
 @property (strong, nonatomic) NSOutputStream* outputStream;
 
+// Buffered data read from REPL
 @property (strong, nonatomic) NSMutableData* inputBuffer;
 @property (atomic) NSUInteger inputBufferBytesScanned;
 
@@ -30,12 +33,12 @@
 
 @implementation ABYServer
 
-- (BOOL)isReplConnected
+-(BOOL)isReplConnected
 {
     return self.outputStream != nil;
 }
 
-- (void)sendMessage:(ABYMessage*)message
+-(void)sendMessage:(ABYMessage*)message
 {
     if (self.messageBeingSent == nil) {
         self.messageBeingSent = message;
@@ -61,7 +64,7 @@
     }
 }
 
-- (void)setUpPrintCapability
+-(void)setUpPrintCapability
 {
     [self.jsContext evaluateScript:@"var out = {}"];
     self.jsContext[@"out"][@"write"] = ^(NSString *message) {
@@ -73,7 +76,7 @@
     };
 }
 
-- (void)evaluateJavaScriptAndSendResponse:(NSString*)javaScript
+-(void)evaluateJavaScriptAndSendResponse:(NSString*)javaScript
 {
     // Temporarily install an exception handler
     id currentExceptionHandler = self.jsContext.exceptionHandler;
@@ -118,7 +121,8 @@
     
 }
 
-- (void)sendPayload {
+-(void)sendPayload
+{
     NSInteger result = [self.outputStream write:self.messageBeingSent.payload.bytes + self.messagePayloadBytesSent
                                       maxLength:self.messageBeingSent.payload.length - self.messagePayloadBytesSent];
     if (result <= 0) {
@@ -132,7 +136,8 @@
     }
 }
 
-- (void)sendTerminator:(uint8_t)value {
+- (void)sendTerminator:(uint8_t)value
+{
     uint8_t terminator[1] = {value};
     NSInteger bytesWritten = [self.outputStream write:terminator maxLength:1];
     if (bytesWritten != 1) {

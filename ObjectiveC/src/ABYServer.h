@@ -9,6 +9,11 @@
  */
 @interface ABYServer : NSObject<NSStreamDelegate>
 
+/**
+ Starts server listening and wrapping a context.
+ @param port the port to listen on
+ @param jsContext the context to wrap
+ */
 -(void)startListening:(short)port forContext:(JSContext*)jsContext;
 
 @end

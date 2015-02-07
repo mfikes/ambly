@@ -5,7 +5,10 @@
 
 @interface ABYContextManager()
 
+// The context being managed
 @property (strong, nonatomic) JSContext* context;
+
+// The set of paths that have already been required
 @property (strong, nonatomic) NSMutableDictionary* requiredPaths;
 
 @end
@@ -26,6 +29,9 @@
     return self;
 }
 
+/**
+ Sets up exception logging for the wrapped context.
+ */
 - (void)setUpExceptionLogging
 {
     self.context.exceptionHandler = ^(JSContext *context, JSValue *exception) {
@@ -34,6 +40,9 @@
     };
 }
 
+/**
+ Sets up console logging for the wrapped context.
+ */
 - (void)setUpConsoleLog
 {
     [self.context evaluateScript:@"var console = {}"];
@@ -42,6 +51,9 @@
     };
 }
 
+/**
+ Sets up timer functionality for the wrapped context.
+ */
 - (void)setUpTimerFunctionality
 {
     static volatile int32_t counter = 0;
@@ -65,6 +77,9 @@
     };
 }
 
+/**
+ Sets up `require` capability for the wrapped context.
+ */
 - (void)setUpRequire
 {
     // TODO deal with paths in various forms (relative, URLs?)

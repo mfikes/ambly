@@ -9,6 +9,9 @@
  */
 @interface ABYContextManager : NSObject
 
+/**
+ The context being managed.
+ */
 @property (strong, nonatomic, readonly) JSContext* context;
 
 @end
