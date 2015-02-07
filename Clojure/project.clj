@@ -7,7 +7,6 @@
                  [org.clojure/clojurescript "0.0-2760"]]
   :source-paths ["src"]
   :compiler {
-     :output-to "hello_world.js"
      :output-dir "out"
      :optimizations :none
      :cache-analysis true
