@@ -17,8 +17,6 @@
     {:socket socket :in in :out out}))
 
 (defn close-socket [s]
-  (.close (:in s))
-  (.close (:out s))
   (.close (:socket s)))
 
 (defn write [^BufferedWriter out ^String js]
