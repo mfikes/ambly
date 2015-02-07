@@ -52,16 +52,12 @@
        :column   (Long/parseLong column)})))
 
 (defn process-exception
-  "Process a JSC stack representation, optionally parsing it into
-  stack frames if normalize? is true."
-  [normalize? stack]
-  (merge {:stack stack}
-    (when normalize?
-      {:frames
-       (apply vector
-         (remove nil?
-           (map stack-line->frame
-             (rest (string/split-lines stack)))))})))
+  "Process a JSC stack representation parsing it into stack frames."
+  [raw-stacktrace]
+  (apply vector
+    (remove nil?
+      (map stack-line->frame
+        (string/split-lines raw-stacktrace)))))
 
 (defn jsc-eval
   "Evaluate a JavaScript string in the JSC REPL process."
@@ -69,13 +65,12 @@
   (let [{:keys [in out]} @(:socket repl-env)]
     (write out js)
     (let [result (json/read-str
-                   (read-response in) :key-fn keyword)
-          status (keyword (:status result))
-          value (:value result)]
-      {:status status
-       :value  (if (= :exception status)
-                 (process-exception true value)             ; TODO determine when to normalize based on REPL flag
-                 value)})))
+                   (read-response in) :key-fn keyword)]
+      (merge
+        {:status (keyword (:status result))
+         :value  (:value result)}
+        (when-let [raw-stacktrace (:stacktrace result)]
+          {:stacktrace (process-exception raw-stacktrace)})))))
 
 (defn load-javascript
   "Load a Closure JavaScript file into the JSC REPL process."
