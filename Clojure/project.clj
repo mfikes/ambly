@@ -8,6 +8,5 @@
   :source-paths ["src"]
   :compiler {
      :output-dir "out"
-     :optimizations :none
      :cache-analysis true
      :source-map true})
