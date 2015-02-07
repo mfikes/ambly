@@ -199,6 +199,9 @@
         self.inputStream = nil;
         [ABYServer tearDownStream:self.outputStream];
         self.outputStream = nil;
+        @synchronized (self) {
+            self.queuedMessages = nil;
+        }
     }
 }
 
