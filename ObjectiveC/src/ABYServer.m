@@ -189,14 +189,25 @@
             }
         }
     } else if (eventCode == NSStreamEventEndEncountered) {
-        [stream close];
-        [stream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-        if (stream == self.inputStream) {
-            self.inputStream = nil;
-        } else {
-            self.outputStream = nil;
-        }
+        [ABYServer tearDownStream:self.inputStream];
+        self.inputStream = nil;
+        [ABYServer tearDownStream:self.outputStream];
+        self.outputStream = nil;
     }
+}
+
++(void)setUpStream:(NSStream*)stream server:(ABYServer*)server
+{
+    [stream setDelegate:server];
+    [stream  scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    [stream  open];
+}
+
++(void)tearDownStream:(NSStream*)stream
+{
+    [stream close];
+    [stream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    [stream setDelegate:nil];
 }
 
 void handleConnect (
@@ -221,17 +232,11 @@ void handleConnect (
         NSInputStream* inputStream = (__bridge NSInputStream*)clientInput;
         NSOutputStream* outputStream = (__bridge NSOutputStream*)clientOutput;
         
-        [inputStream setDelegate:server];
-        [outputStream setDelegate:server];
-        
-        [inputStream  scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-        [outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        [ABYServer setUpStream:inputStream server:server];
+        [ABYServer setUpStream:outputStream server:server];
 
         server.inputStream = inputStream;
         server.outputStream = outputStream;
-        
-        [inputStream  open];
-        [outputStream open];
     }
 }
 
