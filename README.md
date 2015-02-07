@@ -20,7 +20,6 @@ The embedded JavaScriptCore instance is hosted inside an iOS simulator instance.
 ```
 (repl/repl* (jsc/repl-env)
   {:output-dir "out"
-   :optimizations :none
    :cache-analysis true
    :source-map true})
 ```

@@ -187,7 +187,6 @@
 
   (repl/repl* (jsc/repl-env)
     {:output-dir "out"
-     :optimizations :none
      :cache-analysis true
      :source-map true})
 
