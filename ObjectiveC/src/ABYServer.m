@@ -27,6 +27,10 @@
 
 @implementation ABYServer
 
+- (BOOL)isReplConnected
+{
+    return self.outputStream != nil;
+}
 
 - (void)sendMessage:(ABYMessage*)message
 {
@@ -62,8 +66,10 @@
 {
     [self.jsContext evaluateScript:@"var out = {}"];
     self.jsContext[@"out"][@"write"] = ^(NSString *message) {
-        NSData* payload = [message dataUsingEncoding:NSUTF8StringEncoding];
-        [self sendMessage:[[ABYMessage alloc] initWithPayload:payload terminator:1]];
+        if ([self isReplConnected]) {
+            NSData* payload = [message dataUsingEncoding:NSUTF8StringEncoding];
+            [self sendMessage:[[ABYMessage alloc] initWithPayload:payload terminator:1]];
+        }
     };
 }
 
