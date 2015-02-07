@@ -51,8 +51,8 @@
        :line     (Long/parseLong line)
        :column   (Long/parseLong column)})))
 
-(defn process-exception
-  "Process a JSC stack representation parsing it into stack frames."
+(defn raw-stacktrace->frames
+  "Parse a raw JSC stack representation, parsing it into stack frames."
   [raw-stacktrace]
   (apply vector
     (remove nil?
@@ -70,7 +70,7 @@
         {:status (keyword (:status result))
          :value  (:value result)}
         (when-let [raw-stacktrace (:stacktrace result)]
-          {:stacktrace (process-exception raw-stacktrace)})))))
+          {:stacktrace (raw-stacktrace->frames raw-stacktrace)})))))
 
 (defn load-javascript
   "Load a Closure JavaScript file into the JSC REPL process."
