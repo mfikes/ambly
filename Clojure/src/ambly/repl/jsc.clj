@@ -57,9 +57,11 @@
   [normalize? stack]
   (merge {:stack stack}
     (when normalize?
-      {:frames (remove nil?
-                 (map stack-line->frame
-                   (rest (string/split-lines stack))))})))
+      {:frames
+       (apply vector
+         (remove nil?
+           (map stack-line->frame
+             (rest (string/split-lines stack)))))})))
 
 (defn jsc-eval
   "Evaluate a JavaScript string in the JSC REPL process."

@@ -7,3 +7,4 @@ ambly.iml
 Clojure/out
 .lein-repl-history
 .lein-failures
+.idea
