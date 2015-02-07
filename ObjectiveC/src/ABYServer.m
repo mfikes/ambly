@@ -8,6 +8,9 @@
 
 @interface ABYServer()
 
+// All calls on this class should be confined to this single thread
+@property (strong, nonatomic) NSThread* confinedThread;
+
 @property (strong, nonatomic) JSContext* jsContext;
 
 @property (strong, nonatomic) NSInputStream* inputStream;
@@ -34,31 +37,27 @@
 
 - (void)sendMessage:(ABYMessage*)message
 {
-    @synchronized (self) {
-        if (self.messageBeingSent == nil) {
-            self.messageBeingSent = message;
-            self.messagePayloadBytesSent = 0;
-            if (self.outputStream.hasSpaceAvailable) {
-                [self sendPayload];
-            }
-        } else {
-            // Something is in flight. Queue message.
-            if (!self.queuedMessages) {
-                self.queuedMessages = [[NSMutableArray alloc] init];
-            }
-            [self.queuedMessages addObject:message];
+    if (self.messageBeingSent == nil) {
+        self.messageBeingSent = message;
+        self.messagePayloadBytesSent = 0;
+        if (self.outputStream.hasSpaceAvailable) {
+            [self sendPayload];
         }
+    } else {
+        // Something is in flight. Queue message.
+        if (!self.queuedMessages) {
+            self.queuedMessages = [[NSMutableArray alloc] init];
+        }
+        [self.queuedMessages addObject:message];
     }
 }
 
 -(void)dequeAndSend
 {
-    @synchronized (self) {
-        if (self.queuedMessages.count) {
-            ABYMessage* message = self.queuedMessages[0];
-            [self.queuedMessages removeObjectAtIndex:0];
-            [self sendMessage:message];
-        }
+    if (self.queuedMessages.count) {
+        ABYMessage* message = self.queuedMessages[0];
+        [self.queuedMessages removeObjectAtIndex:0];
+        [self sendMessage:message];
     }
 }
 
@@ -66,6 +65,7 @@
 {
     [self.jsContext evaluateScript:@"var out = {}"];
     self.jsContext[@"out"][@"write"] = ^(NSString *message) {
+        NSAssert([NSThread currentThread] == self.confinedThread, @"Called on unexpected thread");
         if ([self isReplConnected]) {
             NSData* payload = [message dataUsingEncoding:NSUTF8StringEncoding];
             [self sendMessage:[[ABYMessage alloc] initWithPayload:payload terminator:1]];
@@ -158,6 +158,8 @@
 
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode
 {
+    NSAssert([NSThread currentThread] == self.confinedThread, @"Called on unexpected thread");
+    
     if (eventCode == NSStreamEventHasBytesAvailable) {
         if(!self.inputBuffer) {
             self.inputBuffer = [NSMutableData data];
@@ -199,9 +201,7 @@
         self.inputStream = nil;
         [ABYServer tearDownStream:self.outputStream];
         self.outputStream = nil;
-        @synchronized (self) {
-            self.queuedMessages = nil;
-        }
+        self.queuedMessages = nil;
     }
 }
 
@@ -250,6 +250,8 @@ void handleConnect (
 }
 
 -(void)startListening:(short)port forContext:(JSContext*)jsContext {
+    
+    self.confinedThread = [NSThread currentThread];
     
     self.jsContext = jsContext;
     
