@@ -15,7 +15,7 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     self.contextManager = [[ABYContextManager alloc] init];
     self.server = [[ABYServer alloc] init];
-    [self.server startListening:9999 forContext:self.contextManager.context];
+    [self.server startListening:50505 forContext:self.contextManager.context];
     return YES;
 }
 

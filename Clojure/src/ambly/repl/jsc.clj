@@ -194,7 +194,7 @@
   (let [{:keys [host port]}
         (merge
           {:host "localhost"
-           :port 9999}
+           :port 50505}
           options)]
     (JscEnv. host port (atom nil) (atom nil))))
 
