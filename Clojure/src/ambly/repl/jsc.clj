@@ -55,25 +55,27 @@
               (when-not (.isClosed (:socket @(:socket repl-env)))
                 (.printStackTrace e)))))))
 
-(defn stack-line->frame
+(defn stack-line->canonical-frame
   "Parses a stack line into a frame representation, returning nil
   if parse failed."
   [stack-line]
   (let [[function file line column]
         (rest (re-matches #"(.*)@file://(.*):([0-9]+):([0-9]+)"
                 stack-line))]
-    (if (and function file line column)
-      {:function function
-       :file     file
+    (if (and file function line column)
+      {:file     file
+       :function function
        :line     (Long/parseLong line)
        :column   (Long/parseLong column)})))
 
-(defn raw-stacktrace->frames
-  "Parse a raw JSC stack representation, parsing it into stack frames."
+(defn raw-stacktrace->canonical-stacktrace
+  "Parse a raw JSC stack representation, parsing it into stack frames.
+  The canonical stacktrace must be a vector of maps of the form
+  {:file <string> :function <string> :line <integer> :column <integer>}."
   [raw-stacktrace]
   (->> raw-stacktrace
     string/split-lines
-    (map stack-line->frame)
+    (map stack-line->canonical-frame)
     (remove nil?)
     vec))
 
@@ -94,7 +96,7 @@
             {:status (keyword (:status result))
              :value  (:value result)}
             (when-let [raw-stacktrace (:stacktrace result)]
-              {:stacktrace (raw-stacktrace->frames raw-stacktrace)})))))))
+              {:stacktrace (raw-stacktrace->canonical-stacktrace raw-stacktrace)})))))))
 
 (defn load-javascript
   "Load a Closure JavaScript file into the JSC REPL process."
