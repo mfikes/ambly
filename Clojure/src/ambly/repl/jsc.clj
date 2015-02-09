@@ -24,19 +24,19 @@
   (.write out (int 0)) ;; terminator
   (.flush out))
 
-(defn read-messages [^BufferedReader in response-channel]
+(defn read-messages [^BufferedReader in response-promise]
   (loop [sb (StringBuilder.) c (.read in)]
     (cond
       (= c -1) (do
-                 (when-let [ch @response-channel]
-                   (deliver ch :eof))
+                 (if-let [resp-promise @response-promise]
+                   (deliver resp-promise :eof))
                  :eof)
       (= c 1) (do
                 (print (str sb))
                 (flush)
                 (recur (StringBuilder.) (.read in)))
       (= c 0) (do
-                (deliver @response-channel (str sb))
+                (deliver @response-promise (str sb))
                 (recur (StringBuilder.) (.read in)))
       :else (do
               (.append sb (char c))
@@ -48,7 +48,7 @@
   (.start
         (Thread.
           #(try
-            (let [rv (read-messages (:in @(:socket repl-env)) (:response-channel repl-env))]
+            (let [rv (read-messages (:in @(:socket repl-env)) (:response-promise repl-env))]
               (when (= :eof rv)
                 (close-socket @(:socket repl-env))))
             (catch IOException e
@@ -81,7 +81,7 @@
   [repl-env js]
   (let [{:keys [out]} @(:socket repl-env)
         response-promise (promise)]
-    (reset! (:response-channel repl-env) response-promise)
+    (reset! (:response-promise repl-env) response-promise)
     (write out js)
     (let [response @response-promise]
       (if (= :eof response)
@@ -179,7 +179,7 @@
              (js/CLOSURE_IMPORT_SCRIPT
                (aget (.. js/goog -dependencies_ -nameToPath) name))))))))
 
-(defrecord JscEnv [host port socket response-channel]
+(defrecord JscEnv [host port socket response-promise]
   repl/IJavaScriptEnv
   (-setup [this opts]
     (setup this opts))
