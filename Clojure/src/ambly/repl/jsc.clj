@@ -120,9 +120,6 @@
         env (ana/empty-env)
         core (io/resource "cljs/core.cljs")
         root-path (.getCanonicalFile output-dir)]
-    ;; TODO: temporary hack, should wait till we can read the start string
-    ;; from the process - David
-    (Thread/sleep 300)
     (reset! (:socket repl-env)
       (socket (:host repl-env) (:port repl-env)))
     ;; Start dedicated thread to read messages from socket
