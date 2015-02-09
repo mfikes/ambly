@@ -71,10 +71,11 @@
 (defn raw-stacktrace->frames
   "Parse a raw JSC stack representation, parsing it into stack frames."
   [raw-stacktrace]
-  (apply vector
-    (remove nil?
-      (map stack-line->frame
-        (string/split-lines raw-stacktrace)))))
+  (->> raw-stacktrace
+    string/split-lines
+    (map stack-line->frame)
+    (remove nil?)
+    vec))
 
 (defn jsc-eval
   "Evaluate a JavaScript string in the JSC REPL process."
