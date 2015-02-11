@@ -8,9 +8,6 @@
 // The context being managed
 @property (strong, nonatomic) JSContext* context;
 
-// The set of paths that have already been required
-@property (strong, nonatomic) NSMutableDictionary* requiredPaths;
-
 @end
 
 @implementation ABYContextManager
@@ -18,7 +15,6 @@
 -(id)init
 {
     if (self = [super init]) {
-        self.requiredPaths = [[NSMutableDictionary alloc] init];
         self.context = [[JSContext alloc] init];
         
         [self setUpExceptionLogging];
@@ -84,24 +80,18 @@
 {
     // TODO deal with paths in various forms (relative, URLs?)
     
-    __weak typeof(self) weakSelf = self;
-    
     self.context[@"require"] = ^(NSString *path) {
         
         JSContext* currentContext = [JSContext currentContext];
         
-        if (!weakSelf.requiredPaths[path]) {
-            
-            NSError* error = nil;
-            NSString* sourceText = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&error];
-            
-            if (!error && sourceText) {
-                [currentContext evaluateScript:sourceText withSourceURL:[NSURL fileURLWithPath:path]];
-                weakSelf.requiredPaths[path] = @(YES);
-            }
-        }
-        return [JSValue valueWithUndefinedInContext:currentContext];
+        NSError* error = nil;
+        NSString* sourceText = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&error];
         
+        if (!error && sourceText) {
+            [currentContext evaluateScript:sourceText withSourceURL:[NSURL fileURLWithPath:path]];
+        }
+        
+        return [JSValue valueWithUndefinedInContext:currentContext];
     };
 }
 
