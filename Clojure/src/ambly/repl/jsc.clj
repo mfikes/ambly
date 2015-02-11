@@ -2,6 +2,7 @@
   (:require [clojure.string :as string]
             [clojure.java.io :as io]
             [cljs.analyzer :as ana]
+            [cljs.util :as util]
             [cljs.compiler :as comp]
             [cljs.repl :as repl]
             [cljs.closure :as closure]
@@ -58,12 +59,16 @@
 (defn stack-line->canonical-frame
   "Parses a stack line into a frame representation, returning nil
   if parse failed."
-  [stack-line]
+  [stack-line opts]
   (let [[function file line column]
         (rest (re-matches #"(.*)@file://(.*):([0-9]+):([0-9]+)"
                 stack-line))]
     (if (and file function line column)
-      {:file     file
+      {:file     (string/replace
+                   (.getCanonicalFile (io/file file))
+                   (str (System/getProperty "user.dir") File/separator
+                     (util/output-directory opts) File/separator)
+                   "")
        :function function
        :line     (Long/parseLong line)
        :column   (Long/parseLong column)})))
@@ -72,10 +77,10 @@
   "Parse a raw JSC stack representation, parsing it into stack frames.
   The canonical stacktrace must be a vector of maps of the form
   {:file <string> :function <string> :line <integer> :column <integer>}."
-  [raw-stacktrace]
+  [raw-stacktrace opts]
   (->> raw-stacktrace
     string/split-lines
-    (map stack-line->canonical-frame)
+    (map #(stack-line->canonical-frame % opts))
     (remove nil?)
     vec))
 
@@ -96,7 +101,7 @@
             {:status (keyword (:status result))
              :value  (:value result)}
             (when-let [raw-stacktrace (:stacktrace result)]
-              {:stacktrace (raw-stacktrace->canonical-stacktrace raw-stacktrace)})))))))
+              {:stacktrace raw-stacktrace})))))))
 
 (defn load-javascript
   "Load a Closure JavaScript file into the JSC REPL process."
@@ -180,6 +185,9 @@
                (aget (.. js/goog -dependencies_ -nameToPath) name))))))))
 
 (defrecord JscEnv [host port socket response-promise]
+  repl/IParseStacktrace
+  (-parse-stacktrace [this stacktrace opts]
+    (raw-stacktrace->canonical-stacktrace stacktrace opts))
   repl/IJavaScriptEnv
   (-setup [this opts]
     (setup this opts))
