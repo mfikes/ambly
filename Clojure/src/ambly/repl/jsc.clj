@@ -177,12 +177,14 @@
          (set-print-fn! js/out.write)))
     ;; redef goog.require to track loaded libs
     (repl/evaluate-form repl-env env "<cljs repl>"
-      '(set! (.-require js/goog)
-         (fn [name reload]
-           (when (or (not (contains? *loaded-libs* name)) reload)
-             (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
-             (js/CLOSURE_IMPORT_SCRIPT
-               (aget (.. js/goog -dependencies_ -nameToPath) name))))))))
+      '(do
+         (set! *loaded-libs* #{"cljs.core"})
+         (set! (.-require js/goog)
+           (fn [name reload]
+             (when (or (not (contains? *loaded-libs* name)) reload)
+               (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
+               (js/CLOSURE_IMPORT_SCRIPT
+                 (aget (.. js/goog -dependencies_ -nameToPath) name)))))))))
 
 (defrecord JscEnv [host port socket response-promise]
   repl/IParseStacktrace
