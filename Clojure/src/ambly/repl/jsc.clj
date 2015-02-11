@@ -186,7 +186,7 @@
 
 (defrecord JscEnv [host port socket response-promise]
   repl/IParseStacktrace
-  (-parse-stacktrace [this stacktrace opts]
+  (-parse-stacktrace [this stacktrace error opts]
     (raw-stacktrace->canonical-stacktrace stacktrace opts))
   repl/IJavaScriptEnv
   (-setup [this opts]
