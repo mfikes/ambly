@@ -132,7 +132,6 @@
       (socket (:host repl-env) (:port repl-env)))
     ;; Start dedicated thread to read messages from socket
     (start-reading-messages repl-env)
-
     ;; compile cljs.core & its dependencies, goog/base.js must be available
     ;; for bootstrap to load, use new closure/compile as it can handle
     ;; resources in JARs
