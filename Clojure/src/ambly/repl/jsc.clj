@@ -187,6 +187,11 @@
   repl/IParseStacktrace
   (-parse-stacktrace [this stacktrace error opts]
     (raw-stacktrace->canonical-stacktrace stacktrace opts))
+  cljs.repl/IPrintStacktrace
+  (-print-stacktrace [repl-env stacktrace error build-options]
+    (doseq [{:keys [function file url line column]}
+            (cljs.repl/mapped-stacktrace stacktrace build-options)]
+      (println "\t" (str function " (" (str (or url file)) ":" line ":" column ")"))))
   repl/IJavaScriptEnv
   (-setup [this opts]
     (setup this opts))
