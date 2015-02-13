@@ -86,7 +86,7 @@
         NSString* readPath = path;
         
 #if 0
-        NSString* outputDir = @"/Volumes/10.0.1.6";
+        NSString* outputDir = @"/Volumes/Mikes-iPod-touch.local";
         NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
         
         if ([path hasPrefix:outputDir]) {
