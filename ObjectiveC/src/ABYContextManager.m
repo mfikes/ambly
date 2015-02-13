@@ -82,6 +82,15 @@
     
     self.context[@"require"] = ^(NSString *path) {
         
+#if 0
+        NSString* outputDir = @"/Volumes/10.0.1.6";
+        NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+        
+        if ([path hasPrefix:outputDir]) {
+            path = [NSString stringWithFormat:@"%@%@", documentsPath, [path substringFromIndex:[outputDir length]]];
+        }
+#endif
+        
         JSContext* currentContext = [JSContext currentContext];
         
         NSError* error = nil;
