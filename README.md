@@ -18,7 +18,7 @@ The embedded JavaScriptCore instance is hosted inside an iOS simulator instance.
 
 ### Xcode Demo Project
 
-In `ObjectiveC/Ambly Demo` run `pod install`.
+In `ambly/ObjectiveC/Ambly Demo` run `pod install`.
 
 
 Open the `Ambly Demo.xcworkspace` in Xcode run the app it in the simulator.
