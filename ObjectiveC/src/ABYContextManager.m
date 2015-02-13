@@ -82,22 +82,25 @@
     
     self.context[@"require"] = ^(NSString *path) {
         
+        NSString* requiredPath = path;
+        NSString* readPath = path;
+        
 #if 0
         NSString* outputDir = @"/Volumes/10.0.1.6";
         NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
         
         if ([path hasPrefix:outputDir]) {
-            path = [NSString stringWithFormat:@"%@%@", documentsPath, [path substringFromIndex:[outputDir length]]];
+            readPath = [NSString stringWithFormat:@"%@%@", documentsPath, [path substringFromIndex:[outputDir length]]];
         }
 #endif
         
         JSContext* currentContext = [JSContext currentContext];
         
         NSError* error = nil;
-        NSString* sourceText = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&error];
+        NSString* sourceText = [NSString stringWithContentsOfFile:readPath encoding:NSUTF8StringEncoding error:&error];
         
         if (!error && sourceText) {
-            [currentContext evaluateScript:sourceText withSourceURL:[NSURL fileURLWithPath:path]];
+            [currentContext evaluateScript:sourceText withSourceURL:[NSURL fileURLWithPath:requiredPath]];
         }
         
         return [JSValue valueWithUndefinedInContext:currentContext];
