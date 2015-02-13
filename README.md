@@ -2,12 +2,30 @@
 
 ClojureScript REPL into embedded JavaScriptCore.
 
+## Prerequisites
+
+### Xcode/iOS
+
+You must have Xcode installed as well as support for [CocoaPods](http://cocoapods.org).
+
+### Clojure/ClojueScript
+
+You must have Java 7 or later installed along with [Leiningen](http://leiningen.org).
+
 ## Running
 
 The embedded JavaScriptCore instance is hosted inside an iOS simulator instance.
 
-1. Open the Xcode project in the Ambly Demo directory and run it in the simulator.
-2. In `ambly/Clojure` run `script/jscrepljs`
+### Xcode Demo Project
+
+In `ObjectiveC/Ambly Demo` run `pod install`.
+
+
+Open the `Ambly Demo.xcworkspace` in Xcode run the app it in the simulator.
+
+### REPL
+
+In `ambly/Clojure` run `script/jscrepljs`
 
 
 Then the REPL will be live:
