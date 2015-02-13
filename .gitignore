@@ -9,3 +9,7 @@ Clojure/out
 .lein-failures
 .idea
 Clojure/.ambly_jsc_repl
+ObjectiveC/Ambly Demo/Pods
+Podfile.lock
+ObjectiveC/Ambly Demo/Ambly Demo.xcworkspace/xcuserdata
+ObjectiveC/Ambly Demo/Ambly Demo.xcworkspace

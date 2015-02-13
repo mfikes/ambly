@@ -1,0 +1,15 @@
+source 'https://github.com/CocoaPods/Specs.git'
+platform :ios, '8.0'
+
+# If Ambly Demo were a bona-fide app, it would depend
+# a released version of Ambly:
+#pod 'Ambly', '~> 0.1.0'
+
+# For testing, we could have an app depend on Ambly's
+# GitHub repository:
+#pod 'Ambly', :git => 'https://github.com/omcljs/ambly.git'
+
+# Since we also use the Ambly Demo to devlop the Ambly
+# code, it directly includes the Ambly source in its workspace.
+# So, we instead have Ambly Demo depend on Ambly's deps:
+pod "GCDWebServer/WebDAV", "~> 3.2.2"
