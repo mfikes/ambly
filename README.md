@@ -48,6 +48,7 @@ If you would like to manually start the Ambly REPL, first start a Clojure REPL w
 ```
 (repl/repl* (jsc/repl-env)
   {:output-dir "out"
+   :optimizations :none
    :cache-analysis true
    :source-map true})
 ```

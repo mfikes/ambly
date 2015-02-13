@@ -6,10 +6,10 @@ if hash rlwrap 2>/dev/null; then
     rlwrap lein trampoline run -m clojure.main -e \
     "(require '[cljs.repl :as repl])
     (require '[ambly.repl.jsc :as jsc])
-    (repl/repl* (jsc/repl-env $1) {:output-dir \".ambly_jsc_repl\" :cache-analysis true :source-map true})"
+    (repl/repl* (jsc/repl-env $1) {:output-dir \".ambly_jsc_repl\" :optimizations :none :cache-analysis true :source-map true})"
 else
     lein trampoline run -m clojure.main -e \
     "(require '[cljs.repl :as repl])
     (require '[ambly.repl.jsc :as jsc])
-    (repl/repl* (jsc/repl-env $1) {:output-dir \".ambly_jsc_repl\" :cache-analysis true :source-map true})"
+    (repl/repl* (jsc/repl-env $1) {:output-dir \".ambly_jsc_repl\" :optimizations :none :cache-analysis true :source-map true})"
 fi
