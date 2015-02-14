@@ -14,7 +14,7 @@ You must have Java 7 or later installed along with [Leiningen](http://leiningen.
 
 ## Running
 
-The embedded JavaScriptCore instance is hosted inside an iOS simulator instance.
+The embedded JavaScriptCore instance is hosted inside an iOS simulator instance (with [on-device support](https://github.com/omcljs/ambly/wiki/On-Device-REPL) coming soon).
 
 ### Xcode Demo Project
 
