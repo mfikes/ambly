@@ -39,11 +39,6 @@
         (.removeServiceListener mdns-service reg-type service-listener)
         (.close mdns-service)))))
 
-;; Example respnoses from above
-(comment
-  {"Ambly WebDAV Server on iPod touch" {:address #<Inet4Address /10.0.1.6>, :port 8080},
-   "Ambly WebDAV Server on iPhone Simulator" {:address #<Inet4Address /10.0.1.200>, :port 8080}})
-
 (defn socket [host port]
   (let [socket (Socket. host port)
         in     (io/reader socket)
