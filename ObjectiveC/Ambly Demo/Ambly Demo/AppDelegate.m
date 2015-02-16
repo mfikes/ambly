@@ -36,7 +36,6 @@
     
 #if (!TARGET_IPHONE_SIMULATOR)
     // Start up the WebDAV server
-    NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
     self.davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:compilerOutputDirectory.path];
     [self.davServer start];
 #endif
