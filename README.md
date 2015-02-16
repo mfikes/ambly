@@ -34,7 +34,7 @@ Look in the Xcode logs for lines like the following:
 [INFO] GCDWebDAVServer now reachable at http://My-iPhone.local/
 ```
 
-Take either of the URLs (IP-based, or Bonjour-based), and in Finder do `Go` > `Connect to Server …` 
+Take either of the URLs (IP-based, or Bonjour-based), and in Finder do `Go` > `Connect to Server...` 
 
 Then put the WebDav endpoint into the Server Address field and Connect as Guest.
 
@@ -66,7 +66,7 @@ If you would like to manually start the Ambly REPL, first start a Clojure REPL w
 
 ```clojure
 (repl/repl* (jsc/repl-env)
-  {:output-dir "out"
+  {:output-dir "/tmp/ambly-cljs-out"
    :optimizations :none
    :cache-analysis true
    :source-map true})
