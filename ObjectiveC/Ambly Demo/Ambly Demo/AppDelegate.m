@@ -34,12 +34,12 @@
     self.replServer = [[ABYServer alloc] init];
     [self.replServer startListening:50505 forContext:self.contextManager.context];
     
-#if (!TARGET_IPHONE_SIMULATOR)
+//#if (!TARGET_IPHONE_SIMULATOR)
     // Start up the WebDAV server
     self.davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:compilerOutputDirectory.path];
     NSString* bonjourName = [NSString stringWithFormat:@"Ambly WebDAV Server on %@", [UIDevice currentDevice].name];
     [self.davServer startWithPort:8080 bonjourName:bonjourName];
-#endif
+//#endif
     
     return YES;
 }

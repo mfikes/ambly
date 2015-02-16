@@ -9,23 +9,40 @@
             [clojure.data.json :as json])
   (:import java.net.Socket
            java.lang.StringBuilder
-           [java.io File BufferedReader BufferedWriter IOException]))
+           [java.io File BufferedReader BufferedWriter IOException]
+           (javax.jmdns JmDNS ServiceListener)))
 
-(defn discover-ambly-webdav-endpoints [timeout]
-  (let [discovered-endpoints (atom {})
-        ambly-service-name-prefix "Ambly WebDAV Server"
-        ^com.apple.dnssd.DNSSDService dns-sd-service
-        (com.apple.dnssd.DNSSD/browse "_http._tcp"
-          (reify com.apple.dnssd.BrowseListener
-            (serviceFound [this browser flags if-index service-name reg-type domain]
-              (when (.startsWith service-name ambly-service-name-prefix)
-                (swap! discovered-endpoints assoc service-name {})))
-            (serviceLost [this browser flags if-index service-name reg-type domain]
-              (when (.startsWith service-name ambly-service-name-prefix)
-                (swap! discovered-endpoints dissoc service-name)))))]
-    (Thread/sleep timeout)
-    (.stop dns-sd-service)
-    @discovered-endpoints))
+(defn discover-ambly-webdav-bonjour-services
+  "Looks for Ambly WebDAV services advertised via Bonjour."
+  [timeout]
+  (let [reg-type "_http._tcp.local."
+        discovered-services (atom {})
+        mdns-service (JmDNS/create)
+        service-listener
+        (reify ServiceListener
+          (serviceAdded [_ service-event]
+            (let [name (.getName service-event)]
+              (when (.startsWith name "Ambly WebDAV Server")
+                (.requestServiceInfo mdns-service (.getType service-event) (.getName service-event) 1))))
+          (serviceRemoved [_ service-event]
+            (swap! discovered-services dissoc (.getName service-event)))
+          (serviceResolved [_ service-event]
+            (swap! discovered-services assoc (.getName service-event)
+              (let [info (.getInfo service-event)]
+                {:address (.getAddress info)
+                 :port (.getPort info)}))))]
+    (try
+      (.addServiceListener mdns-service reg-type service-listener)
+      (Thread/sleep timeout)
+      @discovered-services
+      (finally
+        (.removeServiceListener mdns-service reg-type service-listener)
+        (.close mdns-service)))))
+
+;; Example respnoses from above
+(comment
+  {"Ambly WebDAV Server on iPod touch" {:address #<Inet4Address /10.0.1.6>, :port 8080},
+   "Ambly WebDAV Server on iPhone Simulator" {:address #<Inet4Address /10.0.1.200>, :port 8080}})
 
 (defn socket [host port]
   (let [socket (Socket. host port)
