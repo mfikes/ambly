@@ -11,6 +11,22 @@
            java.lang.StringBuilder
            [java.io File BufferedReader BufferedWriter IOException]))
 
+(defn discover-ambly-webdav-endpoints [timeout]
+  (let [discovered-endpoints (atom {})
+        ambly-service-name-prefix "Ambly WebDAV Server"
+        ^com.apple.dnssd.DNSSDService dns-sd-service
+        (com.apple.dnssd.DNSSD/browse "_http._tcp"
+          (reify com.apple.dnssd.BrowseListener
+            (serviceFound [this browser flags if-index service-name reg-type domain]
+              (when (.startsWith service-name ambly-service-name-prefix)
+                (swap! discovered-endpoints assoc service-name {})))
+            (serviceLost [this browser flags if-index service-name reg-type domain]
+              (when (.startsWith service-name ambly-service-name-prefix)
+                (swap! discovered-endpoints dissoc service-name)))))]
+    (Thread/sleep timeout)
+    (.stop dns-sd-service)
+    @discovered-endpoints))
+
 (defn socket [host port]
   (let [socket (Socket. host port)
         in     (io/reader socket)
