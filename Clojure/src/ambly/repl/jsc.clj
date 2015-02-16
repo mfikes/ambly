@@ -61,14 +61,10 @@
   if parse failed."
   [stack-line opts]
   (let [[function file line column]
-        (rest (re-matches #"(.*)@file://(.*):([0-9]+):([0-9]+)"
+        (rest (re-matches #"(.*)@file:///(.*):([0-9]+):([0-9]+)"
                 stack-line))]
     (if (and file function line column)
-      {:file     (string/replace
-                   (.getCanonicalFile (io/file file))
-                   (str (System/getProperty "user.dir") File/separator
-                     (util/output-directory opts) File/separator)
-                   "")
+      {:file     (str (io/file (util/output-directory opts) file))
        :function function
        :line     (Long/parseLong line)
        :column   (Long/parseLong column)})))
@@ -126,8 +122,7 @@
   (let [output-dir (io/file (:output-dir opts))
         _ (.mkdirs output-dir)
         env (ana/empty-env)
-        core (io/resource "cljs/core.cljs")
-        root-path (.getCanonicalFile output-dir)]
+        core (io/resource "cljs/core.cljs")]
     (reset! (:socket repl-env)
       (socket (:host repl-env) (:port repl-env)))
     ;; Start dedicated thread to read messages from socket
@@ -150,14 +145,14 @@
     (jsc-eval repl-env
       (str "CLOSURE_IMPORT_SCRIPT = function(src) {"
         (form-require-expr-js
-          (str "'" root-path File/separator "goog" File/separator "' + src"))
+          (str "'goog" File/separator "' + src"))
         "return true; };"))
     ;; bootstrap
     (jsc-eval repl-env
-      (form-require-path-js (io/file root-path "goog" "base.js")))
+      (form-require-path-js (io/file "goog" "base.js")))
     ;; load the deps file so we can goog.require cljs.core etc.
     (jsc-eval repl-env
-      (form-require-path-js (io/file root-path "ambly_repl_deps.js")))
+      (form-require-path-js (io/file "ambly_repl_deps.js")))
     ;; monkey-patch isProvided_ to avoid useless warnings - David
     (jsc-eval repl-env
       (str "goog.isProvided_ = function(x) { return false; };"))

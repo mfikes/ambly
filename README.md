@@ -14,19 +14,38 @@ You must have Java 7 or later installed along with [Leiningen](http://leiningen.
 
 ## Running
 
-The embedded JavaScriptCore instance is hosted inside an iOS simulator instance (with [on-device support](https://github.com/omcljs/ambly/wiki/On-Device-REPL) coming soon).
+The embedded JavaScriptCore instance is hosted inside an iOS app (either in the simulator or on-device).
 
 ### Xcode Demo Project
 
 In `ambly/ObjectiveC/Ambly Demo` run `pod install`.
 
-
-Open the `Ambly Demo.xcworkspace` in Xcode run the app it in the simulator.
+Open the `Ambly Demo.xcworkspace` in Xcode run the app it in the simulator or on a device.
 
 ### REPL
 
-In `ambly/Clojure` run `script/jscrepljs`
+#### WebDAV Setup
+If you are running the app on a device, you will first need to have your Mac mount the WebDAV folder being exposed by the app. (If you are running it in the simulator, you can skip this step.)
 
+Look in the Xcode logs for lines like the following:
+```
+[INFO] GCDWebDAVServer started on port 80 and reachable at http://10.0.1.6/
+[VERBOSE] Bonjour registration complete for GCDWebDAVServer
+[INFO] GCDWebDAVServer now reachable at http://My-iPhone.local/
+```
+
+Take either of the URLs (IP-based, or Bonjour-based), and in Finder do `Go` > `Connect to Server …` 
+
+Then put the WebDav endpoint into the Server Address field and Connect as Guest.
+
+#### Starting the REPL
+
+
+In `ambly/Clojure` run either
+- `script/jscrepljs` 
+if running the app in the simulator
+- `script/jscrepljs <IP or Bonjour HostName>` 
+if on-device
 
 Then the REPL will be live:
 ```
@@ -45,9 +64,19 @@ If you would like to manually start the Ambly REPL, first start a Clojure REPL w
   '[ambly.repl.jsc :as jsc])
 ```
 
-```
+```clojure
 (repl/repl* (jsc/repl-env)
   {:output-dir "out"
+   :optimizations :none
+   :cache-analysis true
+   :source-map true})
+```
+
+If you are instead running the app on a device:
+
+```clojure
+(repl/repl* (jsc/repl-env :host <IP or Bonjour HostName>)
+    {:output-dir "/Volumes/<IP or Bonjour HostName>"
    :optimizations :none
    :cache-analysis true
    :source-map true})

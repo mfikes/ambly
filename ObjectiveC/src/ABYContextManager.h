@@ -14,4 +14,6 @@
  */
 @property (strong, nonatomic, readonly) JSContext* context;
 
+-(id)initWithCompilerOutputDirectory:(NSURL*)compilerOutputDirectory;
+
 @end

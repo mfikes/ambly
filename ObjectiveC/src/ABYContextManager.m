@@ -7,15 +7,17 @@
 
 // The context being managed
 @property (strong, nonatomic) JSContext* context;
+@property (strong, nonatomic) NSURL* compilerOutputDirectory;
 
 @end
 
 @implementation ABYContextManager
 
--(id)init
+-(id)initWithCompilerOutputDirectory:(NSURL*)compilerOutputDirectory
 {
     if (self = [super init]) {
         self.context = [[JSContext alloc] init];
+        self.compilerOutputDirectory = compilerOutputDirectory;
         
         [self setUpExceptionLogging];
         [self setUpConsoleLog];
@@ -78,21 +80,11 @@
  */
 - (void)setUpRequire
 {
-    // TODO deal with paths in various forms (relative, URLs?)
+    __weak typeof(self) weakSelf = self;
     
     self.context[@"require"] = ^(NSString *path) {
         
-        NSString* requiredPath = path;
-        NSString* readPath = path;
-        
-#if 0
-        NSString* outputDir = @"/Volumes/Mikes-iPod-touch.local";
-        NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-        
-        if ([path hasPrefix:outputDir]) {
-            readPath = [NSString stringWithFormat:@"%@%@", documentsPath, [path substringFromIndex:[outputDir length]]];
-        }
-#endif
+        NSString* readPath = [NSString stringWithFormat:@"%@/%@", weakSelf.compilerOutputDirectory.path, path];
         
         JSContext* currentContext = [JSContext currentContext];
         
@@ -100,7 +92,7 @@
         NSString* sourceText = [NSString stringWithContentsOfFile:readPath encoding:NSUTF8StringEncoding error:&error];
         
         if (!error && sourceText) {
-            [currentContext evaluateScript:sourceText withSourceURL:[NSURL fileURLWithPath:requiredPath]];
+            [currentContext evaluateScript:sourceText withSourceURL:[NSURL fileURLWithPath:path]];
         }
         
         return [JSValue valueWithUndefinedInContext:currentContext];

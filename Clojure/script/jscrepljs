@@ -2,14 +2,28 @@
 
 type lein >/dev/null 2>&1 || { echo >&2 "I require lein but it's not installed.  Aborting."; exit 1; }
 
+if [ -n "$1" ]; then
 if hash rlwrap 2>/dev/null; then
     rlwrap lein trampoline run -m clojure.main -e \
     "(require '[cljs.repl :as repl])
     (require '[ambly.repl.jsc :as jsc])
-    (repl/repl* (jsc/repl-env $1) {:output-dir \".ambly_jsc_repl\" :optimizations :none :cache-analysis true :source-map true})"
+    (repl/repl* (jsc/repl-env :host \"$1\") {:output-dir \"/Volumes/$1\" :optimizations :none :cache-analysis true :source-map true})"
 else
     lein trampoline run -m clojure.main -e \
     "(require '[cljs.repl :as repl])
     (require '[ambly.repl.jsc :as jsc])
-    (repl/repl* (jsc/repl-env $1) {:output-dir \".ambly_jsc_repl\" :optimizations :none :cache-analysis true :source-map true})"
+    (repl/repl* (jsc/repl-env :host \"$1\") {:output-dir \"/Volumes/$1\" :optimizations :none :cache-analysis true :source-map true})"
+fi
+else
+if hash rlwrap 2>/dev/null; then
+    rlwrap lein trampoline run -m clojure.main -e \
+    "(require '[cljs.repl :as repl])
+    (require '[ambly.repl.jsc :as jsc])
+    (repl/repl* (jsc/repl-env) {:output-dir \"/tmp/ambly-cljs-out\" :optimizations :none :cache-analysis true :source-map true})"
+else
+    lein trampoline run -m clojure.main -e \
+    "(require '[cljs.repl :as repl])
+    (require '[ambly.repl.jsc :as jsc])
+    (repl/repl* (jsc/repl-env $1) {:output-dir \"/tmp/ambly-cljs-out\" :optimizations :none :cache-analysis true :source-map true})"
+fi
 fi
