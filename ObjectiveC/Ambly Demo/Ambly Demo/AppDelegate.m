@@ -16,6 +16,12 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     
+    // Shut down the idle timer so that you can easily experiment
+    // with the demo app from a device that is not connected to a Mac
+    // running Xcode. Since this demo app isn't being released we
+    // can do this unconditionally.
+    [UIApplication sharedApplication].idleTimerDisabled = YES;
+    
     // All of the setup below is for dev.
     // For release the app would load files from shipping bundle.
     
