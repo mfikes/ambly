@@ -28,7 +28,7 @@ Open the `Ambly Demo.xcworkspace` in Xcode and run the app it in the simulator o
 
 In `ambly/Clojure` run `script/jscrepljs` to start the REPL.
 
-**NOTE**: You may see warnings regarding Bonjour/MDNS being logged. You may also encounter what appears to be a race between files being read in the WebDAV target and them being written out. If this occurs, rerun `script/jscrepljs`. 
+**NOTE**: You may see warnings regarding Bonjour/MDNS being logged. These appear to be benign.
 
 Then the REPL will be live:
 ```

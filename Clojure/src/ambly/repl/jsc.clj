@@ -224,8 +224,6 @@
                (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
                (js/CLOSURE_IMPORT_SCRIPT
                  (aget (.. js/goog -dependencies_ -nameToPath) name)))))))
-    ; There may be a (pretty bad) race with WebDAV output flushing to simulator/device, so sleep
-    (Thread/sleep 10000)
     {:merge-opts {:output-dir webdav-mount-point}}))
 
 (defrecord JscEnv [host port socket response-promise webdav-mount-point]
