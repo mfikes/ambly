@@ -248,7 +248,8 @@
     (load-javascript this provides url))
   (-tear-down [this]
     (shell/sh "umount" @webdav-mount-point)
-    (close-socket @socket)))
+    (close-socket @socket)
+    (shutdown-agents)))
 
 (defn repl-env* [options]
   (let [{:keys [host port]}
