@@ -24,28 +24,11 @@ Open the `Ambly Demo.xcworkspace` in Xcode and run the app it in the simulator o
 
 ### REPL
 
-#### WebDAV Setup
-If you are running the app on a device, you will first need to have your Mac mount the WebDAV folder being exposed by the app. (If you are running it in the simulator, you can skip this step.)
+**NOTE**: ClojureScript _master_ is currently required. (You will need to get the latest, build it, and update the `project.clj` file in `ambly/Clojure` to refer to your locally-built copy.)
 
-Look in the Xcode logs for lines like the following:
-```
-[INFO] GCDWebDAVServer started on port 80 and reachable at http://10.0.1.6/
-[VERBOSE] Bonjour registration complete for GCDWebDAVServer
-[INFO] GCDWebDAVServer now reachable at http://My-iPhone.local/
-```
+In `ambly/Clojure` run `script/jscrepljs` to start the REPL.
 
-Take either of the URLs (IP-based, or Bonjour-based), and in Finder do `Go` > `Connect to Server...` 
-
-Then put the WebDav endpoint into the Server Address field and Connect as Guest.
-
-#### Starting the REPL
-
-
-In `ambly/Clojure` run either
-- `script/jscrepljs` 
-if running the app in the simulator
-- `script/jscrepljs <IP or Bonjour HostName>` 
-if on-device
+**NOTE**: You may see warnings regarding Bonjour/MDNS being logged. You may also encounter what appears to be a race between files being read in the WebDAV target and them being written out. If this occurs, rerun `script/jscrepljs`. 
 
 Then the REPL will be live:
 ```
@@ -66,18 +49,7 @@ If you would like to manually start the Ambly REPL, first start a Clojure REPL w
 
 ```clojure
 (repl/repl* (jsc/repl-env)
-  {:output-dir "/tmp/ambly-cljs-out"
-   :optimizations :none
-   :cache-analysis true
-   :source-map true})
-```
-
-If you are instead running the app on a device:
-
-```clojure
-(repl/repl* (jsc/repl-env :host <IP or Bonjour HostName>)
-    {:output-dir "/Volumes/<IP or Bonjour HostName>"
-   :optimizations :none
+  {:optimizations :none
    :cache-analysis true
    :source-map true})
 ```

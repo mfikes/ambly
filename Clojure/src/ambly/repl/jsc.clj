@@ -6,17 +6,20 @@
             [cljs.compiler :as comp]
             [cljs.repl :as repl]
             [cljs.closure :as closure]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [clojure.java.shell :as shell])
   (:import java.net.Socket
            java.lang.StringBuilder
            [java.io File BufferedReader BufferedWriter IOException]
            (javax.jmdns JmDNS ServiceListener)))
 
+;; For now, this impl simply returns the first service as soon as it is discovered
 (defn discover-ambly-webdav-bonjour-services
   "Looks for Ambly WebDAV services advertised via Bonjour."
   [timeout]
   (let [reg-type "_http._tcp.local."
-        discovered-services (atom {})
+        ;discovered-services (atom {})
+        discovered-services (promise)
         mdns-service (JmDNS/create)
         service-listener
         (reify ServiceListener
@@ -25,24 +28,21 @@
               (when (.startsWith name "Ambly WebDAV Server")
                 (.requestServiceInfo mdns-service (.getType service-event) (.getName service-event) 1))))
           (serviceRemoved [_ service-event]
-            (swap! discovered-services dissoc (.getName service-event)))
+            #_(swap! discovered-services dissoc (.getName service-event)))
           (serviceResolved [_ service-event]
-            (swap! discovered-services assoc (.getName service-event)
-              (let [info (.getInfo service-event)]
-                {:address (.getAddress info)
-                 :port (.getPort info)}))))]
+            (let [entry {(.getName service-event)
+                         (let [info (.getInfo service-event)]
+                           {:address (.getAddress info)
+                            :port    (.getPort info)})}]
+              #_(swap! discovered-services merge entry)
+              (deliver discovered-services entry))))]
     (try
       (.addServiceListener mdns-service reg-type service-listener)
-      (Thread/sleep timeout)
-      @discovered-services
+      #_(Thread/sleep timeout)
+      (deref discovered-services timeout {})
       (finally
         (.removeServiceListener mdns-service reg-type service-listener)
         (.close mdns-service)))))
-
-;; Example respnoses from above
-(comment
-  {"Ambly WebDAV Server on iPod touch" {:address #<Inet4Address /10.0.1.6>, :port 8080},
-   "Ambly WebDAV Server on iPhone Simulator" {:address #<Inet4Address /10.0.1.200>, :port 8080}})
 
 (defn socket [host port]
   (let [socket (Socket. host port)
@@ -152,12 +152,24 @@
 
 (defn setup
   [repl-env opts]
-  (let [output-dir (io/file (:output-dir opts))
+  (let [discovered-endpoints (discover-ambly-webdav-bonjour-services 15000)
+        _ (when (empty? discovered-endpoints)
+            (throw (Exception. "No device or simulator running Ambly discovered.")))
+        ; TODO Need some UI and/config facilitating picking an Ambly instance
+        [webdav-endpoint-name webdav-endpoint] (first discovered-endpoints)
+        ; Assuming IPv4 for now
+        endpoint-address (.getHostAddress (:address webdav-endpoint))
+        endpoint-port (:port webdav-endpoint)
+        webdav-mount-point (str "/Volumes/Ambly-" endpoint-address)
+        output-dir (io/file webdav-mount-point)
         _ (.mkdirs output-dir)
         env (ana/empty-env)
         core (io/resource "cljs/core.cljs")]
+    (println "Connecting to" (subs webdav-endpoint-name (count "Ambly WebDAV Server on ")))
+    (reset! (:webdav-mount-point repl-env) webdav-mount-point)
+    (shell/sh "mount_webdav" (str "http://" endpoint-address ":" endpoint-port) webdav-mount-point)
     (reset! (:socket repl-env)
-      (socket (:host repl-env) (:port repl-env)))
+      (socket endpoint-address (:port repl-env)))
     ;; Start dedicated thread to read messages from socket
     (start-reading-messages repl-env)
     ;; compile cljs.core & its dependencies, goog/base.js must be available
@@ -165,6 +177,7 @@
     ;; resources in JARs
     (let [core-js (closure/compile core
                     (assoc opts
+                      :output-dir webdav-mount-point
                       :output-file
                       (closure/src-file->target-file core)))
           deps (closure/add-dependencies opts core-js)]
@@ -209,9 +222,12 @@
              (when (or (not (contains? *loaded-libs* name)) reload)
                (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
                (js/CLOSURE_IMPORT_SCRIPT
-                 (aget (.. js/goog -dependencies_ -nameToPath) name)))))))))
+                 (aget (.. js/goog -dependencies_ -nameToPath) name)))))))
+    ; There may be a (pretty bad) race with WebDAV output flushing to simulator/device, so sleep
+    (Thread/sleep 10000)
+    {:merge-opts {:output-dir webdav-mount-point}}))
 
-(defrecord JscEnv [host port socket response-promise]
+(defrecord JscEnv [host port socket response-promise webdav-mount-point]
   repl/IParseStacktrace
   (-parse-stacktrace [this stacktrace error opts]
     (raw-stacktrace->canonical-stacktrace stacktrace opts))
@@ -228,6 +244,7 @@
   (-load [this provides url]
     (load-javascript this provides url))
   (-tear-down [this]
+    (shell/sh "umount" @webdav-mount-point)
     (close-socket @socket)))
 
 (defn repl-env* [options]
@@ -236,7 +253,7 @@
           {:host "localhost"
            :port 50505}
           options)]
-    (JscEnv. host port (atom nil) (atom nil))))
+    (JscEnv. host port (atom nil) (atom nil) (atom nil))))
 
 (defn repl-env
   [& {:as options}]

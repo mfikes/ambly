@@ -20,11 +20,7 @@
     // For release the app would load files from shipping bundle.
     
     // Set up the compiler output directory
-#if TARGET_IPHONE_SIMULATOR
-    NSURL* compilerOutputDirectory = [NSURL fileURLWithPath:@"/tmp/ambly-cljs-out"];
-#else
     NSURL* compilerOutputDirectory = [[self privateDocumentsDirectory] URLByAppendingPathComponent:@"cljs-out"];
-#endif
     
     // Ensure compiler output directory exists
     [self createDirectoriesUpTo:compilerOutputDirectory];
@@ -33,13 +29,15 @@
     self.contextManager = [[ABYContextManager alloc] initWithCompilerOutputDirectory:compilerOutputDirectory];
     self.replServer = [[ABYServer alloc] init];
     [self.replServer startListening:50505 forContext:self.contextManager.context];
-    
-//#if (!TARGET_IPHONE_SIMULATOR)
+
     // Start up the WebDAV server
     self.davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:compilerOutputDirectory.path];
+//#if TARGET_IPHONE_SIMULATOR
+//    NSString* bonjourName = [NSString stringWithFormat:@"Ambly WebDAV Server on %@ runnng on %@", [UIDevice currentDevice].name, [[NSProcessInfo processInfo] hostName]];
+//#else
     NSString* bonjourName = [NSString stringWithFormat:@"Ambly WebDAV Server on %@", [UIDevice currentDevice].name];
-    [self.davServer startWithPort:8080 bonjourName:bonjourName];
 //#endif
+    [self.davServer startWithPort:8080 bonjourName:bonjourName];
     
     return YES;
 }
