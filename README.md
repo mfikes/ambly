@@ -28,8 +28,6 @@ Open the `Ambly Demo.xcworkspace` in Xcode and run the app it in the simulator o
 
 In `ambly/Clojure` run `script/jscrepljs` to start the REPL.
 
-**NOTE**: You may see warnings regarding Bonjour/MDNS being logged. These appear to be benign.
-
 Then the REPL will be live:
 ```
 To quit, type: :cljs/quit

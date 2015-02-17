@@ -13,6 +13,9 @@
            [java.io File BufferedReader BufferedWriter IOException]
            (javax.jmdns JmDNS ServiceListener)))
 
+(defn set-logging-level [logger-name level]
+  (.setLevel (java.util.logging.Logger/getLogger logger-name) level))
+
 ;; For now, this impl simply returns the first service as soon as it is discovered
 (defn discover-ambly-webdav-bonjour-services
   "Looks for Ambly WebDAV services advertised via Bonjour."
@@ -152,7 +155,8 @@
 
 (defn setup
   [repl-env opts]
-  (let [discovered-endpoints (discover-ambly-webdav-bonjour-services 15000)
+  (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/SEVERE)
+        discovered-endpoints (discover-ambly-webdav-bonjour-services 15000)
         _ (when (empty? discovered-endpoints)
             (throw (Exception. "No device or simulator running Ambly discovered.")))
         ; TODO Need some UI and/config facilitating picking an Ambly instance
