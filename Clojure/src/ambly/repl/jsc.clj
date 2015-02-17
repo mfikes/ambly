@@ -29,7 +29,7 @@
 (defn discover-and-pick-ambly-instance
   "Looks for Ambly WebDAV services advertised via Bonjour and presents
   a simple command-line UI letting user pick one."
-  []
+  [choose-first-discovered?]
   (let [reg-type "_http._tcp.local."
         discovered-services (atom (sorted-map))
         mdns-service (JmDNS/create)
@@ -59,10 +59,11 @@
       (loop [current-discovered-services @discovered-services]
         (println)
         (print-services current-discovered-services)
-        (println "\n[r] Refresh\n")
-        (print "Choice: ")
-        (flush)
-        (let [choice (read-line)]
+        (when-not choose-first-discovered?
+          (println "\n[r] Refresh\n")
+          (print "Choice: ")
+          (flush))
+        (let [choice (if choose-first-discovered? "1" (read-line))]
           (if (= "r" choice)
             (recur @discovered-services)
             (let [choices (service-map->choice-list current-discovered-services)
@@ -184,7 +185,7 @@
 (defn setup
   [repl-env opts]
   (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/SEVERE)
-        [webdav-endpoint-name webdav-endpoint] (discover-and-pick-ambly-instance)
+        [webdav-endpoint-name webdav-endpoint] (discover-and-pick-ambly-instance (:choose-first-discovered repl-env))
         _ (println "\nConnecting to" (service-name->display-name webdav-endpoint-name) "...\n")
         ; Assuming IPv4 for now
         endpoint-address (.getHostAddress (:address webdav-endpoint))
@@ -254,7 +255,7 @@
                  (aget (.. js/goog -dependencies_ -nameToPath) name)))))))
     {:merge-opts {:output-dir webdav-mount-point}}))
 
-(defrecord JscEnv [host port socket response-promise webdav-mount-point]
+(defrecord JscEnv [host port socket response-promise webdav-mount-point choose-first-discovered]
   repl/IParseStacktrace
   (-parse-stacktrace [this stacktrace error opts]
     (raw-stacktrace->canonical-stacktrace stacktrace opts))
@@ -276,12 +277,12 @@
     (shutdown-agents)))
 
 (defn repl-env* [options]
-  (let [{:keys [host port]}
+  (let [{:keys [host port choose-first-discovered]}
         (merge
           {:host "localhost"
            :port 50505}
           options)]
-    (JscEnv. host port (atom nil) (atom nil) (atom nil))))
+    (JscEnv. host port (atom nil) (atom nil) (atom nil) choose-first-discovered)))
 
 (defn repl-env
   [& {:as options}]
