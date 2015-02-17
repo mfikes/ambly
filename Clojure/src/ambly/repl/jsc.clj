@@ -16,13 +16,22 @@
 (defn set-logging-level [logger-name level]
   (.setLevel (java.util.logging.Logger/getLogger logger-name) level))
 
-;; For now, this impl simply returns the first service as soon as it is discovered
-(defn discover-ambly-webdav-bonjour-services
-  "Looks for Ambly WebDAV services advertised via Bonjour."
-  [timeout]
+(defn service-name->display-name [service-name]
+  (subs service-name (count "Ambly WebDAV Server on ")))
+
+(defn service-map->choice-list [service-map]
+  (map vector (iterate inc 1) service-map))
+
+(defn print-services [service-map]
+  (doseq [[choice-number [service-name _]] (service-map->choice-list service-map)]
+    (println (str "[" choice-number "] " (service-name->display-name service-name)))))
+
+(defn discover-and-pick-ambly-instance
+  "Looks for Ambly WebDAV services advertised via Bonjour and presents
+  a simple command-line UI letting user pick one."
+  []
   (let [reg-type "_http._tcp.local."
-        ;discovered-services (atom {})
-        discovered-services (promise)
+        discovered-services (atom (sorted-map))
         mdns-service (JmDNS/create)
         service-listener
         (reify ServiceListener
@@ -31,21 +40,40 @@
               (when (.startsWith name "Ambly WebDAV Server")
                 (.requestServiceInfo mdns-service (.getType service-event) (.getName service-event) 1))))
           (serviceRemoved [_ service-event]
-            #_(swap! discovered-services dissoc (.getName service-event)))
+            (swap! discovered-services dissoc (.getName service-event)))
           (serviceResolved [_ service-event]
             (let [entry {(.getName service-event)
                          (let [info (.getInfo service-event)]
                            {:address (.getAddress info)
                             :port    (.getPort info)})}]
-              #_(swap! discovered-services merge entry)
-              (deliver discovered-services entry))))]
+              (swap! discovered-services merge entry))))]
     (try
       (.addServiceListener mdns-service reg-type service-listener)
-      #_(Thread/sleep timeout)
-      (deref discovered-services timeout {})
+      (loop [count 0]
+        (when (empty? @discovered-services)
+          (Thread/sleep 100)
+          (when (= 1000 count)
+            (println "\nSearching ..."))
+          (recur (inc count))))
+      (Thread/sleep 500)                                    ;; Sleep a little more to catch stragglers
+      (loop [current-discovered-services @discovered-services]
+        (println)
+        (print-services current-discovered-services)
+        (println "\n[r] Refresh\n")
+        (print "Choice: ")
+        (flush)
+        (let [choice (read-line)]
+          (if (= "r" choice)
+            (recur @discovered-services)
+            (let [choices (service-map->choice-list current-discovered-services)
+                  choice-ndx (try (dec (Long/parseLong choice)) (catch NumberFormatException _ nil))]
+              (if (< -1 choice-ndx (count choices))
+                (second (nth choices choice-ndx))
+                (recur current-discovered-services))))))
       (finally
-        (.removeServiceListener mdns-service reg-type service-listener)
-        (.close mdns-service)))))
+        (future
+          (.removeServiceListener mdns-service reg-type service-listener)
+          (.close mdns-service))))))
 
 (defn socket [host port]
   (let [socket (Socket. host port)
@@ -156,11 +184,8 @@
 (defn setup
   [repl-env opts]
   (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/SEVERE)
-        discovered-endpoints (discover-ambly-webdav-bonjour-services 15000)
-        _ (when (empty? discovered-endpoints)
-            (throw (Exception. "No device or simulator running Ambly discovered.")))
-        ; TODO Need some UI and/config facilitating picking an Ambly instance
-        [webdav-endpoint-name webdav-endpoint] (first discovered-endpoints)
+        [webdav-endpoint-name webdav-endpoint] (discover-and-pick-ambly-instance)
+        _ (println "\nConnecting to" (service-name->display-name webdav-endpoint-name) "...\n")
         ; Assuming IPv4 for now
         endpoint-address (.getHostAddress (:address webdav-endpoint))
         endpoint-port (:port webdav-endpoint)
@@ -169,7 +194,6 @@
         _ (.mkdirs output-dir)
         env (ana/empty-env)
         core (io/resource "cljs/core.cljs")]
-    (println "Connecting to" (subs webdav-endpoint-name (count "Ambly WebDAV Server on ")))
     (reset! (:webdav-mount-point repl-env) webdav-mount-point)
     (shell/sh "mount_webdav" (str "http://" endpoint-address ":" endpoint-port) webdav-mount-point)
     (reset! (:socket repl-env)
