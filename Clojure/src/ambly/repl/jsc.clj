@@ -185,6 +185,7 @@
       ;; for all compiled namespaces
       (apply closure/output-unoptimized
         (assoc opts
+          :output-dir webdav-mount-point
           :output-to (.getPath (io/file output-dir "ambly_repl_deps.js")))
         deps))
     ;; Set up CLOSURE_IMPORT_SCRIPT function, injecting path
