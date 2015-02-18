@@ -194,7 +194,7 @@
 
 (defn setup
   [repl-env opts]
-  (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/SEVERE)
+  (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/OFF)
         [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered repl-env))
         endpoint-address (.getHostAddress (:address endpoint))
         endpoint-port (:port endpoint)
