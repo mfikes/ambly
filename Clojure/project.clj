@@ -7,7 +7,6 @@
                  [org.clojure/clojurescript "0.0-2850"]
                  [javax.jmdns/jmdns "3.4.1"]]
   :source-paths ["src"]
-  :compiler {
-     :optimizations :none
-     :cache-analysis true
-     :source-map true})
+  :compiler {:optimizations :none
+             :cache-analysis true
+             :source-map true})
