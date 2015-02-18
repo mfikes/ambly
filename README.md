@@ -26,13 +26,31 @@ Open the `Ambly Demo.xcworkspace` in Xcode and run the app it in the simulator o
 
 **NOTE**: ClojureScript _master_ is currently required. (You will need to get the latest, build it, and update the `project.clj` file in `ambly/Clojure` to refer to your locally-built copy.)
 
-In `ambly/Clojure` run `script/jscrepljs` to start the REPL.
+In `ambly/Clojure` run `script/jscrepljs` to start the REPL. You will be presented with a list of discovered devices. Type the number of the device to connect to, or type 'R' to refresh the list:
 
-Then the REPL will be live:
 ```
+$ script/jscrepljs 
 To quit, type: :cljs/quit
-ClojureScript:cljs.user> (+ 1 1)
-2
+
+[1] iPod touch
+[2] iPhone Simulator (Mac Pro)
+
+[R] Refresh
+
+Choice: r
+
+[1] iPod touch
+[2] iPad
+[3] iPhone Simulator (Mac Pro)
+
+[R] Refresh
+
+Choice: 1
+
+Connecting to iPod touch ...
+
+ClojureScript:cljs.user> (+ 3 4)
+7
 ```
 
 ### Manual REPL Startup
