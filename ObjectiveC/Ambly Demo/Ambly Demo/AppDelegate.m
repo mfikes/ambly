@@ -43,6 +43,7 @@
 //#else
     NSString* bonjourName = [NSString stringWithFormat:@"Ambly WebDAV Server on %@", [UIDevice currentDevice].name];
 //#endif
+    [GCDWebDAVServer setLogLevel:2]; // Info
     [self.davServer startWithPort:8080 bonjourName:bonjourName];
     
     return YES;
