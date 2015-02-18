@@ -16,8 +16,10 @@
 (defn set-logging-level [logger-name level]
   (.setLevel (java.util.logging.Logger/getLogger logger-name) level))
 
+(def ambly-bonjour-name-prefix "Ambly ")
+
 (defn service-name->display-name [service-name]
-  (subs service-name (count "Ambly WebDAV Server on ")))
+  (subs service-name (count ambly-bonjour-name-prefix)))
 
 (defn service-map->choice-list [service-map]
   (map vector (iterate inc 1) service-map))
@@ -37,7 +39,7 @@
         (reify ServiceListener
           (serviceAdded [_ service-event]
             (let [name (.getName service-event)]
-              (when (.startsWith name "Ambly WebDAV Server")
+              (when (.startsWith name ambly-bonjour-name-prefix)
                 (.requestServiceInfo mdns-service (.getType service-event) (.getName service-event) 1))))
           (serviceRemoved [_ service-event]
             (swap! discovered-services dissoc (.getName service-event)))

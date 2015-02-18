@@ -38,11 +38,14 @@
 
     // Start up the WebDAV server
     self.davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:compilerOutputDirectory.path];
-//#if TARGET_IPHONE_SIMULATOR
-//    NSString* bonjourName = [NSString stringWithFormat:@"Ambly WebDAV Server on %@ runnng on %@", [UIDevice currentDevice].name, [[NSProcessInfo processInfo] hostName]];
-//#else
-    NSString* bonjourName = [NSString stringWithFormat:@"Ambly WebDAV Server on %@", [UIDevice currentDevice].name];
-//#endif
+#if TARGET_IPHONE_SIMULATOR
+    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ (%@)", [UIDevice currentDevice].name, [[NSProcessInfo processInfo] hostName]];
+#else
+    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@", [UIDevice currentDevice].name];
+#endif
+    
+    bonjourName = [self cleanseBonjourName:bonjourName];
+    
     [GCDWebDAVServer setLogLevel:2]; // Info
     [self.davServer startWithPort:8080 bonjourName:bonjourName];
     
@@ -69,6 +72,22 @@
             abort();
         }
     }
+}
+
+- (NSString*)cleanseBonjourName:(NSString*)bonjourName
+{
+    // Bonjour names  cannot contain dots
+    bonjourName = [bonjourName stringByReplacingOccurrencesOfString:@"." withString:@"-"];
+    // Bonjour names cannot be longer than 63 characters in UTF-8
+    
+    int upperBound = 63;
+    while (strlen(bonjourName.UTF8String) > 63) {
+        NSRange stringRange = {0, upperBound};
+        stringRange = [bonjourName rangeOfComposedCharacterSequencesForRange:stringRange];
+        bonjourName = [bonjourName substringWithRange:stringRange];
+        upperBound--;
+    }
+    return bonjourName;
 }
 
 @end
