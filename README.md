@@ -28,7 +28,7 @@ Open the `Ambly Demo.xcworkspace` in Xcode and run the app it in the simulator o
 
 In `ambly/Clojure` run `script/jscrepljs` to start the REPL. You will be presented with a list of discovered devices. Type the number of the device to connect to, or type 'R' to refresh the list. 
 
-(The initial connection to a device may take around 20 s to complete as `cljs.core` and other support is loaded onto it via WebDAV. Subsequent connections take 2–3 s as the on-device cache is used.)
+(The initial connection to a device may take around 20 s to complete as `cljs.core` and other support files are loaded onto it via WebDAV. Subsequent connections take 2–3 s as the on-device cache is used.)
 
 Here is a sample REPL startup sequence, illustrating device discovery and connection:
 
