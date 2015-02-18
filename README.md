@@ -35,7 +35,7 @@ $ script/jscrepljs
 To quit, type: :cljs/quit
 
 [1] iPod touch
-[2] iPhone Simulator (Mac Pro)
+[2] iPhone Simulator (My-Mac-Pro)
 
 [R] Refresh
 
@@ -43,7 +43,7 @@ Choice: r
 
 [1] iPod touch
 [2] iPad
-[3] iPhone Simulator (Mac Pro)
+[3] iPhone Simulator (My-Mac-Pro)
 
 [R] Refresh
 
