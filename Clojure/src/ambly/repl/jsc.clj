@@ -18,6 +18,9 @@
 
 (def ambly-bonjour-name-prefix "Ambly ")
 
+(defn is-ambly-bonjour-name? [bonjour-name]
+  (.startsWith bonjour-name ambly-bonjour-name-prefix))
+
 (defn bonjour-name->display-name
   [bonjour-name]
   (subs bonjour-name (count ambly-bonjour-name-prefix)))
@@ -43,16 +46,17 @@
         (reify ServiceListener
           (serviceAdded [_ service-event]
             (let [name (.getName service-event)]
-              (when (.startsWith name ambly-bonjour-name-prefix)
+              (when (is-ambly-bonjour-name? name)
                 (.requestServiceInfo mdns-service (.getType service-event) (.getName service-event) 1))))
           (serviceRemoved [_ service-event]
             (swap! name-endpoint-map dissoc (.getName service-event)))
           (serviceResolved [_ service-event]
-            (let [entry {(.getName service-event)
-                         (let [info (.getInfo service-event)]
-                           {:address (.getAddress info)
-                            :port    (.getPort info)})}]
-              (swap! name-endpoint-map merge entry))))]
+            (let [name (.getName service-event)]
+              (when (is-ambly-bonjour-name? name)
+                (let [entry {name (let [info (.getInfo service-event)]
+                                    {:address (.getAddress info)
+                                     :port    (.getPort info)})}]
+                  (swap! name-endpoint-map merge entry))))))]
     (try
       (.addServiceListener mdns-service reg-type service-listener)
       (loop [count 0]
