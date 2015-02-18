@@ -26,7 +26,9 @@ Open the `Ambly Demo.xcworkspace` in Xcode and run the app it in the simulator o
 
 **NOTE**: ClojureScript _master_ is currently required. (You will need to get the latest, build it, and update the `project.clj` file in `ambly/Clojure` to refer to your locally-built copy.)
 
-In `ambly/Clojure` run `script/jscrepljs` to start the REPL. You will be presented with a list of discovered devices. Type the number of the device to connect to, or type 'R' to refresh the list:
+In `ambly/Clojure` run `script/jscrepljs` to start the REPL. You will be presented with a list of discovered devices. Type the number of the device to connect to, or type 'R' to refresh the list. 
+
+The initial connection to a device may take around 20 s to complete as `cljs.core` and other support is loaded onto it via WebDAV. Subsequent connections take 2–3 s as the on-device cache is used.
 
 ```
 $ script/jscrepljs 
