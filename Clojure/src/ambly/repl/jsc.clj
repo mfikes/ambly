@@ -18,22 +18,26 @@
 
 (def ambly-bonjour-name-prefix "Ambly ")
 
-(defn service-name->display-name [service-name]
-  (subs service-name (count ambly-bonjour-name-prefix)))
+(defn bonjour-name->display-name
+  [bonjour-name]
+  (subs bonjour-name (count ambly-bonjour-name-prefix)))
 
-(defn service-map->choice-list [service-map]
-  (map vector (iterate inc 1) service-map))
+(defn name-endpoint-map->choice-list [name-endpoint-map]
+  (map vector (iterate inc 1) name-endpoint-map))
 
-(defn print-services [service-map]
-  (doseq [[choice-number [service-name _]] (service-map->choice-list service-map)]
-    (println (str "[" choice-number "] " (service-name->display-name service-name)))))
+(defn print-discovered-devices [name-endpoint-map]
+  (if (empty? name-endpoint-map)
+    (println "(No devices)")
+    (doseq [[choice-number [bonjour-name _]] (name-endpoint-map->choice-list name-endpoint-map)]
+      (println (str "[" choice-number "] " (bonjour-name->display-name bonjour-name))))))
 
-(defn discover-and-pick-ambly-instance
-  "Looks for Ambly WebDAV services advertised via Bonjour and presents
-  a simple command-line UI letting user pick one."
+(defn discover-and-choose-device
+  "Looks for Ambly WebDAV devices advertised via Bonjour and presents
+  a simple command-line UI letting user pick one, unless
+  choose-first-discovered? is set to true in which case the UI is bypassed"
   [choose-first-discovered?]
   (let [reg-type "_http._tcp.local."
-        discovered-services (atom (sorted-map))
+        name-endpoint-map (atom (sorted-map))
         mdns-service (JmDNS/create)
         service-listener
         (reify ServiceListener
@@ -42,37 +46,37 @@
               (when (.startsWith name ambly-bonjour-name-prefix)
                 (.requestServiceInfo mdns-service (.getType service-event) (.getName service-event) 1))))
           (serviceRemoved [_ service-event]
-            (swap! discovered-services dissoc (.getName service-event)))
+            (swap! name-endpoint-map dissoc (.getName service-event)))
           (serviceResolved [_ service-event]
             (let [entry {(.getName service-event)
                          (let [info (.getInfo service-event)]
                            {:address (.getAddress info)
                             :port    (.getPort info)})}]
-              (swap! discovered-services merge entry))))]
+              (swap! name-endpoint-map merge entry))))]
     (try
       (.addServiceListener mdns-service reg-type service-listener)
       (loop [count 0]
-        (when (empty? @discovered-services)
+        (when (empty? @name-endpoint-map)
           (Thread/sleep 100)
-          (when (= 1000 count)
-            (println "\nSearching ..."))
+          (when (= 20 count)
+            (println "\nSearching for devices ..."))
           (recur (inc count))))
       (Thread/sleep 500)                                    ;; Sleep a little more to catch stragglers
-      (loop [current-discovered-services @discovered-services]
+      (loop [current-name-endpoint-map @name-endpoint-map]
         (println)
-        (print-services current-discovered-services)
+        (print-discovered-devices current-name-endpoint-map)
         (when-not choose-first-discovered?
-          (println "\n[r] Refresh\n")
+          (println "\n[R] Refresh\n")
           (print "Choice: ")
           (flush))
         (let [choice (if choose-first-discovered? "1" (read-line))]
-          (if (= "r" choice)
-            (recur @discovered-services)
-            (let [choices (service-map->choice-list current-discovered-services)
-                  choice-ndx (try (dec (Long/parseLong choice)) (catch NumberFormatException _ nil))]
+          (if (= "r" (.toLowerCase choice))
+            (recur @name-endpoint-map)
+            (let [choices (name-endpoint-map->choice-list current-name-endpoint-map)
+                  choice-ndx (try (dec (Long/parseLong choice)) (catch NumberFormatException _ -1))]
               (if (< -1 choice-ndx (count choices))
                 (second (nth choices choice-ndx))
-                (recur current-discovered-services))))))
+                (recur current-name-endpoint-map))))))
       (finally
         (future
           (.removeServiceListener mdns-service reg-type service-listener)
@@ -187,16 +191,15 @@
 (defn setup
   [repl-env opts]
   (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/SEVERE)
-        [webdav-endpoint-name webdav-endpoint] (discover-and-pick-ambly-instance (:choose-first-discovered repl-env))
-        _ (println "\nConnecting to" (service-name->display-name webdav-endpoint-name) "...\n")
-        ; Assuming IPv4 for now
-        endpoint-address (.getHostAddress (:address webdav-endpoint))
-        endpoint-port (:port webdav-endpoint)
+        [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered repl-env))
+        endpoint-address (.getHostAddress (:address endpoint))
+        endpoint-port (:port endpoint)
         webdav-mount-point (str "/Volumes/Ambly-" endpoint-address)
         output-dir (io/file webdav-mount-point)
         _ (.mkdirs output-dir)
         env (ana/empty-env)
         core (io/resource "cljs/core.cljs")]
+    (println "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
     (reset! (:webdav-mount-point repl-env) webdav-mount-point)
     (shell/sh "mount_webdav" (str "http://" endpoint-address ":" endpoint-port) webdav-mount-point)
     (reset! (:socket repl-env)
