@@ -2,7 +2,7 @@
 
 ClojureScript REPL into iOS JavaScriptCore.
 
-Ambly is designed to be a great REPL for use in devloping hybrid iOS apps which target ClojureScript to an embedded instance of JavaScriptCore. The goal is to eliminate friction and make for a seamless experience.
+Ambly is designed to be a great REPL for use in devloping hybrid ClojureScript iOS apps. The goal is to eliminate friction and make for a seamless experience.
 
 Ambly comprises a ClojureScript REPL implementation, along with Objective-C code which interfaces with JavaScriptCore.
 
