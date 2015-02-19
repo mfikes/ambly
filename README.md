@@ -14,8 +14,6 @@ You must have Java 7 or later installed along with [Leiningen](http://leiningen.
 
 ### Demo App
 
-The included demo iOS app can be run either in the simulator or on a device.
-
 In `ambly/ObjectiveC/Ambly Demo` run `pod install`.
 
 Open the `Ambly Demo.xcworkspace` in Xcode and run it in the simulator or on a device.
@@ -24,9 +22,9 @@ Open the `Ambly Demo.xcworkspace` in Xcode and run it in the simulator or on a d
 
 **NOTE**: ClojureScript _master_ is currently required . (You will need clone [its repo](https://github.com/clojure/clojurescript), build it (`script/build`), and update the `project.clj` file in `ambly/Clojure`, revising `"0.0-2850"` to match the version number of your locally-built copy.)
 
-In `ambly/Clojure` run `script/jscrepljs` to start the REPL. You will be presented a list of auto-discovered simulators and/or devices to you can connect to.
+In `ambly/Clojure` run `script/jscrepljs` to start the REPL.
 
-Here is a sample REPL startup sequence, illustrating device discovery and connection:
+Here is a sample REPL startup sequence, illustrating device auto-discovery and connection:
 
 ```
 $ script/jscrepljs 
