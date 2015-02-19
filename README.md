@@ -77,7 +77,9 @@ For a better REPL experience you can install
 brew install rlwrap
 ```
 
-The `script/jscrepljs` script will detect that `rlwrap` is installed and use it. If manually starting the Ambly REPL, use:
+The `script/jscrepljs` script automatically use `rlwrap` if installed. 
+
+If manually starting the Ambly REPL, use:
 
 ```
 rlwrap lein trampoline run -m clojure.main
