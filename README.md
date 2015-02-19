@@ -24,7 +24,7 @@ Open the `Ambly Demo.xcworkspace` in Xcode and run it in the simulator or on a d
 
 ### REPL
 
-**NOTE**: ClojureScript _master_ is currently required . You will need clone [its repo](https://github.com/clojure/clojurescript), build it (`script/build`), and update the `project.clj` file in `ambly/Clojure`, revising `"0.0-2850"` to match the version number of your locally-built copy.
+**NOTE**: ClojureScript _master_ is currently required . You will need clone [its repo](https://github.com/clojure/clojurescript), build it (`script/build`), and update `ambly/Clojure/project.clj`, revising `"0.0-2850"` to match the version number of your locally-built copy.
 
 In `ambly/Clojure` run `script/jscrepljs` to start the REPL.
 
