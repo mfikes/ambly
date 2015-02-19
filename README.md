@@ -2,25 +2,24 @@
 
 ClojureScript REPL into iOS JavaScriptCore.
 
-Ambly is designed to be a great REPL for use in devloping hybrid ClojureScript iOS apps. The goal is to eliminate friction and make for a seamless experience.
+Ambly is a REPL designed for use when devloping hybrid ClojureScript iOS apps.
 
-Ambly comprises a ClojureScript REPL implementation, along with Objective-C code which interfaces with JavaScriptCore.
+Ambly comprises a ClojureScript REPL implementation, along with Objective-C code interfacing  JavaScriptCore.
 
-Ambly is currently under development. This repo includes a demo iOS app that you can use to give the REPL a spin.
-
-## Prerequisites
-
-You must have Xcode installed as well as support for [CocoaPods](http://cocoapods.org). 
-
-You must have Java 7 or later installed along with [Leiningen](http://leiningen.org).
+Ambly is under development. A demo iOS app is included so that you can give the REPL a spin!
 
 ## Running
+
+### Prerequisites
+
+You must have Xcode installed as well as support for [CocoaPods](http://cocoapods.org). 
+You must have Java 7 or later installed along with [Leiningen](http://leiningen.org).
 
 ### Demo App
 
 In `ambly/ObjectiveC/Ambly Demo` run `pod install`.
 
-Open the `Ambly Demo.xcworkspace` in Xcode and run the app in the simulator or on a device.
+Open `Ambly Demo.xcworkspace` in Xcode and run the app in the simulator or on a device.
 
 ### REPL
 
@@ -28,7 +27,7 @@ Open the `Ambly Demo.xcworkspace` in Xcode and run the app in the simulator or o
 
 In `ambly/Clojure` run `script/jscrepljs` to start the REPL.
 
-Here is a sample REPL startup sequence, illustrating device auto-discovery and connection:
+Here is a sample REPL startup sequence, illustrating device auto-discovery:
 
 ```
 $ script/jscrepljs 
@@ -69,7 +68,7 @@ If you would like to manually start the Ambly REPL, first start a Clojure REPL w
 
 ### rlwrap
 
-For a better REPL experience you can install
+For a better REPL experience (keyboard input editing and history support), you can install
 [rlwrap](http://utopia.knoware.nl/~hlub/uck/rlwrap/) under OS X with
 [Homebrew](http://brew.sh/):
 
