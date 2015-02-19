@@ -20,7 +20,7 @@ You must have Java 7 or later installed along with [Leiningen](http://leiningen.
 
 In `ambly/ObjectiveC/Ambly Demo` run `pod install`.
 
-Open the `Ambly Demo.xcworkspace` in Xcode and run it in the simulator or on a device.
+Open the `Ambly Demo.xcworkspace` in Xcode and run the app in the simulator or on a device.
 
 ### REPL
 
