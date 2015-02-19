@@ -2,46 +2,35 @@
 
 ClojureScript REPL into iOS JavaScriptCore.
 
+Ambly is currently under development. This repo includes a demo iOS app that you can use to give the REPL a spin.
+
 ## Prerequisites
 
-### Xcode/iOS
-
-You must have Xcode installed as well as support for [CocoaPods](http://cocoapods.org).
-
-### Clojure/ClojueScript
+You must have Xcode installed as well as support for [CocoaPods](http://cocoapods.org). 
 
 You must have Java 7 or later installed along with [Leiningen](http://leiningen.org).
 
 ## Running
 
-The embedded JavaScriptCore instance is hosted inside an iOS app (either in the simulator or on-device).
+### Demo App
 
-### Xcode Demo Project
+The included demo iOS app can be run either in the simulator or on a device.
 
 In `ambly/ObjectiveC/Ambly Demo` run `pod install`.
 
-Open the `Ambly Demo.xcworkspace` in Xcode and run the app it in the simulator or on a device.
+Open the `Ambly Demo.xcworkspace` in Xcode and run it in the simulator or on a device.
 
 ### REPL
 
-**NOTE**: ClojureScript _master_ is currently required. (You will need to get the latest, build it, and update the `project.clj` file in `ambly/Clojure` to refer to your locally-built copy.)
+**NOTE**: ClojureScript _master_ is currently required . (You will need clone [its repo](https://github.com/clojure/clojurescript), build it (`script/build`), and update the `project.clj` file in `ambly/Clojure`, revising `"0.0-2850"` to match the version number of your locally-built copy.)
 
-In `ambly/Clojure` run `script/jscrepljs` to start the REPL. You will be presented with a list of discovered devices. Type the number of the device to connect to, or type 'R' to refresh the list. 
-
-(The initial connection to a device may take around 20 s to complete as `cljs.core` and other support files are loaded onto it via WebDAV. Subsequent connections take 2–3 s as the on-device cache is used.)
+In `ambly/Clojure` run `script/jscrepljs` to start the REPL. You will be presented a list of auto-discovered simulators and/or devices to you can connect to.
 
 Here is a sample REPL startup sequence, illustrating device discovery and connection:
 
 ```
 $ script/jscrepljs 
 To quit, type: :cljs/quit
-
-[1] iPod touch
-[2] iPhone Simulator (My-Mac-Pro)
-
-[R] Refresh
-
-Choice: r
 
 [1] iPod touch
 [2] iPad
@@ -74,7 +63,7 @@ If you would like to manually start the Ambly REPL, first start a Clojure REPL w
    :source-map true})
 ```
 
-Note that currently starting the Ambly REPL with plain `lein repl` is not supported until upstream ClojureScript REPL issues are resolved.
+**NOTE**: Starting the Ambly REPL with plain `lein repl` is currently not supported until upstream ClojureScript REPL issues are resolved.
 
 ### rlwrap
 
