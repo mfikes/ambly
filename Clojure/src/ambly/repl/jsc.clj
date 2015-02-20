@@ -28,17 +28,17 @@
 (defn name-endpoint-map->choice-list [name-endpoint-map]
   (map vector (iterate inc 1) name-endpoint-map))
 
-(defn print-discovered-devices [name-endpoint-map]
+(defn print-discovered-devices [name-endpoint-map opts]
   (if (empty? name-endpoint-map)
-    (println "(No devices)")
+    ((:print opts) "(No devices)")
     (doseq [[choice-number [bonjour-name _]] (name-endpoint-map->choice-list name-endpoint-map)]
-      (println (str "[" choice-number "] " (bonjour-name->display-name bonjour-name))))))
+      ((:print opts) (str "[" choice-number "] " (bonjour-name->display-name bonjour-name))))))
 
 (defn discover-and-choose-device
   "Looks for Ambly WebDAV devices advertised via Bonjour and presents
   a simple command-line UI letting user pick one, unless
   choose-first-discovered? is set to true in which case the UI is bypassed"
-  [choose-first-discovered?]
+  [choose-first-discovered? opts]
   (let [reg-type "_http._tcp.local."
         name-endpoint-map (atom (sorted-map))
         mdns-service (JmDNS/create)
@@ -63,16 +63,16 @@
         (when (empty? @name-endpoint-map)
           (Thread/sleep 100)
           (when (= 20 count)
-            (println "\nSearching for devices ..."))
+            ((:print opts) "\nSearching for devices ..."))
           (recur (inc count))))
       (Thread/sleep 500)                                    ;; Sleep a little more to catch stragglers
       (loop [current-name-endpoint-map @name-endpoint-map]
-        (println)
-        (print-discovered-devices current-name-endpoint-map)
+        ((:print opts))
+        (print-discovered-devices current-name-endpoint-map opts)
         (when-not choose-first-discovered?
-          (println "\n[R] Refresh\n")
-          (print "Choice: ")
-          (flush))
+          ((:print opts) "\n[R] Refresh\n")
+          ((:print-no-newline opts) "Choice: ")
+          ((:flush opts)))
         (let [choice (if choose-first-discovered? "1" (read-line))]
           (if (= "r" (.toLowerCase choice))
             (recur @name-endpoint-map)
@@ -100,7 +100,7 @@
   (.write out (int 0)) ;; terminator
   (.flush out))
 
-(defn read-messages [^BufferedReader in response-promise]
+(defn read-messages [^BufferedReader in response-promise opts]
   (loop [sb (StringBuilder.) c (.read in)]
     (cond
       (= c -1) (do
@@ -108,8 +108,8 @@
                    (deliver resp-promise :eof))
                  :eof)
       (= c 1) (do
-                (print (str sb))
-                (flush)
+                ((:print-no-newline opts) (str sb))
+                ((:flush opts))
                 (recur (StringBuilder.) (.read in)))
       (= c 0) (do
                 (deliver @response-promise (str sb))
@@ -120,11 +120,11 @@
 
 (defn start-reading-messages
   "Starts a thread reading inbound messages."
-  [repl-env]
+  [repl-env opts]
   (.start
         (Thread.
           #(try
-            (let [rv (read-messages (:in @(:socket repl-env)) (:response-promise repl-env))]
+            (let [rv (read-messages (:in @(:socket repl-env)) (:response-promise repl-env) opts)]
               (when (= :eof rv)
                 (close-socket @(:socket repl-env))))
             (catch IOException e
@@ -195,7 +195,7 @@
 (defn setup
   [repl-env opts]
   (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/OFF)
-        [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered repl-env))
+        [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered repl-env) opts)
         endpoint-address (.getHostAddress (:address endpoint))
         endpoint-port (:port endpoint)
         webdav-mount-point (str "/Volumes/Ambly-" endpoint-address)
@@ -203,13 +203,13 @@
         _ (.mkdirs output-dir)
         env (ana/empty-env)
         core (io/resource "cljs/core.cljs")]
-    (println "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
+    ((:print opts) "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
     (reset! (:webdav-mount-point repl-env) webdav-mount-point)
     (shell/sh "mount_webdav" (str "http://" endpoint-address ":" endpoint-port) webdav-mount-point)
     (reset! (:socket repl-env)
       (socket endpoint-address (:port repl-env)))
     ;; Start dedicated thread to read messages from socket
-    (start-reading-messages repl-env)
+    (start-reading-messages repl-env opts)
     ;; compile cljs.core & its dependencies, goog/base.js must be available
     ;; for bootstrap to load, use new closure/compile as it can handle
     ;; resources in JARs
@@ -272,7 +272,7 @@
   (-print-stacktrace [_ stacktrace _ build-options]
     (doseq [{:keys [function file url line column]}
             (repl/mapped-stacktrace stacktrace build-options)]
-      (println "\t" (str function " (" (str (or url file)) ":" line ":" column ")"))))
+      ((:print repl/*repl-opts*) "\t" (str function " (" (str (or url file)) ":" line ":" column ")"))))
   repl/IJavaScriptEnv
   (-setup [repl-env opts]
     (setup repl-env opts))
