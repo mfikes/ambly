@@ -266,21 +266,21 @@
 
 (defrecord JscEnv [host port socket response-promise webdav-mount-point choose-first-discovered]
   repl/IParseStacktrace
-  (-parse-stacktrace [this stacktrace error opts]
-    (raw-stacktrace->canonical-stacktrace stacktrace opts))
+  (-parse-stacktrace [_ stacktrace _ build-options]
+    (raw-stacktrace->canonical-stacktrace stacktrace build-options))
   repl/IPrintStacktrace
-  (-print-stacktrace [repl-env stacktrace error build-options]
+  (-print-stacktrace [_ stacktrace _ build-options]
     (doseq [{:keys [function file url line column]}
-            (cljs.repl/mapped-stacktrace stacktrace build-options)]
+            (repl/mapped-stacktrace stacktrace build-options)]
       (println "\t" (str function " (" (str (or url file)) ":" line ":" column ")"))))
   repl/IJavaScriptEnv
-  (-setup [this opts]
-    (setup this opts))
-  (-evaluate [this filename line js]
-    (jsc-eval this js))
-  (-load [this provides url]
-    (load-javascript this provides url))
-  (-tear-down [this]
+  (-setup [repl-env opts]
+    (setup repl-env opts))
+  (-evaluate [repl-env _ _ js]
+    (jsc-eval repl-env js))
+  (-load [repl-env provides url]
+    (load-javascript repl-env provides url))
+  (-tear-down [_]
     (shell/sh "umount" @webdav-mount-point)
     (close-socket @socket)
     (shutdown-agents)))
