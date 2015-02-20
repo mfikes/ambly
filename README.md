@@ -64,8 +64,6 @@ If you would like to manually start the Ambly REPL, first start a Clojure REPL w
    :source-map true})
 ```
 
-**NOTE**: Starting the Ambly REPL with plain `lein repl` is currently not supported until upstream ClojureScript REPL issues are resolved.
-
 ### rlwrap
 
 For a better REPL experience (keyboard input editing and history support), you can install
