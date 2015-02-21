@@ -23,8 +23,6 @@ Open `Ambly Demo.xcworkspace` in Xcode and run the app in the simulator or on a 
 
 ### REPL
 
-**NOTE**: ClojureScript _master_ is currently required . You will need clone [its repo](https://github.com/clojure/clojurescript), build it (`script/build`), and update `ambly/Clojure/project.clj`, revising `"0.0-2850"` to match the version number of your locally-built copy.
-
 In `ambly/Clojure` run `script/jscrepljs` to start the REPL.
 
 Here is a sample REPL startup sequence, illustrating device auto-discovery:
