@@ -46,7 +46,7 @@ void uncaughtExceptionHandler(NSException *exception) {
     // Start up the WebDAV server
     self.davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:compilerOutputDirectory.path];
 #if TARGET_IPHONE_SIMULATOR
-    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ (%@)", [UIDevice currentDevice].name, [[NSProcessInfo processInfo] hostName]];
+    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ (%@)", [UIDevice currentDevice].model, [[NSProcessInfo processInfo] hostName]];
 #else
     NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@", [UIDevice currentDevice].name];
 #endif
