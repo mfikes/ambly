@@ -190,7 +190,7 @@
             if (found) {
                 self.inputBufferBytesScanned = 0;
             } else {
-                self.inputBufferBytesScanned += BUFFER_SIZE;
+                self.inputBufferBytesScanned += len;
             }
         }
     } else if (eventCode == NSStreamEventHasSpaceAvailable) {
