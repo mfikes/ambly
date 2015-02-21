@@ -4,7 +4,45 @@
 #include <netinet/in.h>
 #include <CoreFoundation/CoreFoundation.h>
 #import <JavaScriptCore/JavaScriptCore.h>
-#import "ABYMessage.h"
+
+/**
+ An `ABYMessage` is an immutable value container for message
+ payloads and terminators.
+ */
+@interface ABYMessage : NSObject
+
+/**
+ The message payload
+ */
+@property (nonatomic, strong) NSData* payload;
+
+/**
+ The message terminator. `0` is used for responses and `1` is used for async prints.
+ */
+@property (nonatomic) uint8_t terminator;
+
+/**
+ Inits this message with a payload and terminator
+ @param payload the payload
+ @param terminator the terminator
+ */
+-(id)initWithPayload:(NSData*)payload terminator:(uint8_t)terminator;
+
+@end
+
+@implementation ABYMessage
+
+-(id)initWithPayload:(NSData*)payload terminator:(uint8_t)terminator
+{
+    if (self = [super init]) {
+        self.payload = payload;
+        self.terminator = terminator;
+    }
+    
+    return self;
+}
+
+@end
 
 @interface ABYServer()
 
