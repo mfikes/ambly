@@ -292,7 +292,7 @@ void handleConnect (
     }
 }
 
--(void)startListening:(short)port forContext:(JSContext*)jsContext {
+-(BOOL)startListening:(unsigned short)port forContext:(JSContext*)jsContext {
     
     self.confinedThread = [NSThread currentThread];
     
@@ -329,8 +329,12 @@ void handleConnect (
                                     (UInt8 *)&sin,
                                     sizeof(sin));
     
-    CFSocketSetAddress(myipv4cfsock, sincfd);
+    CFSocketError sock4err = CFSocketSetAddress(myipv4cfsock, sincfd);
     CFRelease(sincfd);
+    if (sock4err != kCFSocketSuccess) {
+        NSLog(@"Failed to listen on IPv4 for port %d", port);
+        return NO;
+    }
     
     struct sockaddr_in6 sin6;
     
@@ -345,8 +349,12 @@ void handleConnect (
                                      (UInt8 *)&sin6,
                                      sizeof(sin6));
     
-    CFSocketSetAddress(myipv6cfsock, sin6cfd);
+    CFSocketError sock6err = CFSocketSetAddress(myipv6cfsock, sin6cfd);
     CFRelease(sin6cfd);
+    if (sock6err != kCFSocketSuccess) {
+        NSLog(@"Failed to listen on IPv6 for port %d", port);
+        return NO;
+    }
     
     
     CFRunLoopSourceRef socketsource = CFSocketCreateRunLoopSource(
@@ -368,6 +376,8 @@ void handleConnect (
                        CFRunLoopGetCurrent(),
                        socketsource6,
                        kCFRunLoopDefaultMode);
+    
+    return YES;
     
 }
 
