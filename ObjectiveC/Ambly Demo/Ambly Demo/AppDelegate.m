@@ -12,9 +12,16 @@
 
 @end
 
+void uncaughtExceptionHandler(NSException *exception) {
+    NSLog(@"CRASH: %@", exception);
+    NSLog(@"Stack Trace: %@", [exception callStackSymbols]);
+}
+
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    
+    NSSetUncaughtExceptionHandler(&uncaughtExceptionHandler);
     
     // Shut down the idle timer so that you can easily experiment
     // with the demo app from a device that is not connected to a Mac
