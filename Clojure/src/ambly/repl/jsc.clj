@@ -195,7 +195,7 @@
 (defn setup
   [repl-env opts]
   (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/OFF)
-        [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered repl-env) opts)
+        [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered (:options repl-env)) opts)
         endpoint-address (.getHostAddress (:address endpoint))
         endpoint-port (:port endpoint)
         webdav-mount-point (str "/Volumes/Ambly-" endpoint-address)
@@ -266,7 +266,7 @@
                  (aget (.. js/goog -dependencies_ -nameToPath) name)))))))
     {:merge-opts {:output-dir webdav-mount-point}}))
 
-(defrecord JscEnv [host port socket response-promise webdav-mount-point choose-first-discovered]
+(defrecord JscEnv [host port socket response-promise webdav-mount-point options]
   repl/IReplEnvOptions
   (-repl-options [this]
     {:require-foreign true})
@@ -288,15 +288,16 @@
   (-tear-down [_]
     (shell/sh "umount" @webdav-mount-point)
     (close-socket @socket)
-    (shutdown-agents)))
+    (when (:shutdown-agents-on-quit options)
+      (shutdown-agents))))
 
 (defn repl-env* [options]
-  (let [{:keys [host port choose-first-discovered]}
+  (let [{:keys [host port] :as opts}
         (merge
           {:host "localhost"
            :port 50505}
           options)]
-    (JscEnv. host port (atom nil) (atom nil) (atom nil) choose-first-discovered)))
+    (JscEnv. host port (atom nil) (atom nil) (atom nil) opts)))
 
 (defn repl-env
   [& {:as options}]
