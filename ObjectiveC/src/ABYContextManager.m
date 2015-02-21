@@ -19,12 +19,21 @@
         self.context = [[JSContext alloc] init];
         self.compilerOutputDirectory = compilerOutputDirectory;
         
+        [self setupGlobalContext];
         [self setUpExceptionLogging];
         [self setUpConsoleLog];
         [self setUpTimerFunctionality];
         [self setUpRequire];
     }
     return self;
+}
+
+/**
+ Sets up global context, needed by foreign dependencies like React.
+ */
+- (void)setupGlobalContext
+{
+    [self.context evaluateScript:@"var global = this"];
 }
 
 /**
