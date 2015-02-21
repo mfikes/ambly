@@ -265,6 +265,9 @@
     {:merge-opts {:output-dir webdav-mount-point}}))
 
 (defrecord JscEnv [host port socket response-promise webdav-mount-point choose-first-discovered]
+  repl/IReplEnvOptions
+  (-repl-options [this]
+    {:require-foreign true})
   repl/IParseStacktrace
   (-parse-stacktrace [_ stacktrace _ build-options]
     (raw-stacktrace->canonical-stacktrace stacktrace build-options))
