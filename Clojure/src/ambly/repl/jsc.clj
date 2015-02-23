@@ -192,11 +192,6 @@
   {:pre [(or (string? path) (instance? File path))]}
   (form-require-expr-js (str "'" path "'")))
 
-(defn caught
-  [e repl-env opts]
-  (repl/repl-caught e repl-env opts)
-  (throw e))
-
 (defn tear-down
   [repl-env]
   (when-let [webdav-mount-point @(:webdav-mount-point repl-env)]
