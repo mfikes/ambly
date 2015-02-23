@@ -192,79 +192,97 @@
   {:pre [(or (string? path) (instance? File path))]}
   (form-require-expr-js (str "'" path "'")))
 
+(defn caught
+  [e repl-env opts]
+  (repl/repl-caught e repl-env opts)
+  (throw e))
+
+(defn tear-down
+  [repl-env]
+  (when-let [webdav-mount-point @(:webdav-mount-point repl-env)]
+    (shell/sh "umount" webdav-mount-point))
+  (when-let [socket @(:socket repl-env)]
+    (close-socket socket))
+  (when (:shutdown-agents-on-quit (:options repl-env))
+    (shutdown-agents)))
+
 (defn setup
   [repl-env opts]
-  (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/OFF)
-        [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered (:options repl-env)) opts)
-        endpoint-address (.getHostAddress (:address endpoint))
-        endpoint-port (:port endpoint)
-        webdav-mount-point (str "/Volumes/Ambly-" endpoint-address)
-        output-dir (io/file webdav-mount-point)
-        env (ana/empty-env)
-        core (io/resource "cljs/core.cljs")]
-    ((:print opts) "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
-    (reset! (:webdav-mount-point repl-env) webdav-mount-point)
-    (when (.exists output-dir)
-      (shell/sh "umount" webdav-mount-point))
-    (.mkdirs output-dir)
-    (shell/sh "mount_webdav" (str "http://" endpoint-address ":" endpoint-port) webdav-mount-point)
-    (reset! (:socket repl-env)
-      (socket endpoint-address (:port repl-env)))
-    ;; Start dedicated thread to read messages from socket
-    (start-reading-messages repl-env opts)
-    ;; compile cljs.core & its dependencies, goog/base.js must be available
-    ;; for bootstrap to load, use new closure/compile as it can handle
-    ;; resources in JARs
-    (let [core-js (closure/compile core
-                    (assoc opts
-                      :output-dir webdav-mount-point
-                      :output-file
-                      (closure/src-file->target-file core)))
-          deps (closure/add-dependencies opts core-js)]
-      ;; output unoptimized code and the deps file
-      ;; for all compiled namespaces
-      (apply closure/output-unoptimized
-        (assoc opts
-          :output-dir webdav-mount-point
-          :output-to (.getPath (io/file output-dir "ambly_repl_deps.js")))
-        deps))
-    ;; Set up CLOSURE_IMPORT_SCRIPT function, injecting path
-    (jsc-eval repl-env
-      (str "CLOSURE_IMPORT_SCRIPT = function(src) {"
-        (form-require-expr-js
-          (str "'goog" File/separator "' + src"))
-        "return true; };"))
-    ;; bootstrap
-    (jsc-eval repl-env
-      (form-require-path-js (io/file "goog" "base.js")))
-    ;; load the deps file so we can goog.require cljs.core etc.
-    (jsc-eval repl-env
-      (form-require-path-js (io/file "ambly_repl_deps.js")))
-    ;; monkey-patch isProvided_ to avoid useless warnings - David
-    (jsc-eval repl-env
-      (str "goog.isProvided_ = function(x) { return false; };"))
-    ;; monkey-patch goog.require, skip all the loaded checks
-    (repl/evaluate-form repl-env env "<cljs repl>"
-      '(set! (.-require js/goog)
-         (fn [name]
-           (js/CLOSURE_IMPORT_SCRIPT
-             (aget (.. js/goog -dependencies_ -nameToPath) name)))))
-    ;; load cljs.core, setup printing
-    (repl/evaluate-form repl-env env "<cljs repl>"
-      '(do
-         (.require js/goog "cljs.core")
-         (set-print-fn! js/out.write)))
-    ;; redef goog.require to track loaded libs
-    (repl/evaluate-form repl-env env "<cljs repl>"
-      '(do
-         (set! *loaded-libs* #{"cljs.core"})
-         (set! (.-require js/goog)
-           (fn [name reload]
-             (when (or (not (contains? *loaded-libs* name)) reload)
-               (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
-               (js/CLOSURE_IMPORT_SCRIPT
-                 (aget (.. js/goog -dependencies_ -nameToPath) name)))))))
-    {:merge-opts {:output-dir webdav-mount-point}}))
+  (try
+    (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/OFF)
+          [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered (:options repl-env)) opts)
+          endpoint-address (.getHostAddress (:address endpoint))
+          endpoint-port (:port endpoint)
+          webdav-mount-point (str "/Volumes/Ambly-" endpoint-address)
+          output-dir (io/file webdav-mount-point)
+          env (ana/empty-env)
+          core (io/resource "cljs/core.cljs")]
+      ((:print opts) "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
+      (reset! (:webdav-mount-point repl-env) webdav-mount-point)
+      (when (.exists output-dir)
+        (shell/sh "umount" webdav-mount-point))
+      (.mkdirs output-dir)
+      (shell/sh "mount_webdav" (str "http://" endpoint-address ":" endpoint-port) webdav-mount-point)
+      (reset! (:socket repl-env)
+        (socket endpoint-address (:port repl-env)))
+      ;; Start dedicated thread to read messages from socket
+      (start-reading-messages repl-env opts)
+      ;; compile cljs.core & its dependencies, goog/base.js must be available
+      ;; for bootstrap to load, use new closure/compile as it can handle
+      ;; resources in JARs
+      (let [core-js (closure/compile core
+                      (assoc opts
+                        :output-dir webdav-mount-point
+                        :output-file
+                        (closure/src-file->target-file core)))
+            deps (closure/add-dependencies opts core-js)]
+        ;; output unoptimized code and the deps file
+        ;; for all compiled namespaces
+        (apply closure/output-unoptimized
+          (assoc opts
+            :output-dir webdav-mount-point
+            :output-to (.getPath (io/file output-dir "ambly_repl_deps.js")))
+          deps))
+      ;; Set up CLOSURE_IMPORT_SCRIPT function, injecting path
+      (jsc-eval repl-env
+        (str "CLOSURE_IMPORT_SCRIPT = function(src) {"
+          (form-require-expr-js
+            (str "'goog" File/separator "' + src"))
+          "return true; };"))
+      ;; bootstrap
+      (jsc-eval repl-env
+        (form-require-path-js (io/file "goog" "base.js")))
+      ;; load the deps file so we can goog.require cljs.core etc.
+      (jsc-eval repl-env
+        (form-require-path-js (io/file "ambly_repl_deps.js")))
+      ;; monkey-patch isProvided_ to avoid useless warnings - David
+      (jsc-eval repl-env
+        (str "goog.isProvided_ = function(x) { return false; };"))
+      ;; monkey-patch goog.require, skip all the loaded checks
+      (repl/evaluate-form repl-env env "<cljs repl>"
+        '(set! (.-require js/goog)
+           (fn [name]
+             (js/CLOSURE_IMPORT_SCRIPT
+               (aget (.. js/goog -dependencies_ -nameToPath) name)))))
+      ;; load cljs.core, setup printing
+      (repl/evaluate-form repl-env env "<cljs repl>"
+        '(do
+           (.require js/goog "cljs.core")
+           (set-print-fn! js/out.write)))
+      ;; redef goog.require to track loaded libs
+      (repl/evaluate-form repl-env env "<cljs repl>"
+        '(do
+           (set! *loaded-libs* #{"cljs.core"})
+           (set! (.-require js/goog)
+             (fn [name reload]
+               (when (or (not (contains? *loaded-libs* name)) reload)
+                 (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
+                 (js/CLOSURE_IMPORT_SCRIPT
+                   (aget (.. js/goog -dependencies_ -nameToPath) name)))))))
+      {:merge-opts {:output-dir webdav-mount-point}})
+    (catch Throwable t
+      (tear-down repl-env)
+      (throw t))))
 
 (defrecord JscEnv [host port socket response-promise webdav-mount-point options]
   repl/IReplEnvOptions
@@ -285,11 +303,8 @@
     (jsc-eval repl-env js))
   (-load [repl-env provides url]
     (load-javascript repl-env provides url))
-  (-tear-down [_]
-    (shell/sh "umount" @webdav-mount-point)
-    (close-socket @socket)
-    (when (:shutdown-agents-on-quit options)
-      (shutdown-agents))))
+  (-tear-down [repl-env]
+    (tear-down repl-env)))
 
 (defn repl-env* [options]
   (let [{:keys [host port] :as opts}
