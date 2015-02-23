@@ -17,6 +17,11 @@ void uncaughtExceptionHandler(NSException *exception) {
     NSLog(@"Stack Trace: %@", [exception callStackSymbols]);
 }
 
+/*
+ * Note: A lot of the code and logic in this class is potentially useful for anyone developing Ambly-enabled
+ * apps, and is simply here in the demo app for the time being. See https://github.com/omcljs/ambly/issues/39
+ */
+
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
