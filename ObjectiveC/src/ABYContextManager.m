@@ -7,6 +7,8 @@
 
 // The context being managed
 @property (strong, nonatomic) JSContext* context;
+
+// The compiler output directory
 @property (strong, nonatomic) NSURL* compilerOutputDirectory;
 
 @end

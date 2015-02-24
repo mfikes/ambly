@@ -1,14 +1,12 @@
 #import "AppDelegate.h"
 
-#import "ABYServer.h"
 #import "ABYContextManager.h"
-#import "GCDWebDAVServer.h"
+#import "ABYServer.h"
 
 @interface AppDelegate ()
 
 @property (strong, nonatomic) ABYContextManager* contextManager;
 @property (strong, nonatomic) ABYServer* replServer;
-@property (strong, nonatomic) GCDWebDAVServer* davServer;
 
 @end
 
@@ -16,11 +14,6 @@ void uncaughtExceptionHandler(NSException *exception) {
     NSLog(@"CRASH: %@", exception);
     NSLog(@"Stack Trace: %@", [exception callStackSymbols]);
 }
-
-/*
- * Note: A lot of the code and logic in this class is potentially useful for anyone developing Ambly-enabled
- * apps, and is simply here in the demo app for the time being. See https://github.com/omcljs/ambly/issues/39
- */
 
 @implementation AppDelegate
 
@@ -39,30 +32,15 @@ void uncaughtExceptionHandler(NSException *exception) {
     
     // Set up the compiler output directory
     NSURL* compilerOutputDirectory = [[self privateDocumentsDirectory] URLByAppendingPathComponent:@"cljs-out"];
-    
-    // Ensure compiler output directory exists
     [self createDirectoriesUpTo:compilerOutputDirectory];
     
-    // Start up the REPL server
+    // Set up our context
     self.contextManager = [[ABYContextManager alloc] initWithCompilerOutputDirectory:compilerOutputDirectory];
-    self.replServer = [[ABYServer alloc] init];
-    BOOL success = [self.replServer startListening:50505 forContext:self.contextManager.context];
-
-    if (success) {
-        // Start up the WebDAV server
-        self.davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:compilerOutputDirectory.path];
-#if TARGET_IPHONE_SIMULATOR
-        NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ (%@)", [UIDevice currentDevice].model, [[NSProcessInfo processInfo] hostName]];
-#else
-        NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@", [UIDevice currentDevice].name];
-#endif
-        
-        bonjourName = [self cleanseBonjourName:bonjourName];
-        
-        [GCDWebDAVServer setLogLevel:2]; // Info
-        [self.davServer startWithPort:8080 bonjourName:bonjourName];
-    }
     
+    self.replServer = [[ABYServer alloc] initWithContext:self.contextManager.context
+                                 compilerOutputDirectory:compilerOutputDirectory];
+    [self.replServer startListening:50505];
+
     return YES;
 }
 
@@ -86,22 +64,6 @@ void uncaughtExceptionHandler(NSException *exception) {
             abort();
         }
     }
-}
-
-- (NSString*)cleanseBonjourName:(NSString*)bonjourName
-{
-    // Bonjour names  cannot contain dots
-    bonjourName = [bonjourName stringByReplacingOccurrencesOfString:@"." withString:@"-"];
-    // Bonjour names cannot be longer than 63 characters in UTF-8
-    
-    int upperBound = 63;
-    while (strlen(bonjourName.UTF8String) > 63) {
-        NSRange stringRange = {0, upperBound};
-        stringRange = [bonjourName rangeOfComposedCharacterSequencesForRange:stringRange];
-        bonjourName = [bonjourName substringWithRange:stringRange];
-        upperBound--;
-    }
-    return bonjourName;
 }
 
 @end

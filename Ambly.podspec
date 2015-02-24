@@ -9,4 +9,5 @@ Pod::Spec.new do |s|
   s.source_files    = 'ObjectiveC/src/*.{h,m}'
   s.platform        = :ios
   s.requires_arc    = true
+  s.dependency "GCDWebServer/WebDAV", "~> 3.2.2"
 end

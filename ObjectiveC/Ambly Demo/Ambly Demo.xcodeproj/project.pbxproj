@@ -8,22 +8,18 @@
 
 /* Begin PBXBuildFile section */
 		EB386310CA1795C2F38E53DD /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8421BD0F847CD3A5A6AB8276 /* libPods.a */; };
-		ED0928C91A81C67E00DB90BE /* ABYContextManager.m in Sources */ = {isa = PBXBuildFile; fileRef = ED0928C81A81C67E00DB90BE /* ABYContextManager.m */; };
 		ED387D1F1A602B56007E40A2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = ED387D1E1A602B56007E40A2 /* main.m */; };
 		ED387D221A602B56007E40A2 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = ED387D211A602B56007E40A2 /* AppDelegate.m */; };
 		ED387D251A602B56007E40A2 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = ED387D241A602B56007E40A2 /* ViewController.m */; };
 		ED387D281A602B56007E40A2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ED387D261A602B56007E40A2 /* Main.storyboard */; };
 		ED387D2A1A602B56007E40A2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ED387D291A602B56007E40A2 /* Images.xcassets */; };
 		ED387D2D1A602B56007E40A2 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = ED387D2B1A602B56007E40A2 /* LaunchScreen.xib */; };
-		EDEF2D2A1A605D8A00AEDFF6 /* ABYServer.m in Sources */ = {isa = PBXBuildFile; fileRef = EDEF2D291A605D8A00AEDFF6 /* ABYServer.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		189D2BD4775C4255534FEA43 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		8421BD0F847CD3A5A6AB8276 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		E0FE70D7629FF1EB446AB132 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
-		ED0928C71A81C67E00DB90BE /* ABYContextManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ABYContextManager.h; sourceTree = "<group>"; };
-		ED0928C81A81C67E00DB90BE /* ABYContextManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ABYContextManager.m; sourceTree = "<group>"; };
 		ED387D191A602B56007E40A2 /* Ambly Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Ambly Demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED387D1D1A602B56007E40A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		ED387D1E1A602B56007E40A2 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -34,8 +30,6 @@
 		ED387D271A602B56007E40A2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		ED387D291A602B56007E40A2 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		ED387D2C1A602B56007E40A2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
-		EDEF2D281A605D8A00AEDFF6 /* ABYServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ABYServer.h; sourceTree = "<group>"; };
-		EDEF2D291A605D8A00AEDFF6 /* ABYServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ABYServer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,7 +82,6 @@
 		ED387D1B1A602B56007E40A2 /* Ambly Demo */ = {
 			isa = PBXGroup;
 			children = (
-				EDEF2D271A605D8A00AEDFF6 /* Ambly src */,
 				ED387D201A602B56007E40A2 /* AppDelegate.h */,
 				ED387D211A602B56007E40A2 /* AppDelegate.m */,
 				ED387D231A602B56007E40A2 /* ViewController.h */,
@@ -108,18 +101,6 @@
 				ED387D1E1A602B56007E40A2 /* main.m */,
 			);
 			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		EDEF2D271A605D8A00AEDFF6 /* Ambly src */ = {
-			isa = PBXGroup;
-			children = (
-				ED0928C71A81C67E00DB90BE /* ABYContextManager.h */,
-				ED0928C81A81C67E00DB90BE /* ABYContextManager.m */,
-				EDEF2D281A605D8A00AEDFF6 /* ABYServer.h */,
-				EDEF2D291A605D8A00AEDFF6 /* ABYServer.m */,
-			);
-			name = "Ambly src";
-			path = ../../src;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -229,8 +210,6 @@
 			files = (
 				ED387D251A602B56007E40A2 /* ViewController.m in Sources */,
 				ED387D221A602B56007E40A2 /* AppDelegate.m in Sources */,
-				EDEF2D2A1A605D8A00AEDFF6 /* ABYServer.m in Sources */,
-				ED0928C91A81C67E00DB90BE /* ABYContextManager.m in Sources */,
 				ED387D1F1A602B56007E40A2 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

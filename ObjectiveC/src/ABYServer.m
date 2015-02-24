@@ -3,7 +3,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <UIKit/UIDevice.h>
 #import <JavaScriptCore/JavaScriptCore.h>
+#import "GCDWebDAVServer.h"
 
 /**
  An `ABYMessage` is an immutable value container for message
@@ -52,6 +54,12 @@
 // The context this server is wrapping
 @property (strong, nonatomic) JSContext* jsContext;
 
+// The WebDAV server
+@property (strong, nonatomic) GCDWebDAVServer* davServer;
+
+// The compiler output directory
+@property (strong, nonatomic) NSURL* compilerOutputDirectory;
+
 // The streams to the REPL. Non-nil iff connected.
 @property (strong, nonatomic) NSInputStream* inputStream;
 @property (strong, nonatomic) NSOutputStream* outputStream;
@@ -70,6 +78,15 @@
 @end
 
 @implementation ABYServer
+
+-(id)initWithContext:(JSContext*)context compilerOutputDirectory:(NSURL*)compilerOutputDirectory
+{
+    if (self = [super init]) {
+        self.jsContext = context;
+        self.compilerOutputDirectory = compilerOutputDirectory;
+    }
+    return self;
+}
 
 -(BOOL)isReplConnected
 {
@@ -292,12 +309,10 @@ void handleConnect (
     }
 }
 
--(BOOL)startListening:(unsigned short)port forContext:(JSContext*)jsContext {
+-(BOOL)startListening:(unsigned short)port {
     
     self.confinedThread = [NSThread currentThread];
-    
-    self.jsContext = jsContext;
-    
+        
     [self setUpPrintCapability];
 
     CFSocketContext socketCtxt = {0, (__bridge void *)self, NULL, NULL, NULL};
@@ -377,8 +392,43 @@ void handleConnect (
                        socketsource6,
                        kCFRunLoopDefaultMode);
     
+    
+    [self setUpWebDav];
+    
     return YES;
     
+}
+
+- (void)setUpWebDav
+{
+    // Start up the WebDAV server
+    self.davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:self.compilerOutputDirectory.path];
+#if TARGET_IPHONE_SIMULATOR
+    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ (%@)", [UIDevice currentDevice].model, [[NSProcessInfo processInfo] hostName]];
+#else
+    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@", [UIDevice currentDevice].name];
+#endif
+    
+    bonjourName = [self cleanseBonjourName:bonjourName];
+    
+    [GCDWebDAVServer setLogLevel:2]; // Info
+    [self.davServer startWithPort:8080 bonjourName:bonjourName];
+}
+
+- (NSString*)cleanseBonjourName:(NSString*)bonjourName
+{
+    // Bonjour names  cannot contain dots
+    bonjourName = [bonjourName stringByReplacingOccurrencesOfString:@"." withString:@"-"];
+    // Bonjour names cannot be longer than 63 characters in UTF-8
+    
+    int upperBound = 63;
+    while (strlen(bonjourName.UTF8String) > 63) {
+        NSRange stringRange = {0, upperBound};
+        stringRange = [bonjourName rangeOfComposedCharacterSequencesForRange:stringRange];
+        bonjourName = [bonjourName substringWithRange:stringRange];
+        upperBound--;
+    }
+    return bonjourName;
 }
 
 @end
