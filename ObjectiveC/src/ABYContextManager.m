@@ -28,17 +28,20 @@
     return self;
 }
 
-/**
- Sets up global context, needed by foreign dependencies like React.
- */
+-(id)initWithContext:(JSContext*)context compilerOutputDirectory:(NSURL*)compilerOutputDirectory
+{
+    if (self = [super init]) {
+        self.context = context;
+        self.compilerOutputDirectory = compilerOutputDirectory;
+    }
+    return self;
+}
+
 - (void)setupGlobalContext
 {
     [self.context evaluateScript:@"var global = this"];
 }
 
-/**
- Sets up exception logging for the wrapped context.
- */
 - (void)setUpExceptionLogging
 {
     self.context.exceptionHandler = ^(JSContext *context, JSValue *exception) {
@@ -47,9 +50,6 @@
     };
 }
 
-/**
- Sets up console logging for the wrapped context.
- */
 - (void)setUpConsoleLog
 {
     [self.context evaluateScript:@"var console = {}"];
@@ -58,9 +58,6 @@
     };
 }
 
-/**
- Sets up timer functionality for the wrapped context.
- */
 - (void)setUpTimerFunctionality
 {
     static volatile int32_t counter = 0;
@@ -84,9 +81,6 @@
     };
 }
 
-/**
- Sets up `require` capability for the wrapped context.
- */
 - (void)setUpRequire
 {
     __weak typeof(self) weakSelf = self;
@@ -106,6 +100,58 @@
         
         return [JSValue valueWithUndefinedInContext:currentContext];
     };
+}
+
+-(void)bootstrapWithDepsFilePath:(NSString*)depsFilePath googBasePath:(NSString*)googBasePath
+{
+    // This implementation mirrors the bootstrapping code that is in -setup
+    
+    // Setup CLOSURE_IMPORT_SCRIPT
+    [self.context evaluateScript:@"CLOSURE_IMPORT_SCRIPT = function(src) { require('goog/' + src); return true; }"];
+    
+    // Load goog base
+    NSString *baseScriptString = [NSString stringWithContentsOfFile:googBasePath encoding:NSUTF8StringEncoding error:nil];
+     NSAssert(baseScriptString != nil, @"The goog base JavaScript text could not be loaded");
+    [self.context evaluateScript:baseScriptString];
+    
+    // Load the deps file
+    NSString *depsScriptString = [NSString stringWithContentsOfFile:depsFilePath encoding:NSUTF8StringEncoding error:nil];
+    NSAssert(depsScriptString != nil, @"The deps JavaScript text could not be loaded");
+    [self.context evaluateScript:depsScriptString];
+    
+    [self.context evaluateScript:@"goog.isProvided_ = function(x) { return false; };"];
+    
+    [self.context evaluateScript:@"goog.require = function (name) { return CLOSURE_IMPORT_SCRIPT(goog.dependencies_.nameToPath[name]); };"];
+    
+    [self.context evaluateScript:@"goog.require('cljs.core');"];
+    
+    // TODO Is there a better way for the impl below that avoids making direct calls to
+    // ClojureScript compiled artifacts? (Complex and perhaps also fragile).
+    
+     // redef goog.require to track loaded libs
+    [self.context evaluateScript:@"cljs.core._STAR_loaded_libs_STAR_ = new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, ['cljs.core',null], null), null);\n"
+     "\n"
+     "goog.require = (function (name,reload){\n"
+     "   if(cljs.core.truth_((function (){var or__4112__auto__ = !(cljs.core.contains_QMARK_.call(null,cljs.core._STAR_loaded_libs_STAR_,name));\n"
+     "       if(or__4112__auto__){\n"
+     "           return or__4112__auto__;\n"
+     "       } else {\n"
+     "           return reload;\n"
+     "       }\n"
+     "   })())){\n"
+     "       cljs.core._STAR_loaded_libs_STAR_ = cljs.core.conj.call(null,(function (){var or__4112__auto__ = cljs.core._STAR_loaded_libs_STAR_;\n"
+     "           if(cljs.core.truth_(or__4112__auto__)){\n"
+     "               return or__4112__auto__;\n"
+     "           } else {\n"
+     "               return cljs.core.PersistentHashSet.EMPTY;\n"
+     "           }\n"
+     "       })(),name);\n"
+     "       \n"
+     "       return CLOSURE_IMPORT_SCRIPT((goog.dependencies_.nameToPath[name]));\n"
+     "   } else {\n"
+     "       return null;\n"
+     "   }\n"
+     "});"];
 }
 
 @end
