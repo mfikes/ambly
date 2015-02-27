@@ -427,7 +427,13 @@ void handleConnect (
     NSString* appName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
     
 #if TARGET_IPHONE_SIMULATOR
-    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ on %@ (%@)", appName, [UIDevice currentDevice].model, [[NSProcessInfo processInfo] hostName]];
+    
+    NSString* hostName = [[NSProcessInfo processInfo] hostName];
+    if ([hostName hasSuffix:@".local"]) {
+        hostName = [hostName substringToIndex:hostName.length - 6];
+    }
+    
+    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ on %@ (%@)", appName, [UIDevice currentDevice].model, hostName];
 #else
     NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ on %@", appName, [UIDevice currentDevice].name];
 #endif
