@@ -208,7 +208,7 @@
           [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered (:options repl-env)) opts)
           endpoint-address (.getHostAddress (:address endpoint))
           endpoint-port (:port endpoint)
-          webdav-mount-point (str "/Volumes/Ambly-" endpoint-address)
+          webdav-mount-point (str "/Volumes/Ambly-" endpoint-address ":" endpoint-port)
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
           core (io/resource "cljs/core.cljs")]

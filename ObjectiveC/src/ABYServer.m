@@ -356,7 +356,6 @@ void handleConnect (
     CFSocketError sock4err = CFSocketSetAddress(myipv4cfsock, sincfd);
     CFRelease(sincfd);
     if (sock4err != kCFSocketSuccess) {
-        NSLog(@"Failed to listen on IPv4 for port %d", port);
         return NO;
     }
     
@@ -376,7 +375,6 @@ void handleConnect (
     CFSocketError sock6err = CFSocketSetAddress(myipv6cfsock, sin6cfd);
     CFRelease(sin6cfd);
     if (sock6err != kCFSocketSuccess) {
-        NSLog(@"Failed to listen on IPv6 for port %d", port);
         return NO;
     }
     
@@ -425,10 +423,13 @@ void handleConnect (
 {
     // Start up the WebDAV server
     self.davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:self.compilerOutputDirectory.path];
+    
+    NSString* appName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
+    
 #if TARGET_IPHONE_SIMULATOR
-    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ (%@)", [UIDevice currentDevice].model, [[NSProcessInfo processInfo] hostName]];
+    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ on %@ (%@)", appName, [UIDevice currentDevice].model, [[NSProcessInfo processInfo] hostName]];
 #else
-    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@", [UIDevice currentDevice].name];
+    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ on %@", appName, [UIDevice currentDevice].name];
 #endif
     
     bonjourName = [self cleanseBonjourName:bonjourName];
