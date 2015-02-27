@@ -310,6 +310,15 @@ void handleConnect (
 }
 
 -(BOOL)startListening:(unsigned short)port {
+    for (unsigned short attemptPort = port; port < 65535; attemptPort += 2) {
+        if ([self attemptStartListening:attemptPort]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+-(BOOL)attemptStartListening:(unsigned short)port {
     
     self.confinedThread = [NSThread currentThread];
         
@@ -393,13 +402,26 @@ void handleConnect (
                        kCFRunLoopDefaultMode);
     
     
-    [self startWebDavWithPort:port + 1];
+    BOOL startedWebDAV = [self startWebDavWithPort:port + 1];
     
-    return YES;
+    if (!startedWebDAV) {
+        // Clean up TCP
+        CFRunLoopRemoveSource(
+                              CFRunLoopGetCurrent(),
+                              socketsource6,
+                              kCFRunLoopDefaultMode);
+        
+        CFRunLoopRemoveSource(
+                              CFRunLoopGetCurrent(),
+                              socketsource,
+                              kCFRunLoopDefaultMode);
+    }
+    
+    return startedWebDAV;
     
 }
 
-- (void)startWebDavWithPort:(NSUInteger)port
+- (BOOL)startWebDavWithPort:(NSUInteger)port
 {
     // Start up the WebDAV server
     self.davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:self.compilerOutputDirectory.path];
@@ -412,7 +434,7 @@ void handleConnect (
     bonjourName = [self cleanseBonjourName:bonjourName];
     
     [GCDWebDAVServer setLogLevel:2]; // Info
-    [self.davServer startWithPort:port bonjourName:bonjourName];
+    return [self.davServer startWithPort:port bonjourName:bonjourName];
 }
 
 - (NSString*)cleanseBonjourName:(NSString*)bonjourName

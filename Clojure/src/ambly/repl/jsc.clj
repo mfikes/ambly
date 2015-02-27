@@ -219,7 +219,7 @@
       (.mkdirs output-dir)
       (shell/sh "mount_webdav" (str "http://" endpoint-address ":" endpoint-port) webdav-mount-point)
       (reset! (:socket repl-env)
-        (socket endpoint-address (:port repl-env)))
+        (socket endpoint-address (dec endpoint-port)))
       ;; Start dedicated thread to read messages from socket
       (start-reading-messages repl-env opts)
       ;; compile cljs.core & its dependencies, goog/base.js must be available
@@ -279,7 +279,7 @@
       (tear-down repl-env)
       (throw t))))
 
-(defrecord JscEnv [host port socket response-promise webdav-mount-point options]
+(defrecord JscEnv [socket response-promise webdav-mount-point options]
   repl/IReplEnvOptions
   (-repl-options [this]
     {:require-foreign true})
@@ -302,12 +302,7 @@
     (tear-down repl-env)))
 
 (defn repl-env* [options]
-  (let [{:keys [host port] :as opts}
-        (merge
-          {:host "localhost"
-           :port 50505}
-          options)]
-    (JscEnv. host port (atom nil) (atom nil) (atom nil) opts)))
+  (JscEnv. (atom nil) (atom nil) (atom nil) options))
 
 (defn repl-env
   [& {:as options}]
