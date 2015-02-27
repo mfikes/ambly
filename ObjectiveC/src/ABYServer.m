@@ -393,13 +393,13 @@ void handleConnect (
                        kCFRunLoopDefaultMode);
     
     
-    [self setUpWebDav];
+    [self startWebDavWithPort:port + 1];
     
     return YES;
     
 }
 
-- (void)setUpWebDav
+- (void)startWebDavWithPort:(NSUInteger)port
 {
     // Start up the WebDAV server
     self.davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:self.compilerOutputDirectory.path];
@@ -412,7 +412,7 @@ void handleConnect (
     bonjourName = [self cleanseBonjourName:bonjourName];
     
     [GCDWebDAVServer setLogLevel:2]; // Info
-    [self.davServer startWithPort:8080 bonjourName:bonjourName];
+    [self.davServer startWithPort:port bonjourName:bonjourName];
 }
 
 - (NSString*)cleanseBonjourName:(NSString*)bonjourName
