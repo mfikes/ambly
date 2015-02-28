@@ -19,7 +19,7 @@
 
 /**
  Starts server listening and wrapping a context.
- @param jsContext the context to wrap
+ 
  @return YES iff successful
  */
 -(BOOL)startListening;
