@@ -257,11 +257,7 @@
             }
         }
     } else if (eventCode == NSStreamEventEndEncountered) {
-        [ABYServer tearDownStream:self.inputStream];
-        self.inputStream = nil;
-        [ABYServer tearDownStream:self.outputStream];
-        self.outputStream = nil;
-        self.queuedMessages = nil;
+        [self tearDown];
     }
 }
 
@@ -279,6 +275,19 @@
     [stream setDelegate:nil];
 }
 
+-(void)tearDown
+{
+    if (self.inputStream) {
+        [ABYServer tearDownStream:self.inputStream];
+        self.inputStream = nil;
+    }
+    
+    if (self.outputStream) {
+        [ABYServer tearDownStream:self.outputStream];
+        self.outputStream = nil;
+    }
+}
+
 void handleConnect (
                     CFSocketRef s,
                     CFSocketCallBackType callbackType,
@@ -288,7 +297,7 @@ void handleConnect (
                     )
 {
     if( callbackType & kCFSocketAcceptCallBack)
-    {        
+    {
         CFReadStreamRef clientInput = NULL;
         CFWriteStreamRef clientOutput = NULL;
         
@@ -296,7 +305,11 @@ void handleConnect (
         
         CFStreamCreatePairWithSocket(kCFAllocatorDefault, nativeSocketHandle, &clientInput, &clientOutput);
         
+        CFReadStreamSetProperty(clientInput, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
+        CFWriteStreamSetProperty(clientOutput, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
+        
         ABYServer* server = (__bridge ABYServer*)info;
+        [server tearDown];
         
         NSInputStream* inputStream = (__bridge NSInputStream*)clientInput;
         NSOutputStream* outputStream = (__bridge NSOutputStream*)clientOutput;
