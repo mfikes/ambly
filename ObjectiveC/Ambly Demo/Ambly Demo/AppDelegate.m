@@ -39,7 +39,10 @@ void uncaughtExceptionHandler(NSException *exception) {
     
     self.replServer = [[ABYServer alloc] initWithContext:self.contextManager.context
                                  compilerOutputDirectory:compilerOutputDirectory];
-    [self.replServer startListening:50505];
+    BOOL successful = [self.replServer startListening];
+    if (!successful) {
+        NSLog(@"Failed to start REPL server.");
+    }
 
     return YES;
 }

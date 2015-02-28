@@ -309,8 +309,9 @@ void handleConnect (
     }
 }
 
--(BOOL)startListening:(unsigned short)port {
-    for (unsigned short attemptPort = port; port < 65535; attemptPort += 2) {
+-(BOOL)startListening {
+    
+    for (unsigned short attemptPort = 49152; attemptPort != 0; attemptPort += 2) {
         if ([self attemptStartListening:attemptPort]) {
             return YES;
         }

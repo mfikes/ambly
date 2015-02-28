@@ -19,10 +19,9 @@
 
 /**
  Starts server listening and wrapping a context.
- @param port the port to listen on
  @param jsContext the context to wrap
  @return YES iff successful
  */
--(BOOL)startListening:(unsigned short)port;
+-(BOOL)startListening;
 
 @end
