@@ -25,7 +25,7 @@
         [self setUpExceptionLogging];
         [self setUpConsoleLog];
         [self setUpTimerFunctionality];
-        [self setUpRequire];
+        [self setUpAmblyRequire];
     }
     return self;
 }
@@ -83,11 +83,11 @@
     };
 }
 
-- (void)setUpRequire
+- (void)setUpAmblyRequire
 {
     __weak typeof(self) weakSelf = self;
     
-    self.context[@"require"] = ^(NSString *path) {
+    self.context[@"amblyRequire"] = ^(NSString *path) {
         
         NSString* readPath = [NSString stringWithFormat:@"%@/%@", weakSelf.compilerOutputDirectory.path, path];
         
@@ -109,7 +109,7 @@
     // This implementation mirrors the bootstrapping code that is in -setup
     
     // Setup CLOSURE_IMPORT_SCRIPT
-    [self.context evaluateScript:@"CLOSURE_IMPORT_SCRIPT = function(src) { require('goog/' + src); return true; }"];
+    [self.context evaluateScript:@"CLOSURE_IMPORT_SCRIPT = function(src) { amblyRequire('goog/' + src); return true; }"];
     
     // Load goog base
     NSString *baseScriptString = [NSString stringWithContentsOfFile:googBasePath encoding:NSUTF8StringEncoding error:nil];

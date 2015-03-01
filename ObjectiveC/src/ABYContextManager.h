@@ -53,9 +53,9 @@
 - (void)setUpTimerFunctionality;
 
 /**
- Sets up `require` capability for the managed context.
+ Sets up `amblyRequire` capability for the managed context.
  */
-- (void)setUpRequire;
+- (void)setUpAmblyRequire;
 
 /**
  Bootstraps the JavaScript environment so that goog require is set up to work properly.

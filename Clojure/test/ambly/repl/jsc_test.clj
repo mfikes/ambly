@@ -5,8 +5,8 @@
 
 (deftest form-require-expr-js-test
   (testing "Dynamic Path in /tmp"
-    (is (= "require('/tmp/' + x);" (form-require-expr-js "'/tmp/' + x")))))
+    (is (= "amblyRequire('/tmp/' + x);" (form-ambly-require-expr-js "'/tmp/' + x")))))
 
 (deftest form-require-path-js-test
   (testing "Path in /tmp"
-    (is (= "require('/tmp/foo.js');" (form-require-path-js (io/file "/tmp" "foo.js"))))))
+    (is (= "amblyRequire('/tmp/foo.js');" (form-ambly-require-path-js (io/file "/tmp" "foo.js"))))))
