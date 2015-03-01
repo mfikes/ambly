@@ -181,7 +181,7 @@
     (str "goog.require('" (comp/munge (first provides)) "')")))
 
 (defn form-ambly-require-expr-js
-  "Takes a JavaScript path expression anf forms a `amblyRequire` command."
+  "Takes a JavaScript path expression and forms an `amblyRequire` command."
   [path-expr]
   {:pre [(string? path-expr)]}
   (str "amblyRequire(" path-expr ");"))
