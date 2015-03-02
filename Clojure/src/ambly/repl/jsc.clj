@@ -222,58 +222,59 @@
         (socket endpoint-address (dec endpoint-port)))
       ;; Start dedicated thread to read messages from socket
       (start-reading-messages repl-env opts)
-      ;; compile cljs.core & its dependencies, goog/base.js must be available
-      ;; for bootstrap to load, use new closure/compile as it can handle
-      ;; resources in JARs
-      (let [core-js (closure/compile core
-                      (assoc opts
-                        :output-dir webdav-mount-point
-                        :output-file
-                        (closure/src-file->target-file core)))
-            deps (closure/add-dependencies opts core-js)]
-        ;; output unoptimized code and the deps file
-        ;; for all compiled namespaces
-        (apply closure/output-unoptimized
-          (assoc opts
-            :output-dir webdav-mount-point
-            :output-to (.getPath (io/file output-dir "ambly_repl_deps.js")))
-          deps))
-      ;; Set up CLOSURE_IMPORT_SCRIPT function, injecting path
-      (jsc-eval repl-env
-        (str "CLOSURE_IMPORT_SCRIPT = function(src) {"
-          (form-ambly-require-expr-js
-            (str "'goog" File/separator "' + src"))
-          "return true; };"))
-      ;; bootstrap
-      (jsc-eval repl-env
-        (form-ambly-require-path-js (io/file "goog" "base.js")))
-      ;; load the deps file so we can goog.require cljs.core etc.
-      (jsc-eval repl-env
-        (form-ambly-require-path-js (io/file "ambly_repl_deps.js")))
-      ;; monkey-patch isProvided_ to avoid useless warnings - David
-      (jsc-eval repl-env
-        (str "goog.isProvided_ = function(x) { return false; };"))
-      ;; monkey-patch goog.require, skip all the loaded checks
-      (repl/evaluate-form repl-env env "<cljs repl>"
-        '(set! (.-require js/goog)
-           (fn [name]
-             (js/CLOSURE_IMPORT_SCRIPT
-               (aget (.. js/goog -dependencies_ -nameToPath) name)))))
-      ;; load cljs.core, setup printing
-      (repl/evaluate-form repl-env env "<cljs repl>"
-        '(do
-           (.require js/goog "cljs.core")
-           (set-print-fn! js/out.write)))
-      ;; redef goog.require to track loaded libs
-      (repl/evaluate-form repl-env env "<cljs repl>"
-        '(do
-           (set! *loaded-libs* #{"cljs.core"})
-           (set! (.-require js/goog)
-             (fn [name reload]
-               (when (or (not (contains? *loaded-libs* name)) reload)
-                 (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
-                 (js/CLOSURE_IMPORT_SCRIPT
-                   (aget (.. js/goog -dependencies_ -nameToPath) name)))))))
+      (when (= "true" (:value (jsc-eval repl-env "typeof cljs === 'undefined'")))
+        ;; compile cljs.core & its dependencies, goog/base.js must be available
+        ;; for bootstrap to load, use new closure/compile as it can handle
+        ;; resources in JARs
+        (let [core-js (closure/compile core
+                        (assoc opts
+                          :output-dir webdav-mount-point
+                          :output-file
+                          (closure/src-file->target-file core)))
+              deps (closure/add-dependencies opts core-js)]
+          ;; output unoptimized code and the deps file
+          ;; for all compiled namespaces
+          (apply closure/output-unoptimized
+            (assoc opts
+              :output-dir webdav-mount-point
+              :output-to (.getPath (io/file output-dir "ambly_repl_deps.js")))
+            deps))
+        ;; Set up CLOSURE_IMPORT_SCRIPT function, injecting path
+        (jsc-eval repl-env
+          (str "CLOSURE_IMPORT_SCRIPT = function(src) {"
+            (form-ambly-require-expr-js
+              (str "'goog" File/separator "' + src"))
+            "return true; };"))
+        ;; bootstrap
+        (jsc-eval repl-env
+          (form-ambly-require-path-js (io/file "goog" "base.js")))
+        ;; load the deps file so we can goog.require cljs.core etc.
+        (jsc-eval repl-env
+          (form-ambly-require-path-js (io/file "ambly_repl_deps.js")))
+        ;; monkey-patch isProvided_ to avoid useless warnings - David
+        (jsc-eval repl-env
+          (str "goog.isProvided_ = function(x) { return false; };"))
+        ;; monkey-patch goog.require, skip all the loaded checks
+        (repl/evaluate-form repl-env env "<cljs repl>"
+          '(set! (.-require js/goog)
+             (fn [name]
+               (js/CLOSURE_IMPORT_SCRIPT
+                 (aget (.. js/goog -dependencies_ -nameToPath) name)))))
+        ;; load cljs.core, setup printing
+        (repl/evaluate-form repl-env env "<cljs repl>"
+          '(do
+             (.require js/goog "cljs.core")
+             (set-print-fn! js/out.write)))
+        ;; redef goog.require to track loaded libs
+        (repl/evaluate-form repl-env env "<cljs repl>"
+          '(do
+             (set! *loaded-libs* #{"cljs.core"})
+             (set! (.-require js/goog)
+               (fn [name reload]
+                 (when (or (not (contains? *loaded-libs* name)) reload)
+                   (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
+                   (js/CLOSURE_IMPORT_SCRIPT
+                     (aget (.. js/goog -dependencies_ -nameToPath) name))))))))
       {:merge-opts {:output-dir webdav-mount-point}})
     (catch Throwable t
       (tear-down repl-env)
