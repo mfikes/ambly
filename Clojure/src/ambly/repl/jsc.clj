@@ -142,7 +142,12 @@
       {:file     (str (io/file (util/output-directory opts) file))
        :function function
        :line     (Long/parseLong line)
-       :column   (Long/parseLong column)})))
+       :column   (Long/parseLong column)}
+      (when-not (string/blank? stack-line)
+        {:file nil
+         :function (string/trim stack-line)
+         :line nil
+         :column nil}))))
 
 (defn raw-stacktrace->canonical-stacktrace
   "Parse a raw JSC stack representation, parsing it into stack frames.
@@ -291,7 +296,11 @@
   (-print-stacktrace [_ stacktrace _ build-options]
     (doseq [{:keys [function file url line column]}
             (repl/mapped-stacktrace stacktrace build-options)]
-      ((:print repl/*repl-opts*) "\t" (str function " (" (str (or url file)) ":" line ":" column ")"))))
+      (let [url (when url (string/trim (.toString url)))
+            file (when file (string/trim (.toString file)))]
+       ((:print repl/*repl-opts*)
+        "\t" (str (when function (str function " "))
+               "(" (str (or url file)) (when line (str ":" line)) (when column (str ":" column)) ")")))))
   repl/IJavaScriptEnv
   (-setup [repl-env opts]
     (setup repl-env opts))
