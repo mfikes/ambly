@@ -461,7 +461,7 @@ void handleConnect (
     
     bonjourName = [self cleanseBonjourName:bonjourName];
     
-    [GCDWebDAVServer setLogLevel:2]; // Info
+    [GCDWebDAVServer setLogLevel:3]; // Warning
     return [self.davServer startWithPort:port bonjourName:bonjourName];
 }
 
