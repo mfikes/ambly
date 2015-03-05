@@ -56,7 +56,7 @@
 {
     [self.context evaluateScript:@"var console = {}"];
     self.context[@"console"][@"log"] = ^(NSString *message) {
-        NSLog(@"JS: %@", message);
+        NSLog(@"%@", message);
     };
 }
 

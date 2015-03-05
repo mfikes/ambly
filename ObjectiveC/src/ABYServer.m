@@ -121,14 +121,22 @@
 
 -(void)setUpPrintCapability
 {
-    [self.jsContext evaluateScript:@"var out = {}"];
-    self.jsContext[@"out"][@"write"] = ^(NSString *message) {
-        NSAssert([NSThread currentThread] == self.confinedThread, @"Called on unexpected thread");
-        if ([self isReplConnected]) {
+    __weak typeof(self) weakSelf = self;
+    self.jsContext[@"AMBLY_PRINT_FN"] = ^(NSString *message) {
+        NSCAssert([NSThread currentThread] == weakSelf.confinedThread, @"Called on unexpected thread");
+        if ([weakSelf isReplConnected]) {
             NSData* payload = [message dataUsingEncoding:NSUTF8StringEncoding];
-            [self sendMessage:[[ABYMessage alloc] initWithPayload:payload terminator:1]];
+            [weakSelf sendMessage:[[ABYMessage alloc] initWithPayload:payload terminator:1]];
+        } else {
+            NSLog(@"%@", message);
         }
     };
+    
+    // If bootstrapping an app, the context may have already
+    // been bootstrapped for ClojureScript. If so, set *print-fn*
+    // now. Otherwise, the REPL Clojure side will set *print-fn*
+    // after bootstrapping for ClojureScript over the TCP connection.
+    [self.jsContext evaluateScript:@"if (typeof cljs !== 'undefined') { cljs.core.set_print_fn_BANG_.call(null,AMBLY_PRINT_FN); }"];
 }
 
 -(void)evaluateJavaScriptAndSendResponse:(NSString*)javaScript
@@ -326,6 +334,7 @@ void handleConnect (
     
     for (unsigned short attemptPort = 49152; attemptPort != 0; attemptPort += 2) {
         if ([self attemptStartListening:attemptPort]) {
+            [self setUpPrintCapability];
             return YES;
         }
     }
@@ -336,8 +345,6 @@ void handleConnect (
     
     self.confinedThread = [NSThread currentThread];
         
-    [self setUpPrintCapability];
-
     CFSocketContext socketCtxt = {0, (__bridge void *)self, NULL, NULL, NULL};
     
     CFSocketRef myipv4cfsock = CFSocketCreate(
