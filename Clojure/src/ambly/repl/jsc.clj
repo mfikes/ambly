@@ -13,6 +13,15 @@
            [java.io File BufferedReader BufferedWriter IOException]
            (javax.jmdns JmDNS ServiceListener)))
 
+(defn print-fn [opts]
+  (or (:print-no-newline opts) print))
+
+(defn println-fn [opts]
+  (or (:print opts) println))
+
+(defn flush-fn [opts]
+  (or (:flush opts) flush))
+
 (defn set-logging-level [logger-name level]
   (.setLevel (java.util.logging.Logger/getLogger logger-name) level))
 
@@ -30,9 +39,9 @@
 
 (defn print-discovered-devices [name-endpoint-map opts]
   (if (empty? name-endpoint-map)
-    ((:print opts) "(No devices)")
+    ((println-fn opts) "(No devices)")
     (doseq [[choice-number [bonjour-name _]] (name-endpoint-map->choice-list name-endpoint-map)]
-      ((:print opts) (str "[" choice-number "] " (bonjour-name->display-name bonjour-name))))))
+      ((println-fn opts) (str "[" choice-number "] " (bonjour-name->display-name bonjour-name))))))
 
 (defn discover-and-choose-device
   "Looks for Ambly WebDAV devices advertised via Bonjour and presents
@@ -63,16 +72,16 @@
         (when (empty? @name-endpoint-map)
           (Thread/sleep 100)
           (when (= 20 count)
-            ((:print opts) "\nSearching for devices ..."))
+            ((println-fn opts) "\nSearching for devices ..."))
           (recur (inc count))))
       (Thread/sleep 500)                                    ;; Sleep a little more to catch stragglers
       (loop [current-name-endpoint-map @name-endpoint-map]
-        ((:print opts))
+        ((println-fn opts))
         (print-discovered-devices current-name-endpoint-map opts)
         (when-not choose-first-discovered?
-          ((:print opts) "\n[R] Refresh\n")
-          ((:print-no-newline opts) "Choice: ")
-          ((:flush opts)))
+          ((println-fn opts) "\n[R] Refresh\n")
+          ((print-fn opts) "Choice: ")
+          ((flush-fn opts)))
         (let [choice (if choose-first-discovered? "1" (read-line))]
           (if (= "r" (.toLowerCase choice))
             (recur @name-endpoint-map)
@@ -108,8 +117,8 @@
                    (deliver resp-promise :eof))
                  :eof)
       (= c 1) (do
-                ((:print-no-newline opts) (str sb))
-                ((:flush opts))
+                ((print-fn opts) (str sb))
+                ((flush-fn opts))
                 (recur (StringBuilder.) (.read in)))
       (= c 0) (do
                 (deliver @response-promise (str sb))
@@ -217,7 +226,7 @@
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
           core (io/resource "cljs/core.cljs")]
-      ((:print opts) "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
+      ((println-fn opts) "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
       (reset! (:webdav-mount-point repl-env) webdav-mount-point)
       (when (.exists output-dir)
         (shell/sh "umount" webdav-mount-point))
@@ -298,7 +307,7 @@
             (repl/mapped-stacktrace stacktrace build-options)]
       (let [url (when url (string/trim (.toString url)))
             file (when file (string/trim (.toString file)))]
-       ((:print repl/*repl-opts*)
+       ((println-fn repl/*repl-opts*)
         "\t" (str (when function (str function " "))
                "(" (str (or url file)) (when line (str ":" line)) (when column (str ":" column)) ")")))))
   repl/IJavaScriptEnv
