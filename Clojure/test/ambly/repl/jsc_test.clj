@@ -3,10 +3,10 @@
             [ambly.repl.jsc :refer :all]
             [clojure.java.io :as io]))
 
-(deftest form-require-expr-js-test
+(deftest form-amply-import-script-expr-js-test
   (testing "Dynamic Path in /tmp"
-    (is (= "amblyRequire('/tmp/' + x);" (form-ambly-require-expr-js "'/tmp/' + x")))))
+    (is (= "AMBLY_IMPORT_SCRIPT('/tmp/' + x);" (form-ambly-import-script-expr-js "'/tmp/' + x")))))
 
-(deftest form-require-path-js-test
+(deftest form-ambly-import-script-path-js-test
   (testing "Path in /tmp"
-    (is (= "amblyRequire('/tmp/foo.js');" (form-ambly-require-path-js (io/file "/tmp" "foo.js"))))))
+    (is (= "AMBLY_IMPORT_SCRIPT('/tmp/foo.js');" (form-ambly-import-script-path-js (io/file "/tmp" "foo.js"))))))

@@ -53,9 +53,9 @@
 - (void)setUpTimerFunctionality;
 
 /**
- Sets up `amblyRequire` capability for the managed context.
+ Sets up `AMBLY_IMPORT_SCRIPT` capability for the managed context.
  */
-- (void)setUpAmblyRequire;
+- (void)setUpAmblyImportScript;
 
 /**
  Bootstraps the JavaScript environment so that goog require is set up to work properly.
