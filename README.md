@@ -56,7 +56,7 @@ If you would like to manually start the Ambly REPL, first start a Clojure REPL w
 ```
 
 ```clojure
-(repl/repl* (jsc/repl-env) {:source-map true})
+(repl/repl* (jsc/repl-env) {})
 ```
 
 ### rlwrap
