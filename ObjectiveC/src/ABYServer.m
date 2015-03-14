@@ -48,9 +48,6 @@
 
 @interface ABYServer()
 
-// All calls on this class should be confined to this single thread
-@property (strong, nonatomic) NSThread* confinedThread;
-
 // The context this server is wrapping
 @property (strong, nonatomic) JSContext* jsContext;
 
@@ -123,7 +120,6 @@
 {
     __weak typeof(self) weakSelf = self;
     self.jsContext[@"AMBLY_PRINT_FN"] = ^(NSString *message) {
-        NSCAssert([NSThread currentThread] == weakSelf.confinedThread, @"Called on unexpected thread");
         if ([weakSelf isReplConnected]) {
             NSData* payload = [message dataUsingEncoding:NSUTF8StringEncoding];
             [weakSelf sendMessage:[[ABYMessage alloc] initWithPayload:payload terminator:1]];
@@ -226,8 +222,6 @@
 
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode
 {
-    NSAssert([NSThread currentThread] == self.confinedThread, @"Called on unexpected thread");
-    
     if (eventCode == NSStreamEventHasBytesAvailable) {
         if(!self.inputBuffer) {
             self.inputBuffer = [NSMutableData data];
@@ -343,8 +337,6 @@ void handleConnect (
 
 -(BOOL)attemptStartListening:(unsigned short)port {
     
-    self.confinedThread = [NSThread currentThread];
-        
     CFSocketContext socketCtxt = {0, (__bridge void *)self, NULL, NULL, NULL};
     
     CFSocketRef myipv4cfsock = CFSocketCreate(
