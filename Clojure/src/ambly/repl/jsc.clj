@@ -303,13 +303,20 @@
     (raw-stacktrace->canonical-stacktrace stacktrace build-options))
   repl/IPrintStacktrace
   (-print-stacktrace [_ stacktrace _ build-options]
-    (doseq [{:keys [function file url line column]}
-            (repl/mapped-stacktrace stacktrace build-options)]
-      (let [url (when url (string/trim (.toString url)))
-            file (when file (string/trim (.toString file)))]
-       ((println-fn repl/*repl-opts*)
-        "\t" (str (when function (str function " "))
-               "(" (str (or url file)) (when line (str ":" line)) (when column (str ":" column)) ")")))))
+    (let [source (fn [url file]
+                   (if url
+                     (str url)
+                     (let [file-path (str file)]
+                       (if (.startsWith file-path @webdav-mount-point)
+                         (subs file-path (inc (count @webdav-mount-point)))
+                         file-path))))]
+      (doseq [{:keys [function file url line column]}
+              (repl/mapped-stacktrace stacktrace build-options)]
+        (let [url (when url (string/trim (.toString url)))
+              file (when file (string/trim (.toString file)))]
+          ((println-fn repl/*repl-opts*)
+            "\t" (str (when function (str function " "))
+                      "(" (source url file) (when line (str ":" line)) (when column (str ":" column)) ")"))))))
   repl/IJavaScriptEnv
   (-setup [repl-env opts]
     (setup repl-env opts))
