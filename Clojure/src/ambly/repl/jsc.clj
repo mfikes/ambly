@@ -97,6 +97,18 @@
           (.removeServiceListener mdns-service reg-type service-listener)
           (.close mdns-service))))))
 
+(defn resolve-bonjour [bonjour-name timeout]
+  (let [reg-type "_http._tcp.local."
+        mdns-service (JmDNS/create)]
+    (try
+      (let [info (.getServiceInfo mdns-service reg-type bonjour-name timeout)]
+        (when info
+          {:address (.getAddress info)
+           :port    (.getPort info)}))
+      (finally
+        (future
+          (.close mdns-service))))))
+
 (defn socket [host port]
   (let [socket (Socket. host port)
         in     (io/reader socket)
@@ -230,10 +242,23 @@
 
 (defn- set-up-socket
   [repl-env opts address port]
+  (when-let [socket @(:socket repl-env)]
+    (close-socket socket))
   (reset! (:socket repl-env)
     (socket address port))
   ;; Start dedicated thread to read messages from socket
   (start-reading-messages repl-env opts))
+
+(defn reconnect [repl-env opts]
+  ((print-fn opts) "Reconnecting ...")
+  (let [bonjour-name @(:bonjour-name repl-env)
+        endpoint (resolve-bonjour bonjour-name 15000)]
+    (if endpoint
+      (let [endpoint-address (.getHostAddress (:address endpoint))
+            endpoint-port (:port endpoint)]
+        (mount-webdav repl-env bonjour-name endpoint-address endpoint-port)
+        (set-up-socket repl-env opts endpoint-address (dec endpoint-port)))
+      ((print-fn opts) "Failed to reconnect."))))
 
 (defn setup
   [repl-env opts]
@@ -242,10 +267,12 @@
           [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered (:options repl-env)) opts)
           endpoint-address (.getHostAddress (:address endpoint))
           endpoint-port (:port endpoint)
+          _ (reset! (:bonjour-name repl-env) bonjour-name)
           webdav-mount-point (mount-webdav repl-env bonjour-name endpoint-address endpoint-port)
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
-          core (io/resource "cljs/core.cljs")]
+          core (io/resource "cljs/core.cljs")
+          reconnect-fn (partial reconnect repl-env opts)]
       ((println-fn opts) "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
       (set-up-socket repl-env opts endpoint-address (dec endpoint-port))
       (when (= "true" (:value (jsc-eval repl-env "typeof cljs === 'undefined'")))
@@ -306,7 +333,7 @@
       (tear-down repl-env)
       (throw t))))
 
-(defrecord JscEnv [socket response-promise webdav-mount-point options]
+(defrecord JscEnv [response-promise bonjour-name webdav-mount-point socket options]
   repl/IReplEnvOptions
   (-repl-options [this]
     {:require-foreign true})
@@ -340,7 +367,7 @@
     (tear-down repl-env)))
 
 (defn repl-env* [options]
-  (JscEnv. (atom nil) (atom nil) (atom nil) options))
+  (JscEnv. (atom nil) (atom nil) (atom nil) (atom nil) options))
 
 (defn repl-env
   [& {:as options}]
