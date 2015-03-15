@@ -217,7 +217,7 @@
   (when (:shutdown-agents-on-quit (:options repl-env))
     (shutdown-agents)))
 
-(defn- mount-webdav!
+(defn- mount-webdav
   [repl-env endpoint-address endpoint-port]
   (let [webdav-mount-point (str "/Volumes/Ambly-" endpoint-address ":" endpoint-port)
         output-dir (io/file webdav-mount-point)]
@@ -228,6 +228,13 @@
     (reset! (:webdav-mount-point repl-env) webdav-mount-point)
     webdav-mount-point))
 
+(defn- set-up-socket
+  [repl-env opts address port]
+  (reset! (:socket repl-env)
+    (socket address port))
+  ;; Start dedicated thread to read messages from socket
+  (start-reading-messages repl-env opts))
+
 (defn setup
   [repl-env opts]
   (try
@@ -235,15 +242,12 @@
           [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered (:options repl-env)) opts)
           endpoint-address (.getHostAddress (:address endpoint))
           endpoint-port (:port endpoint)
-          webdav-mount-point (mount-webdav! repl-env endpoint-address endpoint-port)
+          webdav-mount-point (mount-webdav repl-env endpoint-address endpoint-port)
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
           core (io/resource "cljs/core.cljs")]
       ((println-fn opts) "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
-      (reset! (:socket repl-env)
-        (socket endpoint-address (dec endpoint-port)))
-      ;; Start dedicated thread to read messages from socket
-      (start-reading-messages repl-env opts)
+      (set-up-socket repl-env opts endpoint-address (dec endpoint-port))
       (when (= "true" (:value (jsc-eval repl-env "typeof cljs === 'undefined'")))
         ;; compile cljs.core & its dependencies, goog/base.js must be available
         ;; for bootstrap to load, use new closure/compile as it can handle
