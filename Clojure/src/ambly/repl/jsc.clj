@@ -54,14 +54,16 @@
         service-listener
         (reify ServiceListener
           (serviceAdded [_ service-event]
-            (let [name (.getName service-event)]
-              (when (is-ambly-bonjour-name? name)
-                (.requestServiceInfo mdns-service (.getType service-event) (.getName service-event) 1))))
+            (let [type (.getType service-event)
+                  name (.getName service-event)]
+              (when (and (= reg-type type) (is-ambly-bonjour-name? name))
+                (.requestServiceInfo mdns-service type name 1))))
           (serviceRemoved [_ service-event]
             (swap! name-endpoint-map dissoc (.getName service-event)))
           (serviceResolved [_ service-event]
-            (let [name (.getName service-event)]
-              (when (is-ambly-bonjour-name? name)
+            (let [type (.getType service-event)
+                  name (.getName service-event)]
+              (when (and (= reg-type type) (is-ambly-bonjour-name? name))
                 (let [entry {name (let [info (.getInfo service-event)]
                                     {:address (.getAddress info)
                                      :port    (.getPort info)})}]
