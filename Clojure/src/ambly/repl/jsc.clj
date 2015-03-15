@@ -340,9 +340,6 @@
     '[cljs.repl :as repl]
     '[ambly.repl.jsc :as jsc])
 
-  (repl/repl* (jsc/repl-env)
-    {:output-dir "out"
-     :cache-analysis true
-     :source-map true})
+  (repl/repl* (jsc/repl-env) {})
 
   )
