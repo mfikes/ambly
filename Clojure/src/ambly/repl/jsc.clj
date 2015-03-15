@@ -218,8 +218,8 @@
     (shutdown-agents)))
 
 (defn- mount-webdav
-  [repl-env endpoint-address endpoint-port]
-  (let [webdav-mount-point (str "/Volumes/Ambly-" endpoint-address ":" endpoint-port)
+  [repl-env bonjour-name endpoint-address endpoint-port]
+  (let [webdav-mount-point (str "/Volumes/Ambly-" (format "%X" (hash bonjour-name)))
         output-dir (io/file webdav-mount-point)]
     (when (.exists output-dir)
       (shell/sh "umount" webdav-mount-point))
@@ -242,7 +242,7 @@
           [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered (:options repl-env)) opts)
           endpoint-address (.getHostAddress (:address endpoint))
           endpoint-port (:port endpoint)
-          webdav-mount-point (mount-webdav repl-env endpoint-address endpoint-port)
+          webdav-mount-point (mount-webdav repl-env bonjour-name endpoint-address endpoint-port)
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
           core (io/resource "cljs/core.cljs")]
