@@ -141,18 +141,23 @@
               (.append sb (char c))
               (recur sb (.read in))))))
 
+(defn- reconnect-if
+  [repl-env]
+  (when-not @(:torn-down repl-env)
+    (@(:reconnect-fn repl-env))))
+
 (defn start-reading-messages
   "Starts a thread reading inbound messages."
   [repl-env opts]
   (.start
-        (Thread.
-          #(try
-            (let [rv (read-messages (:in @(:socket repl-env)) (:response-promise repl-env) opts)]
-              (when (= :eof rv)
-                (close-socket @(:socket repl-env))))
-            (catch IOException e
-              (when-not (.isClosed (:socket @(:socket repl-env)))
-                (.printStackTrace e)))))))
+    (Thread.
+      #(try
+        (let [rv (read-messages (:in @(:socket repl-env)) (:response-promise repl-env) opts)]
+          (when (= :eof rv)
+            (close-socket @(:socket repl-env))
+            (reconnect-if repl-env)))
+        (catch IOException _
+          (reconnect-if repl-env))))))
 
 (defn stack-line->canonical-frame
   "Parses a stack line into a frame representation, returning nil
@@ -189,18 +194,23 @@
   (let [{:keys [out]} @(:socket repl-env)
         response-promise (promise)]
     (reset! (:response-promise repl-env) response-promise)
-    (write out js)
-    (let [response @response-promise]
-      (if (= :eof response)
-        {:status :error
-         :value  "Connection to JavaScriptCore closed."}
-        (let [result (json/read-str response
-                       :key-fn keyword)]
-          (merge
-            {:status (keyword (:status result))
-             :value  (:value result)}
-            (when-let [raw-stacktrace (:stacktrace result)]
-              {:stacktrace raw-stacktrace})))))))
+    (try
+      (write out js)
+      (let [response @response-promise]
+        (if (= :eof response)
+          (do
+            (reconnect-if repl-env)
+            {:status :error
+             :value  "Connection closed."})
+          (let [result (json/read-str response
+                         :key-fn keyword)]
+            (merge
+              {:status (keyword (:status result))
+               :value  (:value result)}
+              (when-let [raw-stacktrace (:stacktrace result)]
+                {:stacktrace raw-stacktrace})))))
+      (catch Exception _
+        (reconnect-if repl-env)))))
 
 (defn load-javascript
   "Load a Closure JavaScript file into the JSC REPL process."
@@ -273,6 +283,7 @@
           env (ana/empty-env)
           core (io/resource "cljs/core.cljs")]
       ((println-fn opts) "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
+      (reset! (:reconnect-fn repl-env) (partial reconnect repl-env opts))
       (set-up-socket repl-env opts endpoint-address (dec endpoint-port))
       (when (= "true" (:value (jsc-eval repl-env "typeof cljs === 'undefined'")))
         ;; compile cljs.core & its dependencies, goog/base.js must be available
@@ -332,7 +343,7 @@
       (tear-down repl-env)
       (throw t))))
 
-(defrecord JscEnv [response-promise bonjour-name webdav-mount-point socket options]
+(defrecord JscEnv [response-promise bonjour-name webdav-mount-point socket torn-down reconnect-fn options]
   repl/IReplEnvOptions
   (-repl-options [this]
     {:require-foreign true})
@@ -363,10 +374,11 @@
   (-load [repl-env provides url]
     (load-javascript repl-env provides url))
   (-tear-down [repl-env]
+    (reset! torn-down true)
     (tear-down repl-env)))
 
 (defn repl-env* [options]
-  (JscEnv. (atom nil) (atom nil) (atom nil) (atom nil) options))
+  (JscEnv. (atom nil) (atom nil) (atom nil) (atom nil) (atom nil) (atom nil) options))
 
 (defn repl-env
   [& {:as options}]
