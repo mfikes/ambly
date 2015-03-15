@@ -110,7 +110,7 @@
           (.close mdns-service))))))
 
 (defn socket [host port]
-  (let [socket (Socket. host port)
+  (let [socket (doto (Socket. host port) (.setKeepAlive true))
         in     (io/reader socket)
         out    (io/writer socket)]
     {:socket socket :in in :out out}))
@@ -271,8 +271,7 @@
           webdav-mount-point (mount-webdav repl-env bonjour-name endpoint-address endpoint-port)
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
-          core (io/resource "cljs/core.cljs")
-          reconnect-fn (partial reconnect repl-env opts)]
+          core (io/resource "cljs/core.cljs")]
       ((println-fn opts) "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
       (set-up-socket repl-env opts endpoint-address (dec endpoint-port))
       (when (= "true" (:value (jsc-eval repl-env "typeof cljs === 'undefined'")))
