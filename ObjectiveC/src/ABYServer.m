@@ -182,9 +182,13 @@
 
 -(void)sendPayload
 {
-    NSInteger result = [self.outputStream write:self.messageBeingSent.payload.bytes + self.messagePayloadBytesSent
-                                      maxLength:self.messageBeingSent.payload.length - self.messagePayloadBytesSent];
-    if (result <= 0) {
+    NSInteger result = 0;
+    if (self.messageBeingSent.payload.length) {
+        result = [self.outputStream write:self.messageBeingSent.payload.bytes + self.messagePayloadBytesSent
+                                maxLength:self.messageBeingSent.payload.length - self.messagePayloadBytesSent];
+    }
+    
+    if (result < 0) {
         NSLog(@"Error writing bytes to REPL output stream");
     } else {
         self.messagePayloadBytesSent += result;
