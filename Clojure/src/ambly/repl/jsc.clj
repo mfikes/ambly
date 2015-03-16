@@ -219,7 +219,7 @@
 
 (defn- mount-webdav
   [repl-env bonjour-name endpoint-address endpoint-port]
-  (let [webdav-mount-point (str "/Volumes/Ambly-" (format "%X" (hash bonjour-name)))
+  (let [webdav-mount-point (str "/Volumes/Ambly-" (format "%08X" (hash bonjour-name)))
         output-dir (io/file webdav-mount-point)]
     (when (.exists output-dir)
       (shell/sh "umount" webdav-mount-point))
