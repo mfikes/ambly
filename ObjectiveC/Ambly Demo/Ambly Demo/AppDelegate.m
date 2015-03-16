@@ -1,5 +1,6 @@
 #import "AppDelegate.h"
 
+#import <JavaScriptCore/JavaScriptCore.h>
 #import "ABYContextManager.h"
 #import "ABYServer.h"
 
@@ -35,7 +36,13 @@ void uncaughtExceptionHandler(NSException *exception) {
     [self createDirectoriesUpTo:compilerOutputDirectory];
     
     // Set up our context
-    self.contextManager = [[ABYContextManager alloc] initWithCompilerOutputDirectory:compilerOutputDirectory];
+    self.contextManager = [[ABYContextManager alloc] initWithContext:[[JSContext alloc] init]
+                                             compilerOutputDirectory:compilerOutputDirectory];
+    [self.contextManager setupGlobalContext];
+    [self.contextManager setUpExceptionLogging];
+    [self.contextManager setUpConsoleLog];
+    [self.contextManager setUpTimerFunctionality];
+    [self.contextManager setUpAmblyImportScript];
     
     self.replServer = [[ABYServer alloc] initWithContext:self.contextManager.context
                                  compilerOutputDirectory:compilerOutputDirectory];

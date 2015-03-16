@@ -15,21 +15,6 @@
 
 @implementation ABYContextManager
 
--(id)initWithCompilerOutputDirectory:(NSURL*)compilerOutputDirectory
-{
-    if (self = [super init]) {
-        self.context = [[JSContext alloc] init];
-        self.compilerOutputDirectory = compilerOutputDirectory;
-        
-        [self setupGlobalContext];
-        [self setUpExceptionLogging];
-        [self setUpConsoleLog];
-        [self setUpTimerFunctionality];
-        [self setUpAmblyImportScript];
-    }
-    return self;
-}
-
 -(id)initWithContext:(JSContext*)context compilerOutputDirectory:(NSURL*)compilerOutputDirectory
 {
     if (self = [super init]) {

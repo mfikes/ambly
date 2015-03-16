@@ -15,15 +15,6 @@
 @property (strong, nonatomic, readonly) JSContext* context;
 
 /**
- Initializes with a compiler output directory, internally creating and enriching a JSContext.
- 
- Note: This method is used by the Ambly demo app for bootstrapping with an empty REPL.
- 
- @param compilerOutputDirectory the compiler output directory
- */
--(id)initWithCompilerOutputDirectory:(NSURL*)compilerOutputDirectory;
-
-/**
  Initializes with a compiler output directory, accepting an externally-created JSContext.
  
  @param context the JavaScriptCore context
