@@ -11,4 +11,4 @@ fi
 $COMMAND trampoline run -m clojure.main -e \
 "(require '[cljs.repl :as repl])
 (require '[ambly.repl.jsc :as jsc])
-(repl/repl* (jsc/repl-env :shutdown-agents-on-quit true) {})"
+(repl/repl* (jsc/repl-env) {})"

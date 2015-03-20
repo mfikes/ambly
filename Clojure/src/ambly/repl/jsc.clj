@@ -6,12 +6,15 @@
             [cljs.compiler :as comp]
             [cljs.repl :as repl]
             [cljs.closure :as closure]
-            [clojure.data.json :as json]
-            [clojure.java.shell :as shell])
+            [clojure.data.json :as json])
   (:import java.net.Socket
            java.lang.StringBuilder
            [java.io File BufferedReader BufferedWriter IOException]
            (javax.jmdns JmDNS ServiceListener)))
+
+(defn sh
+  [& args]
+  (.waitFor (.exec (Runtime/getRuntime) (string/join " " args))))
 
 (defn print-fn [opts]
   (or (:print-no-newline opts) print))
@@ -93,9 +96,11 @@
                 (second (nth choices choice-ndx))
                 (recur current-name-endpoint-map))))))
       (finally
-        (future
-          (.removeServiceListener mdns-service reg-type service-listener)
-          (.close mdns-service))))))
+        (.start
+          (Thread.
+            (fn []
+              (.removeServiceListener mdns-service reg-type service-listener)
+              (.close mdns-service))))))))
 
 (defn socket [host port]
   (let [socket (doto (Socket. host port) (.setKeepAlive true))
@@ -211,20 +216,18 @@
 (defn tear-down
   [repl-env]
   (when-let [webdav-mount-point @(:webdav-mount-point repl-env)]
-    (shell/sh "umount" webdav-mount-point))
+    (sh "umount" webdav-mount-point))
   (when-let [socket @(:socket repl-env)]
-    (close-socket socket))
-  (when (:shutdown-agents-on-quit (:options repl-env))
-    (shutdown-agents)))
+    (close-socket socket)))
 
 (defn- mount-webdav
   [repl-env bonjour-name endpoint-address endpoint-port]
   (let [webdav-mount-point (str "/Volumes/Ambly-" (format "%08X" (hash bonjour-name)))
         output-dir (io/file webdav-mount-point)]
     (when (.exists output-dir)
-      (shell/sh "umount" webdav-mount-point))
+      (sh "umount" webdav-mount-point))
     (.mkdirs output-dir)
-    (shell/sh "mount_webdav" (str "http://" endpoint-address ":" endpoint-port) webdav-mount-point)
+    (sh "mount_webdav" (str "http://" endpoint-address ":" endpoint-port) webdav-mount-point)
     (reset! (:webdav-mount-point repl-env) webdav-mount-point)
     webdav-mount-point))
 
