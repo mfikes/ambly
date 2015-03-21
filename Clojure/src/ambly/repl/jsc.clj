@@ -254,59 +254,68 @@
           core (io/resource "cljs/core.cljs")]
       ((println-fn opts) "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
       (set-up-socket repl-env opts endpoint-address (dec endpoint-port))
-      (when (= "true" (:value (jsc-eval repl-env "typeof cljs === 'undefined'")))
-        ;; compile cljs.core & its dependencies, goog/base.js must be available
-        ;; for bootstrap to load, use new closure/compile as it can handle
-        ;; resources in JARs
-        (let [core-js (closure/compile core
-                        (assoc opts
-                          :output-dir webdav-mount-point
-                          :output-file
-                          (closure/src-file->target-file core)))
-              deps (closure/add-dependencies opts core-js)]
-          ;; output unoptimized code and the deps file
-          ;; for all compiled namespaces
-          (apply closure/output-unoptimized
-            (assoc opts
-              :output-dir webdav-mount-point
-              :output-to (.getPath (io/file output-dir "ambly_repl_deps.js")))
-            deps))
-        ;; Set up CLOSURE_IMPORT_SCRIPT function, injecting path
-        (jsc-eval repl-env
-          (str "CLOSURE_IMPORT_SCRIPT = function(src) {"
-            (form-ambly-import-script-expr-js
-              (str "'goog" File/separator "' + src"))
-            "return true; };"))
-        ;; bootstrap
-        (jsc-eval repl-env
-          (form-ambly-import-script-path-js (io/file "goog" "base.js")))
-        ;; load the deps file so we can goog.require cljs.core etc.
-        (jsc-eval repl-env
-          (form-ambly-import-script-path-js (io/file "ambly_repl_deps.js")))
-        ;; monkey-patch isProvided_ to avoid useless warnings - David
-        (jsc-eval repl-env
-          (str "goog.isProvided_ = function(x) { return false; };"))
-        ;; monkey-patch goog.require, skip all the loaded checks
-        (repl/evaluate-form repl-env env "<cljs repl>"
-          '(set! (.-require js/goog)
-             (fn [name]
-               (js/CLOSURE_IMPORT_SCRIPT
-                 (aget (.. js/goog -dependencies_ -nameToPath) name)))))
-        ;; load cljs.core, setup printing
-        (repl/evaluate-form repl-env env "<cljs repl>"
-          '(do
-             (.require js/goog "cljs.core")
-             (set-print-fn! js/AMBLY_PRINT_FN)))
-        ;; redef goog.require to track loaded libs
-        (repl/evaluate-form repl-env env "<cljs repl>"
-          '(do
-             (set! *loaded-libs* #{"cljs.core"})
-             (set! (.-require js/goog)
-               (fn [name reload]
-                 (when (or (not (contains? *loaded-libs* name)) reload)
-                   (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
-                   (js/CLOSURE_IMPORT_SCRIPT
-                     (aget (.. js/goog -dependencies_ -nameToPath) name))))))))
+      (if (= "true" (:value (jsc-eval repl-env "typeof cljs === 'undefined'")))
+        (do
+          ;; compile cljs.core & its dependencies, goog/base.js must be available
+          ;; for bootstrap to load, use new closure/compile as it can handle
+          ;; resources in JARs
+          (let [core-js (closure/compile core
+                          (assoc opts
+                            :output-dir webdav-mount-point
+                            :output-file
+                            (closure/src-file->target-file core)))
+                deps (closure/add-dependencies opts core-js)]
+            ;; output unoptimized code and the deps file
+            ;; for all compiled namespaces
+            (apply closure/output-unoptimized
+              (assoc opts
+                :output-dir webdav-mount-point
+                :output-to (.getPath (io/file output-dir "ambly_repl_deps.js")))
+              deps))
+          ;; Set up CLOSURE_IMPORT_SCRIPT function, injecting path
+          (jsc-eval repl-env
+            (str "CLOSURE_IMPORT_SCRIPT = function(src) {"
+              (form-ambly-import-script-expr-js
+                (str "'goog" File/separator "' + src"))
+              "return true; };"))
+          ;; bootstrap
+          (jsc-eval repl-env
+            (form-ambly-import-script-path-js (io/file "goog" "base.js")))
+          ;; load the deps file so we can goog.require cljs.core etc.
+          (jsc-eval repl-env
+            (form-ambly-import-script-path-js (io/file "ambly_repl_deps.js")))
+          ;; monkey-patch isProvided_ to avoid useless warnings - David
+          (jsc-eval repl-env
+            (str "goog.isProvided_ = function(x) { return false; };"))
+          ;; monkey-patch goog.require, skip all the loaded checks
+          (repl/evaluate-form repl-env env "<cljs repl>"
+            '(set! (.-require js/goog)
+               (fn [name]
+                 (js/CLOSURE_IMPORT_SCRIPT
+                   (aget (.. js/goog -dependencies_ -nameToPath) name)))))
+          ;; load cljs.core, setup printing
+          (repl/evaluate-form repl-env env "<cljs repl>"
+            '(do
+               (.require js/goog "cljs.core")
+               (set-print-fn! js/AMBLY_PRINT_FN)))
+          ;; redef goog.require to track loaded libs
+          (repl/evaluate-form repl-env env "<cljs repl>"
+            '(do
+               (set! *loaded-libs* #{"cljs.core"})
+               (set! (.-require js/goog)
+                 (fn [name reload]
+                   (when (or (not (contains? *loaded-libs* name)) reload)
+                     (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
+                     (js/CLOSURE_IMPORT_SCRIPT
+                       (aget (.. js/goog -dependencies_ -nameToPath) name))))))))
+        (let [expected-clojurescript-version (cljs.util/clojurescript-version)
+              actual-clojurescript-version (:value (jsc-eval repl-env "cljs.core._STAR_clojurescript_version_STAR_"))]
+          (when-not (= expected-clojurescript-version actual-clojurescript-version)
+            ((println-fn opts)
+              (str "WARNING: " (bonjour-name->display-name bonjour-name)
+                "\n         is running ClojureScript " actual-clojurescript-version
+                ", while the Ambly REPL is\n         set up to use ClojureScript "
+                expected-clojurescript-version ".\n")))))
       {:merge-opts {:output-dir webdav-mount-point}})
     (catch Throwable t
       (tear-down repl-env)
