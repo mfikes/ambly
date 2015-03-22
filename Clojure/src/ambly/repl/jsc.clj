@@ -14,33 +14,43 @@
 
 (defn sh
   [& args]
+  {:pre [(every? string? args)]}
   (.waitFor (.exec (Runtime/getRuntime) (string/join " " args))))
 
 (defn print-fn [opts]
+  {:pre [(map? opts)]}
   (or (:print-no-newline opts) print))
 
 (defn println-fn [opts]
+  {:pre [(map? opts)]}
   (or (:print opts) println))
 
 (defn flush-fn [opts]
+  {:pre [(map? opts)]}
   (or (:flush opts) flush))
 
 (defn set-logging-level [logger-name level]
+  {:pre [(string? logger-name) (instance? java.util.logging.Level level)]}
   (.setLevel (java.util.logging.Logger/getLogger logger-name) level))
 
 (def ambly-bonjour-name-prefix "Ambly ")
 
 (defn is-ambly-bonjour-name? [bonjour-name]
+  {:pre [(string? bonjour-name)]}
   (.startsWith bonjour-name ambly-bonjour-name-prefix))
 
 (defn bonjour-name->display-name
   [bonjour-name]
+  {:pre [(is-ambly-bonjour-name? bonjour-name)]
+   :post [(string? %)]}
   (subs bonjour-name (count ambly-bonjour-name-prefix)))
 
 (defn name-endpoint-map->choice-list [name-endpoint-map]
+  {:pre [(map? name-endpoint-map)]}
   (map vector (iterate inc 1) name-endpoint-map))
 
 (defn print-discovered-devices [name-endpoint-map opts]
+  {:pre [(map? name-endpoint-map) (map? opts)]}
   (if (empty? name-endpoint-map)
     ((println-fn opts) "(No devices)")
     (doseq [[choice-number [bonjour-name _]] (name-endpoint-map->choice-list name-endpoint-map)]
@@ -51,6 +61,7 @@
   a simple command-line UI letting user pick one, unless
   choose-first-discovered? is set to true in which case the UI is bypassed"
   [choose-first-discovered? opts]
+  {:pre [(map? opts)]}
   (let [reg-type "_http._tcp.local."
         name-endpoint-map (atom (sorted-map))
         mdns-service (JmDNS/create)
@@ -102,21 +113,29 @@
               (.removeServiceListener mdns-service reg-type service-listener)
               (.close mdns-service))))))))
 
-(defn socket [host port]
+(defn socket
+  [host port]
+  {:pre [(string? host) (number? port)]}
   (let [socket (doto (Socket. host port) (.setKeepAlive true))
         in     (io/reader socket)
         out    (io/writer socket)]
     {:socket socket :in in :out out}))
 
-(defn close-socket [s]
+(defn close-socket
+  [s]
+  {:pre [(map? s)]}
   (.close (:socket s)))
 
-(defn write [^BufferedWriter out ^String js]
+(defn write
+  [out js]
+  (:pre [(instance? BufferedWriter out) (string? js)])
   (.write out js)
   (.write out (int 0)) ;; terminator
   (.flush out))
 
-(defn read-messages [^BufferedReader in response-promise opts]
+(defn read-messages
+  [in response-promise opts]
+  {:pre [(instance? BufferedReader in) (map? opts)]}
   (loop [sb (StringBuilder.) c (.read in)]
     (cond
       (= c -1) (do
@@ -137,6 +156,7 @@
 (defn start-reading-messages
   "Starts a thread reading inbound messages."
   [repl-env opts]
+  {:pre [(map? repl-env) (map? opts)]}
   (.start
     (Thread.
       #(try
@@ -151,6 +171,7 @@
   "Parses a stack line into a frame representation, returning nil
   if parse failed."
   [stack-line opts]
+  {:pre [(string? stack-line) (map? opts)]}
   (let [[function file line column]
         (rest (re-matches #"(.*)@file:///(.*):([0-9]+):([0-9]+)"
                 stack-line))]
@@ -170,6 +191,8 @@
   The canonical stacktrace must be a vector of maps of the form
   {:file <string> :function <string> :line <integer> :column <integer>}."
   [raw-stacktrace opts]
+  {:pre  [string? (map? opts)]
+   :post [(vector? %)]}
   (->> raw-stacktrace
     string/split-lines
     (map #(stack-line->canonical-frame % opts))
@@ -179,6 +202,7 @@
 (defn jsc-eval
   "Evaluate a JavaScript string in the JSC REPL process."
   [repl-env js]
+  {:pre [(map? repl-env) (string? js)]}
   (let [{:keys [out]} @(:socket repl-env)
         response-promise (promise)]
     (reset! (:response-promise repl-env) response-promise)
@@ -222,6 +246,8 @@
 
 (defn- mount-webdav
   [repl-env bonjour-name endpoint-address endpoint-port]
+  {:pre [(map? repl-env) (is-ambly-bonjour-name? bonjour-name)
+         (string? endpoint-address) (number? endpoint-port)]}
   (let [webdav-mount-point (str "/Volumes/Ambly-" (format "%08X" (hash bonjour-name)))
         output-dir (io/file webdav-mount-point)]
     (when (.exists output-dir)
@@ -233,6 +259,7 @@
 
 (defn- set-up-socket
   [repl-env opts address port]
+  {:pre [(map? repl-env) (map? opts) (string? address) (number? port)]}
   (when-let [socket @(:socket repl-env)]
     (close-socket socket))
   (reset! (:socket repl-env)
@@ -242,6 +269,7 @@
 
 (defn setup
   [repl-env opts]
+  {:pre [(map? repl-env) (map? opts)]}
   (try
     (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/OFF)
           [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered (:options repl-env)) opts)
