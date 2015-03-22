@@ -331,12 +331,12 @@
   repl/IPrintStacktrace
   (-print-stacktrace [_ stacktrace _ build-options]
     (let [source (fn [url file]
-                   (if url
-                     (str url)
+                   (if file
                      (let [file-path (str file)]
                        (if (.startsWith file-path @webdav-mount-point)
                          (subs file-path (inc (count @webdav-mount-point)))
-                         file-path))))]
+                         file-path))
+                     (str url)))]
       (doseq [{:keys [function file url line column]}
               (repl/mapped-stacktrace stacktrace build-options)]
         (let [url (when url (string/trim (.toString url)))
