@@ -17,15 +17,15 @@
   {:pre [(every? string? args)]}
   (.waitFor (.exec (Runtime/getRuntime) (string/join " " args))))
 
-(defn print-fn [opts]
+(defn repl-print [opts msg]
   {:pre [(map? opts)]}
-  (or (:print-no-newline opts) print))
+  ((or (:print-no-newline opts) print) msg))
 
-(defn println-fn [opts]
+(defn repl-println [opts msg]
   {:pre [(map? opts)]}
-  (or (:print opts) println))
+  ((or (:print opts) println) msg))
 
-(defn flush-fn [opts]
+(defn repl-flush [opts]
   {:pre [(map? opts)]}
   (or (:flush opts) flush))
 
@@ -52,9 +52,9 @@
 (defn print-discovered-devices [name-endpoint-map opts]
   {:pre [(map? name-endpoint-map) (map? opts)]}
   (if (empty? name-endpoint-map)
-    ((println-fn opts) "(No devices)")
+    (repl-println opts "(No devices)")
     (doseq [[choice-number [bonjour-name _]] (name-endpoint-map->choice-list name-endpoint-map)]
-      ((println-fn opts) (str "[" choice-number "] " (bonjour-name->display-name bonjour-name))))))
+      (repl-println opts (str "[" choice-number "] " (bonjour-name->display-name bonjour-name))))))
 
 (defn discover-and-choose-device
   "Looks for Ambly WebDAV devices advertised via Bonjour and presents
@@ -88,16 +88,16 @@
         (when (empty? @name-endpoint-map)
           (Thread/sleep 100)
           (when (= 20 count)
-            ((println-fn opts) "\nSearching for devices ..."))
+            (repl-println opts "\nSearching for devices ..."))
           (recur (inc count))))
       (Thread/sleep 500)                                    ;; Sleep a little more to catch stragglers
       (loop [current-name-endpoint-map @name-endpoint-map]
-        ((println-fn opts))
+        (repl-println opts "")
         (print-discovered-devices current-name-endpoint-map opts)
         (when-not choose-first-discovered?
-          ((println-fn opts) "\n[R] Refresh\n")
-          ((print-fn opts) "Choice: ")
-          ((flush-fn opts)))
+          (repl-println opts "\n[R] Refresh\n")
+          (repl-print opts "Choice: ")
+          (repl-flush opts))
         (let [choice (if choose-first-discovered? "1" (read-line))]
           (if (= "r" (.toLowerCase choice))
             (recur @name-endpoint-map)
@@ -143,8 +143,8 @@
                    (deliver resp-promise :eof))
                  :eof)
       (= c 1) (do
-                ((print-fn opts) (str sb))
-                ((flush-fn opts))
+                (repl-print opts (str sb))
+                (repl-flush opts)
                 (recur (StringBuilder.) (.read in)))
       (= c 0) (do
                 (deliver @response-promise (str sb))
@@ -282,7 +282,7 @@
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
           core (io/resource "cljs/core.cljs")]
-      ((println-fn opts) "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n")
+      (repl-println opts (str "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n"))
       (set-up-socket repl-env opts endpoint-address (dec endpoint-port))
       (if (= "true" (:value (jsc-eval repl-env "typeof cljs === 'undefined'")))
         (do
@@ -341,7 +341,7 @@
         (let [expected-clojurescript-version (cljs.util/clojurescript-version)
               actual-clojurescript-version (:value (jsc-eval repl-env "cljs.core._STAR_clojurescript_version_STAR_"))]
           (when-not (= expected-clojurescript-version actual-clojurescript-version)
-            ((println-fn opts)
+            (repl-println opts
               (str "WARNING: " (bonjour-name->display-name bonjour-name)
                 "\n         is running ClojureScript " actual-clojurescript-version
                 ", while the Ambly REPL is\n         set up to use ClojureScript "
@@ -371,9 +371,9 @@
               (repl/mapped-stacktrace stacktrace build-options)]
         (let [url (when url (string/trim (.toString url)))
               file (when file (string/trim (.toString file)))]
-          ((println-fn repl/*repl-opts*)
-            "\t" (str (when function (str function " "))
-                      "(" (source url file) (when line (str ":" line)) (when column (str ":" column)) ")"))))))
+          (repl-println repl/*repl-opts*
+            (str "\t" (when function (str function " "))
+              "(" (source url file) (when line (str ":" line)) (when column (str ":" column)) ")"))))))
   repl/IJavaScriptEnv
   (-setup [repl-env opts]
     (setup repl-env opts))
