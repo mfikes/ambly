@@ -252,7 +252,8 @@
         output-dir (io/file webdav-mount-point)
         webdav-endpoint (str "http://" endpoint-address ":" endpoint-port)]
     (when (.exists output-dir)
-      (sh "umount" webdav-mount-point))
+      (sh "umount" webdav-mount-point)
+      (Thread/sleep 250))
     (.mkdirs output-dir)
     (if (zero? (sh "mount_webdav" webdav-endpoint webdav-mount-point))
       (reset! (:webdav-mount-point repl-env) webdav-mount-point)
