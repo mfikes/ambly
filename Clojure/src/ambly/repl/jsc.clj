@@ -249,12 +249,14 @@
   {:pre [(map? repl-env) (is-ambly-bonjour-name? bonjour-name)
          (string? endpoint-address) (number? endpoint-port)]}
   (let [webdav-mount-point (str "/Volumes/Ambly-" (format "%08X" (hash bonjour-name)))
-        output-dir (io/file webdav-mount-point)]
+        output-dir (io/file webdav-mount-point)
+        webdav-endpoint (str "http://" endpoint-address ":" endpoint-port)]
     (when (.exists output-dir)
       (sh "umount" webdav-mount-point))
     (.mkdirs output-dir)
-    (sh "mount_webdav" (str "http://" endpoint-address ":" endpoint-port) webdav-mount-point)
-    (reset! (:webdav-mount-point repl-env) webdav-mount-point)
+    (if (zero? (sh "mount_webdav" webdav-endpoint webdav-mount-point))
+      (reset! (:webdav-mount-point repl-env) webdav-mount-point)
+      (throw (Exception. (str "Unable to mount WebDAV at " webdav-endpoint))))
     webdav-mount-point))
 
 (defn- set-up-socket
