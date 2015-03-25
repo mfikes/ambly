@@ -17,18 +17,6 @@
   {:pre [(every? string? args)]}
   (.waitFor (.exec (Runtime/getRuntime) (string/join " " args))))
 
-(defn repl-print [opts msg]
-  {:pre [(map? opts)]}
-  ((or (:print-no-newline opts) print) msg))
-
-(defn repl-println [opts msg]
-  {:pre [(map? opts)]}
-  ((or (:print opts) println) msg))
-
-(defn repl-flush [opts]
-  {:pre [(map? opts)]}
-  ((or (:flush opts) flush)))
-
 (defn set-logging-level [logger-name level]
   {:pre [(string? logger-name) (instance? java.util.logging.Level level)]}
   (.setLevel (java.util.logging.Logger/getLogger logger-name) level))
@@ -52,9 +40,9 @@
 (defn print-discovered-devices [name-endpoint-map opts]
   {:pre [(map? name-endpoint-map) (map? opts)]}
   (if (empty? name-endpoint-map)
-    (repl-println opts "(No devices)")
+    (println "(No devices)")
     (doseq [[choice-number [bonjour-name _]] (name-endpoint-map->choice-list name-endpoint-map)]
-      (repl-println opts (str "[" choice-number "] " (bonjour-name->display-name bonjour-name))))))
+      (println (str "[" choice-number "] " (bonjour-name->display-name bonjour-name))))))
 
 (defn discover-and-choose-device
   "Looks for Ambly WebDAV devices advertised via Bonjour and presents
@@ -88,16 +76,16 @@
         (when (empty? @name-endpoint-map)
           (Thread/sleep 100)
           (when (= 20 count)
-            (repl-println opts "\nSearching for devices ..."))
+            (println "\nSearching for devices ..."))
           (recur (inc count))))
       (Thread/sleep 500)                                    ;; Sleep a little more to catch stragglers
       (loop [current-name-endpoint-map @name-endpoint-map]
-        (repl-println opts "")
+        (println)
         (print-discovered-devices current-name-endpoint-map opts)
         (when-not choose-first-discovered?
-          (repl-println opts "\n[R] Refresh\n")
-          (repl-print opts "Choice: ")
-          (repl-flush opts))
+          (println "\n[R] Refresh\n")
+          (print "Choice: ")
+          (flush))
         (let [choice (if choose-first-discovered? "1" (read-line))]
           (if (= "r" (.toLowerCase choice))
             (recur @name-endpoint-map)
@@ -143,8 +131,8 @@
                    (deliver resp-promise :eof))
                  :eof)
       (= c 1) (do
-                (repl-print opts (str sb))
-                (repl-flush opts)
+                (print (str sb))
+                (flush)
                 (recur (StringBuilder.) (.read in)))
       (= c 0) (do
                 (deliver @response-promise (str sb))
@@ -283,7 +271,7 @@
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
           core (io/resource "cljs/core.cljs")]
-      (repl-println opts (str "\nConnecting to " (bonjour-name->display-name bonjour-name) " ...\n"))
+      (println (str "\nConnecting to " (bonjour-name->display-name bonjour-name) " ...\n"))
       (set-up-socket repl-env opts endpoint-address (dec endpoint-port))
       (if (= "true" (:value (jsc-eval repl-env "typeof cljs === 'undefined'")))
         (do
@@ -342,7 +330,7 @@
         (let [expected-clojurescript-version (cljs.util/clojurescript-version)
               actual-clojurescript-version (:value (jsc-eval repl-env "cljs.core._STAR_clojurescript_version_STAR_"))]
           (when-not (= expected-clojurescript-version actual-clojurescript-version)
-            (repl-println opts
+            (println
               (str "WARNING: " (bonjour-name->display-name bonjour-name)
                 "\n         is running ClojureScript " actual-clojurescript-version
                 ", while the Ambly REPL is\n         set up to use ClojureScript "
@@ -372,7 +360,7 @@
               (repl/mapped-stacktrace stacktrace build-options)]
         (let [url (when url (string/trim (.toString url)))
               file (when file (string/trim (.toString file)))]
-          (repl-println repl/*repl-opts*
+          (println
             (str "\t" (when function (str function " "))
               "(" (source url file) (when line (str ":" line)) (when column (str ":" column)) ")"))))))
   repl/IJavaScriptEnv
