@@ -27,7 +27,7 @@
 
 (defn repl-flush [opts]
   {:pre [(map? opts)]}
-  (or (:flush opts) flush))
+  ((or (:flush opts) flush)))
 
 (defn set-logging-level [logger-name level]
   {:pre [(string? logger-name) (instance? java.util.logging.Level level)]}
@@ -283,7 +283,7 @@
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
           core (io/resource "cljs/core.cljs")]
-      (repl-println opts (str "\nConnecting to" (bonjour-name->display-name bonjour-name) "...\n"))
+      (repl-println opts (str "\nConnecting to " (bonjour-name->display-name bonjour-name) " ...\n"))
       (set-up-socket repl-env opts endpoint-address (dec endpoint-port))
       (if (= "true" (:value (jsc-eval repl-env "typeof cljs === 'undefined'")))
         (do
