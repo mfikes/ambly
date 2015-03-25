@@ -29,7 +29,6 @@ Here is a sample REPL startup sequence, illustrating device auto-discovery:
 
 ```
 $ script/jscrepljs 
-To quit, type: :cljs/quit
 
 [1] Ambly Demo on iPod touch
 [2] Ambly Demo on iPad
@@ -41,6 +40,7 @@ Choice: 1
 
 Connecting to Ambly Demo on iPod touch ...
 
+To quit, type: :cljs/quit
 ClojureScript:cljs.user> (+ 3 4)
 7
 ```
