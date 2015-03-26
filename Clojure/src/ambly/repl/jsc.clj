@@ -244,14 +244,22 @@
          (string? endpoint-address) (number? endpoint-port)]}
   (let [webdav-mount-point (str "/Volumes/Ambly-" (format "%08X" (hash bonjour-name)))
         output-dir (io/file webdav-mount-point)
-        webdav-endpoint (str "http://" endpoint-address ":" endpoint-port)]
-    (when (.exists output-dir)
-      (sh "umount" webdav-mount-point)
-      (Thread/sleep 250))
-    (.mkdirs output-dir)
-    (if (zero? (sh "mount_webdav" webdav-endpoint webdav-mount-point))
-      (reset! (:webdav-mount-point repl-env) webdav-mount-point)
-      (throw (Exception. (str "Unable to mount WebDAV at " webdav-endpoint))))
+        webdav-endpoint (str "http://" endpoint-address ":" endpoint-port)
+        unmount-if #(if (.exists output-dir)
+                     (if-not (<= 0 (sh "umount" webdav-mount-point) 1)
+                       (throw (IOException. (str "Unable to unmount previous WebDAV mount at " webdav-mount-point)))))]
+    (unmount-if)
+    (loop [tries 1]
+      (if-not (or (.exists output-dir) (.mkdirs output-dir))
+        (throw (IOException. (str "Unable to create WebDAV mount point " webdav-mount-point))))
+      (if (zero? (sh "mount_webdav" webdav-endpoint webdav-mount-point))
+        (reset! (:webdav-mount-point repl-env) webdav-mount-point)
+        (if (= 4 tries)
+          (throw (IOException. (str "Unable to mount WebDAV at " webdav-endpoint)))
+          (do
+            (unmount-if)
+            (Thread/sleep (* tries 500))
+            (recur (inc tries))))))
     webdav-mount-point))
 
 (defn- set-up-socket
