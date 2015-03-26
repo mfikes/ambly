@@ -187,25 +187,31 @@
     (remove nil?)
     vec))
 
+(def not-conected-result
+  {:status :error
+   :value "Not connected."})
+
 (defn jsc-eval
   "Evaluate a JavaScript string in the JSC REPL process."
   [repl-env js]
   {:pre [(map? repl-env) (string? js)]}
   (let [{:keys [out]} @(:socket repl-env)
         response-promise (promise)]
-    (reset! (:response-promise repl-env) response-promise)
-    (write out js)
-    (let [response @response-promise]
-      (if (= :eof response)
-        {:status :error
-         :value  "Connection to JavaScriptCore closed."}
-        (let [result (json/read-str response
-                       :key-fn keyword)]
-          (merge
-            {:status (keyword (:status result))
-             :value  (:value result)}
-            (when-let [raw-stacktrace (:stacktrace result)]
-              {:stacktrace raw-stacktrace})))))))
+    (if out
+      (do
+        (reset! (:response-promise repl-env) response-promise)
+        (write out js)
+        (let [response @response-promise]
+          (if (= :eof response)
+            not-conected-result
+            (let [result (json/read-str response
+                           :key-fn keyword)]
+              (merge
+                {:status (keyword (:status result))
+                 :value  (:value result)}
+                (when-let [raw-stacktrace (:stacktrace result)]
+                  {:stacktrace raw-stacktrace}))))))
+      not-conected-result)))
 
 (defn load-javascript
   "Load a Closure JavaScript file into the JSC REPL process."
