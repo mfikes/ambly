@@ -397,6 +397,11 @@
   [& {:as options}]
   (repl-env* options))
 
+(defn -main
+  "Launches the Ambly REPL."
+  []
+  (repl/repl (repl-env)))
+
 (comment
 
   (require

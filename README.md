@@ -23,12 +23,12 @@ Open `Ambly Demo.xcworkspace` in Xcode and run the app in the simulator or on a 
 
 ### REPL
 
-In `ambly/Clojure` run `script/jscrepljs` to start the REPL.
+In `ambly/Clojure` run `lein run` to start the REPL.
 
 Here is a sample REPL startup sequence, illustrating device auto-discovery:
 
 ```
-$ script/jscrepljs 
+$ lein run 
 
 [1] Ambly Demo on iPod touch
 [2] Ambly Demo on iPad
@@ -47,7 +47,7 @@ ClojureScript:cljs.user> (+ 3 4)
 
 ### Manual REPL Startup
 
-If you would like to manually start the Ambly REPL, first start a Clojure REPL with `lein trampoline run -m clojure.main` and then issue the following two forms:
+If you would like to manually start the Ambly REPL from a Clojure REPL, issue the following two forms:
 
 ```clojure
 (require
@@ -56,7 +56,7 @@ If you would like to manually start the Ambly REPL, first start a Clojure REPL w
 ```
 
 ```clojure
-(repl/repl* (jsc/repl-env) {})
+(repl/repl (jsc/repl-env))
 ```
 
 ### rlwrap
@@ -69,13 +69,7 @@ For a better REPL experience (keyboard input editing and history support), you c
 brew install rlwrap
 ```
 
-The `script/jscrepljs` script automatically use `rlwrap` if installed. 
-
-If manually starting the Ambly REPL, use:
-
-```
-rlwrap lein trampoline run -m clojure.main
-```
+Then you can start the Ambly REPL with `rlwrap lein run`.
 
 ## License
 
