@@ -41,7 +41,7 @@ Choice: 1
 Connecting to Ambly Demo on iPod touch ...
 
 To quit, type: :cljs/quit
-ClojureScript:cljs.user> (+ 3 4)
+cljs.user=> (+ 3 4)
 7
 ```
 
