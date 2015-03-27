@@ -387,10 +387,13 @@
   (-tear-down [repl-env]
     (tear-down repl-env)))
 
-(defn repl-env* [options]
-  (JscEnv. (atom nil) (atom nil) (atom nil) (atom nil) options))
+(defn repl-env*
+  [options]
+  {:pre [(or (nil? options) (map? options))]}
+  (JscEnv. (atom nil) (atom nil) (atom nil) (atom nil) (or options {})))
 
 (defn repl-env
+  "Ambly REPL environment."
   [& {:as options}]
   (repl-env* options))
 
@@ -400,6 +403,6 @@
     '[cljs.repl :as repl]
     '[ambly.repl.jsc :as jsc])
 
-  (repl/repl* (jsc/repl-env) {})
+  (repl/repl (jsc/repl-env))
 
   )
