@@ -10,7 +10,8 @@
   (:import java.net.Socket
            java.lang.StringBuilder
            [java.io File BufferedReader BufferedWriter IOException]
-           (javax.jmdns JmDNS ServiceListener)))
+           (javax.jmdns JmDNS ServiceListener)
+           (java.net URI)))
 
 (defn sh
   [& args]
@@ -155,24 +156,47 @@
           (when-not (.isClosed (:socket @(:socket repl-env)))
             (.printStackTrace e)))))))
 
+(defn source-uri->file
+  "Takes a source URI and returns a file value suitable for inclusion
+  in a canonical stack frame."
+  [source-uri opts]
+  {:pre [(string? source-uri) (map? opts)]}
+  (let [uri (URI. source-uri)
+        uri-scheme (.getScheme uri)]
+    (case uri-scheme
+      "file" (let [uri-path (.getPath uri)
+                   relative-path (if (.startsWith uri-path "/")
+                                   (subs uri-path 1)
+                                   uri-path)]
+               (str (io/file (util/output-directory opts) relative-path)))
+      (str "<" source-uri ">"))))
+
 (defn stack-line->canonical-frame
   "Parses a stack line into a frame representation, returning nil
   if parse failed."
   [stack-line opts]
-  {:pre [(string? stack-line) (map? opts)]}
-  (let [[function file line column]
-        (rest (re-matches #"(.*)@file:///(.*):([0-9]+):([0-9]+)"
+  {:pre  [(string? stack-line) (map? opts)]}
+  (let [[function source-uri line column]
+        (rest (re-matches #"(.*)@(.*):([0-9]+):([0-9]+)"
                 stack-line))]
-    (if (and file function line column)
-      {:file     (str (io/file (util/output-directory opts) file))
+    (if (and source-uri function line column)
+      {:file     (source-uri->file source-uri opts)
        :function function
        :line     (Long/parseLong line)
        :column   (Long/parseLong column)}
-      (when-not (string/blank? stack-line)
-        {:file nil
-         :function (string/trim stack-line)
-         :line nil
-         :column nil}))))
+      (let [[source-uri line column]
+            (rest (re-matches #"(.*):([0-9]+):([0-9]+)"
+                              stack-line))]
+        (if (and source-uri line column)
+          {:file     (source-uri->file source-uri opts)
+           :function nil
+           :line     (Long/parseLong line)
+           :column   (Long/parseLong column)}
+          (when-not (string/blank? stack-line)
+            {:file     nil
+             :function (string/trim stack-line)
+             :line     nil
+             :column   nil}))))))
 
 (defn raw-stacktrace->canonical-stacktrace
   "Parse a raw JSC stack representation, parsing it into stack frames.
@@ -371,7 +395,9 @@
                          file-path))
                      (str url)))]
       (doseq [{:keys [function file url line column]}
-              (repl/mapped-stacktrace stacktrace build-options)]
+              (map #(merge-with (fn [a b] (or a b)) %1 %2)
+                   (repl/mapped-stacktrace stacktrace build-options)
+                   stacktrace)]
         (let [url (when url (string/trim (.toString url)))
               file (when file (string/trim (.toString file)))]
           (println
