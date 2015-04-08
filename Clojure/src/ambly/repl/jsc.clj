@@ -45,15 +45,13 @@
     (doseq [[choice-number [bonjour-name _]] (name-endpoint-map->choice-list name-endpoint-map)]
       (println (str "[" choice-number "] " (bonjour-name->display-name bonjour-name))))))
 
-(defn discover-and-choose-device
-  "Looks for Ambly WebDAV devices advertised via Bonjour and presents
-  a simple command-line UI letting user pick one, unless
-  choose-first-discovered? is set to true in which case the UI is bypassed"
-  [choose-first-discovered? opts]
-  {:pre [(map? opts)]}
-  (let [reg-type "_http._tcp.local."
-        name-endpoint-map (atom (sorted-map))
-        mdns-service (JmDNS/create)
+(defn setup-mdns
+  "Sets up mDNS to populate atom supplied in name-endpoint-map with discoveries.
+  Returns a function that will tear down mDNS."
+  [reg-type name-endpoint-map]
+  {:pre [(string? reg-type)]
+   :post [(fn? %)]}
+  (let [mdns-service (JmDNS/create)
         service-listener
         (reify ServiceListener
           (serviceAdded [_ service-event]
@@ -71,14 +69,34 @@
                                     {:address (.getAddress info)
                                      :port    (.getPort info)})}]
                   (swap! name-endpoint-map merge entry))))))]
+    (.addServiceListener mdns-service reg-type service-listener)
+    (fn []
+      (.removeServiceListener mdns-service reg-type service-listener)
+      (.close mdns-service))))
+
+(defn discover-and-choose-device
+  "Looks for Ambly WebDAV devices advertised via Bonjour and presents
+  a simple command-line UI letting user pick one, unless
+  choose-first-discovered? is set to true in which case the UI is bypassed"
+  [choose-first-discovered? opts]
+  {:pre [(map? opts)]}
+  (let [reg-type "_http._tcp.local."
+        name-endpoint-map (atom (sorted-map))
+        tear-down-mdns
+        (loop [count 0
+               tear-down-mdns (setup-mdns reg-type name-endpoint-map)]
+          (if (empty? @name-endpoint-map)
+            (do
+              (Thread/sleep 100)
+              (when (= 20 count)
+                (println "\nSearching for devices ..."))
+              (if (zero? (rem (inc count) 100))
+                (do
+                  (tear-down-mdns)
+                  (recur (inc count) (setup-mdns reg-type name-endpoint-map)))
+                (recur (inc count) tear-down-mdns)))
+            tear-down-mdns))]
     (try
-      (.addServiceListener mdns-service reg-type service-listener)
-      (loop [count 0]
-        (when (empty? @name-endpoint-map)
-          (Thread/sleep 100)
-          (when (= 20 count)
-            (println "\nSearching for devices ..."))
-          (recur (inc count))))
       (Thread/sleep 500)                                    ;; Sleep a little more to catch stragglers
       (loop [current-name-endpoint-map @name-endpoint-map]
         (println)
@@ -96,11 +114,7 @@
                 (second (nth choices choice-ndx))
                 (recur current-name-endpoint-map))))))
       (finally
-        (.start
-          (Thread.
-            (fn []
-              (.removeServiceListener mdns-service reg-type service-listener)
-              (.close mdns-service))))))))
+        (.start (Thread. tear-down-mdns))))))
 
 (defn socket
   [host port]
