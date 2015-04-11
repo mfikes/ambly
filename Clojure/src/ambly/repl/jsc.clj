@@ -217,7 +217,7 @@
   The canonical stacktrace must be a vector of maps of the form
   {:file <string> :function <string> :line <integer> :column <integer>}."
   [raw-stacktrace opts]
-  {:pre  [string? (map? opts)]
+  {:pre  [(string? raw-stacktrace) (map? opts)]
    :post [(vector? %)]}
   (->> raw-stacktrace
     string/split-lines
