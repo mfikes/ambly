@@ -14,9 +14,23 @@
            (java.net URI)))
 
 (defn sh
-  [& args]
-  {:pre [(every? string? args)]}
-  (.waitFor (.exec (Runtime/getRuntime) (string/join " " args))))
+  "Executes a shell process. Allows up to timeout to complete, returning process
+  exit code. Otherwise forcibly terminates process and returns timeout-exit-value."
+  [timeout timeout-exit-value & args]
+  {:pre [(number? timeout) (every? string? args)]}
+  (let [process (.exec (Runtime/getRuntime) (string/join " " args))]
+    (loop [time-remaining timeout]
+      (Thread/sleep 100)
+      (or
+        (try
+            (.exitValue process)
+            (catch IllegalThreadStateException _
+              nil))
+        (if (pos? time-remaining)
+          (recur (- time-remaining 100))
+          (do
+            (.destroy process)
+            timeout-exit-value))))))
 
 (defn set-logging-level [logger-name level]
   {:pre [(string? logger-name) (instance? java.util.logging.Level level)]}
@@ -272,7 +286,7 @@
 (defn tear-down
   [repl-env]
   (when-let [webdav-mount-point @(:webdav-mount-point repl-env)]
-    (sh "umount" webdav-mount-point))
+    (sh 1000 -1 "umount" webdav-mount-point))
   (when-let [socket @(:socket repl-env)]
     (close-socket socket)))
 
@@ -284,13 +298,13 @@
         output-dir (io/file webdav-mount-point)
         webdav-endpoint (str "http://" endpoint-address ":" endpoint-port)
         unmount-if #(if (.exists output-dir)
-                     (if-not (<= 0 (sh "umount" webdav-mount-point) 1)
+                     (if-not (<= 0 (sh 1000 -1 "umount" webdav-mount-point) 1)
                        (throw (IOException. (str "Unable to unmount previous WebDAV mount at " webdav-mount-point)))))]
     (unmount-if)
     (loop [tries 1]
       (if-not (or (.exists output-dir) (.mkdirs output-dir))
         (throw (IOException. (str "Unable to create WebDAV mount point " webdav-mount-point))))
-      (if (zero? (sh "mount_webdav" webdav-endpoint webdav-mount-point))
+      (if (zero? (sh 1000 -1 "mount_webdav" webdav-endpoint webdav-mount-point))
         (reset! (:webdav-mount-point repl-env) webdav-mount-point)
         (if (= 4 tries)
           (throw (IOException. (str "Unable to mount WebDAV at " webdav-endpoint)))
