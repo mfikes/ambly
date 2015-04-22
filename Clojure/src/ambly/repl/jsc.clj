@@ -23,9 +23,9 @@
       (Thread/sleep 100)
       (or
         (try
-            (.exitValue process)
-            (catch IllegalThreadStateException _
-              nil))
+          (.exitValue process)
+          (catch IllegalThreadStateException _
+            nil))
         (if (pos? time-remaining)
           (recur (- time-remaining 100))
           (do
@@ -33,26 +33,34 @@
             timeout-exit-value))))))
 
 (defn set-logging-level [logger-name level]
+  "Sets the logging level for a logger to a level."
   {:pre [(string? logger-name) (instance? java.util.logging.Level level)]}
   (.setLevel (java.util.logging.Logger/getLogger logger-name) level))
 
-(def ambly-bonjour-name-prefix "Ambly ")
+(def ambly-bonjour-name-prefix
+  "The prefix used in Ambly Bonjour service names."
+  "Ambly ")
 
 (defn is-ambly-bonjour-name? [bonjour-name]
+  "Returns true iff a given name is an Ambly Bonjour service name."
   {:pre [(string? bonjour-name)]}
   (.startsWith bonjour-name ambly-bonjour-name-prefix))
 
 (defn bonjour-name->display-name
+  "Converts an Ambly Bonjour service name to a display name
+  (stripping off ambly-bonjour-name-prefix)."
   [bonjour-name]
   {:pre [(is-ambly-bonjour-name? bonjour-name)]
    :post [(string? %)]}
   (subs bonjour-name (count ambly-bonjour-name-prefix)))
 
 (defn name-endpoint-map->choice-list [name-endpoint-map]
+  "Takes a name to endpoint map, and converts into an indexed list."
   {:pre [(map? name-endpoint-map)]}
   (map vector (iterate inc 1) name-endpoint-map))
 
 (defn print-discovered-devices [name-endpoint-map opts]
+  "Prints the set of discovered devices given a name endpoint map."
   {:pre [(map? name-endpoint-map) (map? opts)]}
   (if (empty? name-endpoint-map)
     (println "(No devices)")
@@ -406,6 +414,29 @@
       (tear-down repl-env)
       (throw t))))
 
+(defn stacktrace->display-string
+  "Takes a stacktrace and forms a display string, consulting a mapped stacktrace
+  and the output directory"
+  [stacktrace mapped-stacktrace output-dir]
+  {:pre [(vector? stacktrace) (vector? mapped-stacktrace) (string? output-dir)]
+   :post [(string? %)]}
+  (let [source (fn [url file]
+                 (if file
+                   (let [file-path (str file)]
+                     (if (.startsWith file-path output-dir)
+                       (subs file-path (inc (count output-dir)))
+                       file-path))
+                   (str url)))]
+    (apply str
+      (for [{:keys [function file url line column]}
+            (map #(merge-with (fn [a b] (or a b)) %1 %2)
+              mapped-stacktrace
+              stacktrace)]
+        (let [url (when url (string/trim (.toString url)))
+              file (when file (string/trim (.toString file)))]
+          (str "\t" (when function (str function " "))
+            "(" (source url file) (when line (str ":" line)) (when column (str ":" column)) ")\n"))))))
+
 (defrecord JscEnv [response-promise bonjour-name webdav-mount-point socket options]
   repl/IReplEnvOptions
   (-repl-options [this]
@@ -415,22 +446,11 @@
     (raw-stacktrace->canonical-stacktrace stacktrace build-options))
   repl/IPrintStacktrace
   (-print-stacktrace [_ stacktrace _ build-options]
-    (let [source (fn [url file]
-                   (if file
-                     (let [file-path (str file)]
-                       (if (.startsWith file-path @webdav-mount-point)
-                         (subs file-path (inc (count @webdav-mount-point)))
-                         file-path))
-                     (str url)))]
-      (doseq [{:keys [function file url line column]}
-              (map #(merge-with (fn [a b] (or a b)) %1 %2)
-                   (repl/mapped-stacktrace stacktrace build-options)
-                   stacktrace)]
-        (let [url (when url (string/trim (.toString url)))
-              file (when file (string/trim (.toString file)))]
-          (println
-            (str "\t" (when function (str function " "))
-              "(" (source url file) (when line (str ":" line)) (when column (str ":" column)) ")"))))))
+    (print
+      (stacktrace->display-string
+        stacktrace
+        (repl/mapped-stacktrace stacktrace build-options)
+        @webdav-mount-point)))
   repl/IJavaScriptEnv
   (-setup [repl-env opts]
     (setup repl-env opts))
