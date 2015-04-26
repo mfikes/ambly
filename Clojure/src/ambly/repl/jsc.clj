@@ -241,11 +241,12 @@
   [raw-stacktrace opts]
   {:pre  [(string? raw-stacktrace) (map? opts)]
    :post [(vector? %)]}
-  (->> raw-stacktrace
-    string/split-lines
-    (map #(stack-line->canonical-frame % opts))
-    (remove nil?)
-    vec))
+  (let [stack-line->canonical-frame (memoize stack-line->canonical-frame)]
+    (->> raw-stacktrace
+         string/split-lines
+         (map #(stack-line->canonical-frame % opts))
+         (remove nil?)
+         vec)))
 
 (def not-conected-result
   {:status :error
@@ -446,11 +447,12 @@
     (raw-stacktrace->canonical-stacktrace stacktrace build-options))
   repl/IPrintStacktrace
   (-print-stacktrace [_ stacktrace _ build-options]
-    (print
-      (stacktrace->display-string
-        stacktrace
-        (repl/mapped-stacktrace stacktrace build-options)
-        @webdav-mount-point)))
+    (let [truncated-stacktrace (vec (take 1024 stacktrace))]
+      (print
+       (stacktrace->display-string
+         truncated-stacktrace
+         (repl/mapped-stacktrace truncated-stacktrace build-options)
+         @webdav-mount-point))))
   repl/IJavaScriptEnv
   (-setup [repl-env opts]
     (setup repl-env opts))
