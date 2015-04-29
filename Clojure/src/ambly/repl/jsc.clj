@@ -11,7 +11,7 @@
            java.lang.StringBuilder
            [java.io File BufferedReader BufferedWriter IOException]
            (javax.jmdns JmDNS ServiceListener)
-           (java.net URI)))
+           (java.net URI InetAddress NetworkInterface Inet4Address)))
 
 (defn sh
   "Executes a shell process. Allows up to timeout to complete, returning process
@@ -292,6 +292,22 @@
   {:pre [(or (string? path) (instance? File path))]}
   (form-ambly-import-script-expr-js (str "'" path "'")))
 
+(defn- local-address-if
+  "Takes an IP address and returns the localhost address if the
+  address happens to be local to this machine."
+  [ip-address]
+  {:pre [(string? ip-address)]
+   :post [(string? %)]}
+  (try
+    (let [inet-address (InetAddress/getByName ip-address)]
+      (if (NetworkInterface/getByInetAddress inet-address)
+        (if (instance? Inet4Address inet-address)
+          "127.0.0.1"
+          "::1")
+        ip-address))
+    (catch Throwable _
+      ip-address)))
+
 (defn- umount-webdav
   "Unmounts WebDAV, returning true upon success."
   [webdav-mount-point]
@@ -347,7 +363,7 @@
   (try
     (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/OFF)
           [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered (:options repl-env)) opts)
-          endpoint-address (.getHostAddress (:address endpoint))
+          endpoint-address (local-address-if (.getHostAddress (:address endpoint)))
           endpoint-port (:port endpoint)
           _ (reset! (:bonjour-name repl-env) bonjour-name)
           webdav-mount-point (mount-webdav repl-env bonjour-name endpoint-address endpoint-port)
