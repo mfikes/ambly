@@ -295,7 +295,7 @@
 (defn- umount-webdav
   "Unmounts WebDAV, returning true upon success."
   [webdav-mount-point]
-  {:pre (string? webdav-mount-point)}
+  {:pre [(string? webdav-mount-point)]}
   (or
     (not (.exists (io/file webdav-mount-point)))
     (= 0 (sh 5000 -1 "umount" webdav-mount-point))
