@@ -292,24 +292,25 @@
   {:pre [(or (string? path) (instance? File path))]}
   (form-ambly-import-script-expr-js (str "'" path "'")))
 
-(defn tear-down
-  [repl-env]
-  (when-let [webdav-mount-point @(:webdav-mount-point repl-env)]
-    (sh 1000 -1 "umount" webdav-mount-point))
-  (when-let [socket @(:socket repl-env)]
-    (close-socket socket)))
+(defn- umount-webdav
+  "Unmounts WebDAV, returning true upon success."
+  [webdav-mount-point]
+  {:pre (string? webdav-mount-point)}
+  (or
+    (not (.exists (io/file webdav-mount-point)))
+    (= 0 (sh 5000 -1 "umount" webdav-mount-point))
+    (= 0 (sh 5000 -1 "umount" "-f" webdav-mount-point))))
 
 (defn- mount-webdav
+  "Mounts WebDAV, throwing upon failure."
   [repl-env bonjour-name endpoint-address endpoint-port]
   {:pre [(map? repl-env) (is-ambly-bonjour-name? bonjour-name)
          (string? endpoint-address) (number? endpoint-port)]}
   (let [webdav-mount-point (str "/Volumes/Ambly-" (format "%08X" (hash bonjour-name)))
         output-dir (io/file webdav-mount-point)
-        webdav-endpoint (str "http://" endpoint-address ":" endpoint-port)
-        unmount-if #(if (.exists output-dir)
-                     (if-not (<= 0 (sh 1000 -1 "umount" webdav-mount-point) 1)
-                       (throw (IOException. (str "Unable to unmount previous WebDAV mount at " webdav-mount-point)))))]
-    (unmount-if)
+        webdav-endpoint (str "http://" endpoint-address ":" endpoint-port)]
+    (when-not (umount-webdav webdav-mount-point)
+      (throw (IOException. (str "Unable to unmount previous WebDAV mount at " webdav-mount-point))))
     (loop [tries 1]
       (if-not (or (.exists output-dir) (.mkdirs output-dir))
         (throw (IOException. (str "Unable to create WebDAV mount point " webdav-mount-point))))
@@ -318,7 +319,7 @@
         (if (= 4 tries)
           (throw (IOException. (str "Unable to mount WebDAV at " webdav-endpoint)))
           (do
-            (unmount-if)
+            (umount-webdav webdav-mount-point)
             (Thread/sleep (* tries 500))
             (recur (inc tries))))))
     webdav-mount-point))
@@ -332,6 +333,13 @@
     (socket address port))
   ;; Start dedicated thread to read messages from socket
   (start-reading-messages repl-env opts))
+
+(defn tear-down
+  [repl-env]
+  (when-let [webdav-mount-point @(:webdav-mount-point repl-env)]
+    (umount-webdav webdav-mount-point))
+  (when-let [socket @(:socket repl-env)]
+    (close-socket socket)))
 
 (defn setup
   [repl-env opts]
