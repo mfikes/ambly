@@ -32,6 +32,57 @@
             (.destroy process)
             timeout-exit-value))))))
 
+(defn- ip-address->inet-addr
+  "Take a string representation of an IP address and returns a Java InetAddress
+  instance, or nil if the conversion couldn't be completed."
+  [ip-address]
+  {:pre  [(string? ip-address)]
+   :post [(or (nil? %) (instance? InetAddress %))]}
+  (try
+    (InetAddress/getByName ip-address)
+    (catch Throwable _
+      nil)))
+
+(defn local?
+  "Takes an IP address and returns a truthy value iff the address is local
+  to the machine running this code."
+  [ip-address]
+  {:pre [(or (nil? ip-address) (string? ip-address))]}
+  (some-> ip-address
+    ip-address->inet-addr
+    NetworkInterface/getByInetAddress))
+
+(defn address-type
+  "Takes an IP address and returns a keyword in #{:ipv4 :ipv6}
+  indicating the type of the address, or nil if the type could not
+  be determined"
+  [ip-address]
+  {:pre  [(string? ip-address)]
+   :post [(or (nil? %) (#{:ipv4 :ipv6} %))]}
+  (if-let [inet-address (ip-address->inet-addr ip-address)]
+    (if (instance? Inet4Address inet-address)
+      :ipv4
+      :ipv6)))
+
+(defn address-type->localhost-address
+  "Given an address type, returns the localhost address."
+  [address-type]
+  {:pre [(#{:ipv4 :ipv6} address-type)]
+   :post [(string? %)]}
+  (address-type {:ipv4 "127.0.0.1" :ipv6 "::1"}))
+
+(defn- local-address-if
+  "Takes an IP address and returns the localhost address if the
+  address happens to be local to this machine."
+  [ip-address]
+  {:pre  [(string? ip-address)]
+   :post [(string? %)]}
+  (if (local? ip-address)
+    (-> ip-address
+      address-type
+      address-type->localhost-address)
+    ip-address))
+
 (defn set-logging-level [logger-name level]
   "Sets the logging level for a logger to a level."
   {:pre [(string? logger-name) (instance? java.util.logging.Level level)]}
@@ -57,7 +108,10 @@
 (defn name-endpoint-map->choice-list [name-endpoint-map]
   "Takes a name to endpoint map, and converts into an indexed list."
   {:pre [(map? name-endpoint-map)]}
-  (map vector (iterate inc 1) name-endpoint-map))
+  (map vector
+    (iterate inc 1)
+    (sort-by (juxt (comp (complement local?) :address second) first)
+      name-endpoint-map)))
 
 (defn print-discovered-devices [name-endpoint-map opts]
   "Prints the set of discovered devices given a name endpoint map."
@@ -88,7 +142,7 @@
                   name (.getName service-event)]
               (when (and (= reg-type type) (is-ambly-bonjour-name? name))
                 (let [entry {name (let [info (.getInfo service-event)]
-                                    {:address (.getAddress info)
+                                    {:address (.getHostAddress (.getAddress info))
                                      :port    (.getPort info)})}]
                   (swap! name-endpoint-map merge entry))))))]
     (.addServiceListener mdns-service reg-type service-listener)
@@ -103,7 +157,7 @@
   [choose-first-discovered? opts]
   {:pre [(map? opts)]}
   (let [reg-type "_http._tcp.local."
-        name-endpoint-map (atom (sorted-map))
+        name-endpoint-map (atom {})
         tear-down-mdns
         (loop [count 0
                tear-down-mdns (setup-mdns reg-type name-endpoint-map)]
@@ -292,22 +346,6 @@
   {:pre [(or (string? path) (instance? File path))]}
   (form-ambly-import-script-expr-js (str "'" path "'")))
 
-(defn- local-address-if
-  "Takes an IP address and returns the localhost address if the
-  address happens to be local to this machine."
-  [ip-address]
-  {:pre [(string? ip-address)]
-   :post [(string? %)]}
-  (try
-    (let [inet-address (InetAddress/getByName ip-address)]
-      (if (NetworkInterface/getByInetAddress inet-address)
-        (if (instance? Inet4Address inet-address)
-          "127.0.0.1"
-          "::1")
-        ip-address))
-    (catch Throwable _
-      ip-address)))
-
 (defn- umount-webdav
   "Unmounts WebDAV, returning true upon success."
   [webdav-mount-point]
@@ -363,7 +401,7 @@
   (try
     (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/OFF)
           [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered (:options repl-env)) opts)
-          endpoint-address (local-address-if (.getHostAddress (:address endpoint)))
+          endpoint-address (local-address-if (:address endpoint))
           endpoint-port (:port endpoint)
           _ (reset! (:bonjour-name repl-env) bonjour-name)
           webdav-mount-point (mount-webdav repl-env bonjour-name endpoint-address endpoint-port)

@@ -38,7 +38,12 @@
     (is (= '([1 ["Ambly bar" {:port 50000}]]
               [2 ["Ambly foo" {:port 40000}]])
           (name-endpoint-map->choice-list
-            (sorted-map "Ambly foo" {:port 40000} "Ambly bar" {:port 50000}))))))
+            (hash-map "Ambly foo" {:port 40000} "Ambly bar" {:port 50000})))))
+  (testing "double with local"
+    (is (= '([1 ["Ambly foo" {:port 40000 :address "127.0.0.1"}]]
+              [2 ["Ambly bar" {:port 50000}]])
+          (name-endpoint-map->choice-list
+            (hash-map "Ambly foo" {:port 40000 :address "127.0.0.1"} "Ambly bar" {:port 50000}))))))
 
 (deftest test-print-discovered-devices
   (testing "empty"
@@ -53,7 +58,7 @@
     (is (= "[1] bar\n[2] foo\n"
           (with-out-str
             (print-discovered-devices
-              (sorted-map "Ambly foo" {:port 40000} "Ambly bar" {:port 50000}) {}))))))
+              (hash-map "Ambly foo" {:port 40000} "Ambly bar" {:port 50000}) {}))))))
 
 (deftest test->source-uri->file
   (testing "normal"
@@ -125,3 +130,17 @@
 (deftest form-ambly-import-script-path-js-test
   (testing "Path in /tmp"
     (is (= "AMBLY_IMPORT_SCRIPT('/tmp/foo.js');" (form-ambly-import-script-path-js (io/file "/tmp" "foo.js"))))))
+
+(deftest local?-test
+  (testing "127.0.0.1"
+    (is (local? "127.0.0.1")))
+  (testing "192.0.2.1"
+    (is (not (local? "192.0.2.1")))))
+
+(deftest address-type-test
+  (testing "127.0.0.1"
+    (is (= :ipv4 (address-type "127.0.0.1"))))
+  (testing "::1"
+    (is (= :ipv6 (address-type "::1"))))
+  (testing "uknnown"
+    (is (nil? (address-type "blah")))))
