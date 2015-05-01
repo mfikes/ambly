@@ -372,8 +372,7 @@
          (string? endpoint-address) (number? endpoint-port)]}
   (let [webdav-mount-point (str "/Volumes/Ambly-" (format "%08X" (hash bonjour-name)))
         output-dir (io/file webdav-mount-point)
-        webdav-endpoint (create-http-url endpoint-address endpoint-port)
-        _ (println webdav-endpoint)]
+        webdav-endpoint (create-http-url endpoint-address endpoint-port)]
     (when-not (umount-webdav webdav-mount-point)
       (throw (IOException. (str "Unable to unmount previous WebDAV mount at " webdav-mount-point))))
     (loop [tries 1]
