@@ -144,3 +144,9 @@
     (is (= :ipv6 (address-type "::1"))))
   (testing "uknnown"
     (is (nil? (address-type "blah")))))
+
+(deftest create-http-url-test
+  (testing "ipv4"
+    (is (= "http://127.0.0.1:8080" (create-http-url "127.0.0.1" 8080))))
+  (testing "ipv6"
+    (is (= "http://[::1]:8080" (create-http-url "::1" 8080)))))

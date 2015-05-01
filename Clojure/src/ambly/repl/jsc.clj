@@ -357,6 +357,14 @@
       (zero? (sh 1000 -1 "rmdir" webdav-mount-point)))
     (zero? (sh 5000 -1 "umount" "-f" webdav-mount-point))))
 
+(defn create-http-url
+  "Takes an address and port and forms a URL."
+  [address port]
+  (let [wrapped-address (if (= :ipv6 (address-type address))
+                          (str "[" address "]")
+                          address)]
+    (str "http://" wrapped-address ":" port)))
+
 (defn- mount-webdav
   "Mounts WebDAV, throwing upon failure."
   [repl-env bonjour-name endpoint-address endpoint-port]
@@ -364,7 +372,8 @@
          (string? endpoint-address) (number? endpoint-port)]}
   (let [webdav-mount-point (str "/Volumes/Ambly-" (format "%08X" (hash bonjour-name)))
         output-dir (io/file webdav-mount-point)
-        webdav-endpoint (str "http://" endpoint-address ":" endpoint-port)]
+        webdav-endpoint (create-http-url endpoint-address endpoint-port)
+        _ (println webdav-endpoint)]
     (when-not (umount-webdav webdav-mount-point)
       (throw (IOException. (str "Unable to unmount previous WebDAV mount at " webdav-mount-point))))
     (loop [tries 1]
