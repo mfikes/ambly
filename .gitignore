@@ -14,3 +14,4 @@ Podfile.lock
 ObjectiveC/Ambly Demo/Ambly Demo.xcworkspace/xcuserdata
 ObjectiveC/Ambly Demo/Ambly Demo.xcworkspace
 Clojure/.repl
+.DS_Store
