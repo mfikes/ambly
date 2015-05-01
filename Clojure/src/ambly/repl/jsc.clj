@@ -352,8 +352,10 @@
   {:pre [(string? webdav-mount-point)]}
   (or
     (not (.exists (io/file webdav-mount-point)))
-    (= 0 (sh 5000 -1 "umount" webdav-mount-point))
-    (= 0 (sh 5000 -1 "umount" "-f" webdav-mount-point))))
+    (or
+      (zero? (sh 5000 -1 "umount" webdav-mount-point))
+      (zero? (sh 1000 -1 "rmdir" webdav-mount-point)))
+    (zero? (sh 5000 -1 "umount" "-f" webdav-mount-point))))
 
 (defn- mount-webdav
   "Mounts WebDAV, throwing upon failure."
