@@ -520,12 +520,11 @@
     (raw-stacktrace->canonical-stacktrace stacktrace build-options))
   repl/IPrintStacktrace
   (-print-stacktrace [_ stacktrace _ build-options]
-    (let [truncated-stacktrace (vec (take 1024 stacktrace))]
-      (print
-       (stacktrace->display-string
-         truncated-stacktrace
-         (repl/mapped-stacktrace truncated-stacktrace build-options)
-         @webdav-mount-point))))
+    (print
+      (stacktrace->display-string
+        stacktrace
+        (repl/mapped-stacktrace stacktrace build-options)
+        @webdav-mount-point)))
   repl/IJavaScriptEnv
   (-setup [repl-env opts]
     (setup repl-env opts))

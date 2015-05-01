@@ -135,22 +135,6 @@
     [self.jsContext evaluateScript:@"if (typeof cljs !== 'undefined') { cljs.core.set_print_fn_BANG_.call(null,AMBLY_PRINT_FN); }"];
 }
 
--(NSString*)takeLines:(int)lines from:(NSString*)string
-{
-    NSScanner *scanner = [NSScanner scannerWithString:string];
-    NSCharacterSet *newLine = [NSCharacterSet newlineCharacterSet];
-    NSString *line;
-    NSMutableString *result = [[NSMutableString alloc] init];
-    
-    while ([scanner isAtEnd] == NO && (lines-- > 0)) {
-        [scanner scanUpToCharactersFromSet:newLine intoString:&line];
-        [result appendString:line];
-        [result appendString:@"\n"];
-    }
-    
-    return result;
-}
-
 -(void)evaluateJavaScriptAndSendResponse:(NSString*)javaScript
 {
     // Temporarily install an exception handler
@@ -167,7 +151,7 @@
     if (self.jsContext.exception) {
         rv = @{@"status": @"exception",
                @"value": self.jsContext.exception.description,
-               @"stacktrace":[self takeLines:1024 from:[self.jsContext.exception valueForProperty:@"stack"].description]};
+               @"stacktrace":[self.jsContext.exception valueForProperty:@"stack"].description};
         self.jsContext.exception = nil;
     } else if (![result isUndefined] && ![result isNull]) {
         rv = @{@"status": @"success",
