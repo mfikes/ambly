@@ -355,7 +355,9 @@
     (or
       (zero? (sh 5000 -1 "umount" webdav-mount-point))
       (zero? (sh 1000 -1 "rmdir" webdav-mount-point)))
-    (zero? (sh 5000 -1 "umount" "-f" webdav-mount-point))))
+    (or
+      (zero? (sh 5000 -1 "umount" "-f" webdav-mount-point))
+      (zero? (sh 1000 -1 "rmdir" webdav-mount-point)))))
 
 (defn create-http-url
   "Takes an address and port and forms a URL."
