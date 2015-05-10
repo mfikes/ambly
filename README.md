@@ -8,6 +8,13 @@ Ambly comprises a ClojureScript REPL implementation, along with Objective-C code
 
 An iOS app is included, making it easy to give the REPL a spin. [Watch a demo.](http://youtu.be/TVDkYZJW2MY)
 
+```
+platform :ios, '8.0'
+pod "Ambly", "~> 0.1.0"
+```
+
+[![Clojars Project](http://clojars.org/org.omcljs/ambly/latest-version.svg)](http://clojars.org/org.omcljs/ambly)
+
 ## Running
 
 ### Prerequisites
