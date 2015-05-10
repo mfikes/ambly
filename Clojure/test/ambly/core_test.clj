@@ -1,6 +1,6 @@
-(ns ambly.repl.jsc-test
+(ns ambly.core-test
   (:require [clojure.test :refer :all]
-            [ambly.repl.jsc :refer :all]
+            [ambly.core :refer :all]
             [clojure.java.io :as io])
   (:import (java.net URL)
            (java.io File)))

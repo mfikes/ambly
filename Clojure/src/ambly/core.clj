@@ -1,4 +1,4 @@
-(ns ambly.repl.jsc
+(ns ambly.core
   (:require [clojure.string :as string]
             [clojure.java.io :as io]
             [cljs.analyzer :as ana]
@@ -553,8 +553,8 @@
 
   (require
     '[cljs.repl :as repl]
-    '[ambly.repl.jsc :as jsc])
+    '[ambly.core :as ambly])
 
-  (repl/repl (jsc/repl-env))
+  (repl/repl (ambly/repl-env))
 
   )

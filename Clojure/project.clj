@@ -6,5 +6,4 @@
   :dependencies [[org.clojure/clojure "1.7.0-beta2"]
                  [org.clojure/clojurescript "0.0-3255"]
                  [com.github.rickyclarkson/jmdns "3.4.2-r353-1"]]
-  :source-paths ["src"]
-  :main ambly.repl.jsc)
+  :source-paths ["src"])

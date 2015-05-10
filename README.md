@@ -30,7 +30,7 @@ Open `Ambly Demo.xcworkspace` in Xcode and run the app in the simulator or on a 
 
 ### REPL
 
-In `ambly/Clojure` run `lein run` to start the REPL.
+In `ambly/Clojure` run `script/repl` to start the REPL.
 
 Here is a sample REPL startup sequence, illustrating device auto-discovery:
 
@@ -59,11 +59,11 @@ If you would like to manually start the Ambly REPL from a Clojure REPL, issue th
 ```clojure
 (require
   '[cljs.repl :as repl]
-  '[ambly.repl.jsc :as jsc])
+  '[ambly.core :as ambly])
 ```
 
 ```clojure
-(repl/repl (jsc/repl-env))
+(repl/repl (ambly/repl-env))
 ```
 
 ### rlwrap
@@ -76,7 +76,7 @@ For a better REPL experience (keyboard input editing and history support), you c
 brew install rlwrap
 ```
 
-Then you can start the Ambly REPL with `rlwrap lein run`.
+Then `script/repl` will automatically detect `rlwrap` and use it.
 
 ## License
 
