@@ -346,12 +346,21 @@
   {:pre [(or (string? path) (instance? File path))]}
   (form-ambly-import-script-expr-js (str "'" path "'")))
 
+(defn- mount-exists?
+  "Checks to see if a WebDAV mount point already exists."
+  [webdav-mount-point]
+  {:pre [(string? webdav-mount-point)]}
+  ;; We fall back to `.canRead` to cope with mount points where `.exists` returns false and
+  ;; for command-line tools indicate `Operation timed out`.
+  (let [file (io/file webdav-mount-point)]
+    (or (.exists file) (.canRead file))))
+
 (defn- umount-webdav
   "Unmounts WebDAV, returning true upon success."
   [webdav-mount-point]
   {:pre [(string? webdav-mount-point)]}
   (or
-    (not (.exists (io/file webdav-mount-point)))
+    (not (mount-exists? webdav-mount-point))
     (or
       (zero? (sh 5000 -1 "umount" webdav-mount-point))
       (zero? (sh 5000 -1 "umount" "-f" webdav-mount-point))
@@ -376,7 +385,7 @@
     (when-not (umount-webdav webdav-mount-point)
       (throw (IOException. (str "Unable to unmount previous WebDAV mount at " webdav-mount-point))))
     (loop [tries 1]
-      (if-not (or (.exists output-dir) (.mkdirs output-dir))
+      (if-not (or (mount-exists? webdav-mount-point) (.mkdirs output-dir))
         (throw (IOException. (str "Unable to create WebDAV mount point " webdav-mount-point))))
       (if (zero? (sh 1000 -1 "mount_webdav" webdav-endpoint webdav-mount-point))
         (reset! (:webdav-mount-point repl-env) webdav-mount-point)
