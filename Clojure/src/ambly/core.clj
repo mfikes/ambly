@@ -379,9 +379,9 @@
   [repl-env bonjour-name endpoint-address endpoint-port]
   {:pre [(map? repl-env) (is-ambly-bonjour-name? bonjour-name)
          (string? endpoint-address) (number? endpoint-port)]}
-  (let [webdav-mount-point (str "/Volumes/Ambly-" (format "%08X" (hash bonjour-name)))
-        output-dir (io/file webdav-mount-point)
-        webdav-endpoint (create-http-url endpoint-address endpoint-port)]
+  (let [webdav-endpoint (create-http-url endpoint-address endpoint-port)
+        webdav-mount-point (str "/Volumes/Ambly-" (format "%08X" (hash webdav-endpoint)))
+        output-dir (io/file webdav-mount-point)]
     (when-not (umount-webdav webdav-mount-point)
       (throw (IOException. (str "Unable to unmount previous WebDAV mount at " webdav-mount-point))))
     (loop [tries 1]
