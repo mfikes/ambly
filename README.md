@@ -78,6 +78,13 @@ brew install rlwrap
 
 Then `script/repl` will automatically detect `rlwrap` and use it.
 
-## License
+## Contributing
 
-Distributed under the Eclipse Public License, which is also used by ClojureScript.
+Please contact David Nolen via email to request an electronic Contributor
+Agreement. Pull requests will be accepted once your electronic CA has been signed and returned.
+
+## Copyright and license
+
+Copyright © 2015 David Nolen
+
+Licensed under the EPL (see the file epl.html).
