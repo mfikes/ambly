@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
   s.name                  = 'Ambly'
   s.version               = '0.3.0'
-  s.license               = { :type => 'Eclipse Public License 1.0', :file => 'LICENSE' }
+  s.license               = { :type => 'Eclipse Public License 1.0', :file => 'epl.html' }
   s.summary               = 'ClojureScript REPL into embedded JavaScriptCore'
   s.homepage              = 'https://github.com/omcljs/ambly'
   s.author                = 'omcljs'
