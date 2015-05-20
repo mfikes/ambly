@@ -52,6 +52,8 @@ cljs.user=> (+ 3 4)
 7
 ```
 
+> Note: See [Connectivity](https://github.com/omcljs/ambly/wiki/Connectivity) for details, should any networking difficulty arise.
+
 ### Manual REPL Startup
 
 If you would like to manually start the Ambly REPL from a Clojure REPL, issue the following two forms:
