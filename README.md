@@ -89,4 +89,4 @@ Agreement. Pull requests will be accepted once your electronic CA has been signe
 
 Copyright © 2015 David Nolen
 
-Licensed under the EPL (see the file epl.html).
+Licensed under the EPL (see the file LICENSE).
