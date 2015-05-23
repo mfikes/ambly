@@ -1,11 +1,11 @@
-#import "ABYServer.h"
+#include "ABYServer.h"
+#include "ABYUtils.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <UIKit/UIDevice.h>
-#import <JavaScriptCore/JavaScriptCore.h>
-#import "GCDWebDAVServer.h"
+#include "GCDWebDAVServer.h"
 
 /**
  An `ABYMessage` is an immutable value container for message
@@ -49,7 +49,7 @@
 @interface ABYServer()
 
 // The context this server is wrapping
-@property (strong, nonatomic) JSContext* jsContext;
+@property (nonatomic, assign, readonly) JSGlobalContextRef context;
 
 // The WebDAV server
 @property (strong, nonatomic) GCDWebDAVServer* davServer;
@@ -76,13 +76,19 @@
 
 @implementation ABYServer
 
--(id)initWithContext:(JSContext*)context compilerOutputDirectory:(NSURL*)compilerOutputDirectory
+-(id)initWithContext:(JSGlobalContextRef)context compilerOutputDirectory:(NSURL*)compilerOutputDirectory
 {
     if (self = [super init]) {
-        self.jsContext = context;
+        _context = JSGlobalContextRetain(context);
         self.compilerOutputDirectory = compilerOutputDirectory;
     }
     return self;
+}
+
+-(void)dealloc
+{
+    [self tearDown];
+    JSGlobalContextRelease(_context);
 }
 
 -(BOOL)isReplConnected
@@ -119,51 +125,70 @@
 -(void)setUpPrintCapability
 {
     __weak typeof(self) weakSelf = self;
-    self.jsContext[@"AMBLY_PRINT_FN"] = ^(NSString *message) {
-        if ([weakSelf isReplConnected]) {
-            NSData* payload = [message dataUsingEncoding:NSUTF8StringEncoding];
-            [weakSelf sendMessage:[[ABYMessage alloc] initWithPayload:payload terminator:1]];
-        } else {
-            NSLog(@"%@", message);
-        }
-    };
+    
+    [ABYUtils installGlobalFunctionWithBlock:
+     
+     ^JSValueRef(JSContextRef ctx, size_t argc, const JSValueRef argv[]) {
+         
+         if (argc == 1 && JSValueGetType (ctx, argv[0]) == kJSTypeString)
+         {
+             JSStringRef messageStringRef = JSValueToStringCopy(ctx, argv[0], NULL);
+             NSString* message = (__bridge_transfer NSString *)JSStringCopyCFString(kCFAllocatorDefault, messageStringRef);
+             
+             if ([weakSelf isReplConnected]) {
+                 NSData* payload = [message dataUsingEncoding:NSUTF8StringEncoding];
+                 [weakSelf sendMessage:[[ABYMessage alloc] initWithPayload:payload terminator:1]];
+             } else {
+                 NSLog(@"%@", message);
+             }
+             
+             JSStringRelease(messageStringRef);
+         }
+         
+         return JSValueMakeUndefined(ctx);
+     }
+                                        name: @"AMBLY_PRINT_FN"
+                                     argList:@"message"
+                                   inContext:_context];
     
     // If bootstrapping an app, the context may have already
     // been bootstrapped for ClojureScript. If so, set *print-fn*
     // now. Otherwise, the REPL Clojure side will set *print-fn*
     // after bootstrapping for ClojureScript over the TCP connection.
-    [self.jsContext evaluateScript:@"if (typeof cljs !== 'undefined') { cljs.core.set_print_fn_BANG_.call(null,AMBLY_PRINT_FN); }"];
+    [ABYUtils evaluateScript:@"if (typeof cljs !== 'undefined') { cljs.core.set_print_fn_BANG_.call(null,AMBLY_PRINT_FN); }" inContext:_context];
 }
 
 -(void)evaluateJavaScriptAndSendResponse:(NSString*)javaScript
 {
-    // Temporarily install an exception handler
-    id currentExceptionHandler = self.jsContext.exceptionHandler;
-    self.jsContext.exceptionHandler = ^(JSContext *context, JSValue *exception) {
-        context.exception = exception;
-    };
-    
     // Evaluate the JavaScript
-    JSValue* result = [self.jsContext evaluateScript:javaScript];
+    JSValueRef jsError = NULL;
+    JSStringRef javaScriptStringRef = JSStringCreateWithCFString((__bridge CFStringRef)javaScript);
+    JSValueRef result = JSEvaluateScript(_context, javaScriptStringRef, NULL, NULL, 0, &jsError);
+    JSStringRelease(javaScriptStringRef);
+ 
+    // Extract stacktrace if an exception ocurred
+    NSString* stackDescription = nil;
+    if (jsError) {
+        JSStringRef propertyName = JSStringCreateWithCFString((__bridge CFStringRef)@"stack");
+        JSValueRef stack = JSObjectGetProperty(_context, JSValueToObject(_context, jsError, NULL), propertyName, NULL);
+        stackDescription = [ABYUtils stringForValue:stack inContext:_context];
+        JSStringRelease(propertyName);
+    }
     
     // Construct response dictionary
     NSDictionary* rv = nil;
-    if (self.jsContext.exception) {
+    if (jsError) {
         rv = @{@"status": @"exception",
-               @"value": self.jsContext.exception.description,
-               @"stacktrace":[self.jsContext.exception valueForProperty:@"stack"].description};
-        self.jsContext.exception = nil;
-    } else if (![result isUndefined] && ![result isNull]) {
+               @"value": [ABYUtils stringForValue:jsError inContext:_context],
+               @"stacktrace":stackDescription};
+    } else if (!JSValueIsUndefined(_context, result) && !JSValueIsNull(_context, result)) {
         rv = @{@"status": @"success",
-               @"value": result.description};
+               @"value": [ABYUtils stringForValue:result inContext:_context]};
     } else {
         rv = @{@"status": @"success",
                @"value": [NSNull null]};
     }
-    
-    // Restore the previous excepiton handler
-    self.jsContext.exceptionHandler = currentExceptionHandler;
-    
+        
     // Convert response dictionary to JSON
     NSError *error;
     NSData* payload = [NSJSONSerialization dataWithJSONObject:rv

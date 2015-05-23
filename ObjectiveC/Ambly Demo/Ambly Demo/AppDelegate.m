@@ -36,7 +36,7 @@ void uncaughtExceptionHandler(NSException *exception) {
     [self createDirectoriesUpTo:compilerOutputDirectory];
     
     // Set up our context
-    self.contextManager = [[ABYContextManager alloc] initWithContext:[[JSContext alloc] init]
+    self.contextManager = [[ABYContextManager alloc] initWithContext:JSGlobalContextCreate(NULL)
                                              compilerOutputDirectory:compilerOutputDirectory];
     [self.contextManager setupGlobalContext];
     [self.contextManager setUpExceptionLogging];
