@@ -30,11 +30,6 @@
     [ABYUtils evaluateScript:@"var global = this" inContext:_context];
 }
 
-- (void)setUpExceptionLogging
-{
-    NSLog(@"setUpExceptionLogging is being eliminated with move to JavaScriptCore C API");
-}
-
 - (void)setUpConsoleLog
 {
     

@@ -28,11 +28,6 @@
 - (void)setupGlobalContext;
 
 /**
- Sets up exception logging for the managed context.
- */
-- (void)setUpExceptionLogging __attribute__((deprecated("Being eliminated with move to JavaScriptCore C API")));
-
-/**
  Sets up console logging for the managed context.
  */
 - (void)setUpConsoleLog;
