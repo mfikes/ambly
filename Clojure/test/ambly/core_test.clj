@@ -62,43 +62,39 @@
 
 (deftest test->source-uri->file
   (testing "normal"
-    (is (= "/Volumes/Ambly-123/cljs/core.js"
-          (source-uri->file "file:///cljs/core.js" {:output-dir "/Volumes/Ambly-123"}))))
+    (is (= "cljs/core.js"
+          (source-uri->relative-path "file:///cljs/core.js"))))
   (testing "remote"
     (is (= "<http://foo.com/remote.js>"
-          (source-uri->file "http://foo.com/remote.js" {:output-dir "/Volumes/Ambly-123"})))))
+          (source-uri->relative-path "http://foo.com/remote.js")))))
 
 (deftest test-stack-line->canonical-frame
   (testing "normal"
-    (is (= {:file "/Volumes/Ambly-123/cljs/core.js"
+    (is (= {:file "cljs/core.js"
             :function "cljs$core$first"
             :line 4722
             :column 22}
-          (stack-line->canonical-frame "cljs$core$first@file:///cljs/core.js:4722:22"
-                {:output-dir "/Volumes/Ambly-123"}))))
+          (stack-line->canonical-frame "cljs$core$first@file:///cljs/core.js:4722:22"))))
   (testing "no @"
     (is (= {:file "<http://foo.com/remote.js>"
             :function nil
             :line 4722
             :column 22}
-          (stack-line->canonical-frame "http://foo.com/remote.js:4722:22"
-            {:output-dir "/Volumes/Ambly-123"}))))
+          (stack-line->canonical-frame "http://foo.com/remote.js:4722:22"))))
   (testing "global code"
     (is (= {:file nil
             :function "global code"
             :line nil
             :column nil}
-          (stack-line->canonical-frame "global code"
-            {:output-dir "/Volumes/Ambly-123"}))))
+          (stack-line->canonical-frame "global code"))))
   (testing "blank"
-    (is (nil? (stack-line->canonical-frame ""
-                {:output-dir "/Volumes/Ambly-123"})))))
+    (is (nil? (stack-line->canonical-frame "")))))
 
 (deftest test-raw-stacktrace->canonical-stacktrace
   (testing "normal"
-    (is (= [{:file "/Volumes/Ambly-123/cljs/core.js" :function "cljs$core$seq" :line 4692 :column 17}
-            {:file "/Volumes/Ambly-123/cljs/core.js" :function "cljs$core$first" :line 4722 :column 22}
-            {:file "/Volumes/Ambly-123/cljs/core.js" :function "cljs$core$ffirst" :line 5799 :column 39}
+    (is (= [{:file "cljs/core.js" :function "cljs$core$seq" :line 4692 :column 17}
+            {:file "cljs/core.js" :function "cljs$core$first" :line 4722 :column 22}
+            {:file "cljs/core.js" :function "cljs$core$ffirst" :line 5799 :column 39}
             {:file nil :function "global code" :line nil :column nil}]
           (raw-stacktrace->canonical-stacktrace
             "cljs$core$seq@file:///cljs/core.js:4692:17\ncljs$core$first@file:///cljs/core.js:4722:22\ncljs$core$ffirst@file:///cljs/core.js:5799:39\n\n\nglobal code"
@@ -129,7 +125,7 @@
 
 (deftest form-ambly-import-script-path-js-test
   (testing "Path in /tmp"
-    (is (= "AMBLY_IMPORT_SCRIPT('/tmp/foo.js');" (form-ambly-import-script-path-js (io/file "/tmp" "foo.js"))))))
+    (is (= "AMBLY_IMPORT_SCRIPT('/tmp/foo.js');" (form-ambly-import-script-path-js "/tmp/foo.js")))))
 
 (deftest local?-test
   (testing "127.0.0.1"
@@ -141,9 +137,7 @@
   (testing "127.0.0.1"
     (is (= :ipv4 (address-type "127.0.0.1"))))
   (testing "::1"
-    (is (= :ipv6 (address-type "::1"))))
-  (testing "uknnown"
-    (is (nil? (address-type "blah")))))
+    (is (= :ipv6 (address-type "::1")))))
 
 (deftest create-http-url-test
   (testing "ipv4"

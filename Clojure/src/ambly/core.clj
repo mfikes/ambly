@@ -6,12 +6,27 @@
             [cljs.compiler :as comp]
             [cljs.repl :as repl]
             [cljs.closure :as closure]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [clojure.java.shell :as shell])
   (:import java.net.Socket
            java.lang.StringBuilder
            [java.io File BufferedReader BufferedWriter IOException]
            (javax.jmdns JmDNS ServiceListener)
            (java.net URI InetAddress NetworkInterface Inet4Address)))
+
+(defn- substring-exists?
+  "Gets whether a substring exists in a string."
+  [s sub]
+  (not (neg? (.indexOf s sub))))
+
+(defn getOs
+  "Returns a keyword that represents the OS."
+  []
+  (let [os-name (.toLowerCase (System/getProperty "os.name"))]
+    (cond
+      (substring-exists? os-name "mac") :mac
+      (substring-exists? os-name "win") :win
+      :else :unknown)))
 
 (defn sh
   "Executes a shell process. Allows up to timeout to complete, returning process
@@ -246,31 +261,30 @@
           (when-not (.isClosed (:socket @(:socket repl-env)))
             (.printStackTrace e)))))))
 
-(defn source-uri->file
-  "Takes a source URI and returns a file value suitable for inclusion
+(defn source-uri->relative-path
+  "Takes a source URI and returns a relative path value suitable for inclusion
   in a canonical stack frame."
-  [source-uri opts]
-  {:pre [(string? source-uri) (map? opts)]}
+  [source-uri]
+  {:pre [(string? source-uri)]}
   (let [uri (URI. source-uri)
         uri-scheme (.getScheme uri)]
     (case uri-scheme
-      "file" (let [uri-path (.getPath uri)
-                   relative-path (if (.startsWith uri-path "/")
-                                   (subs uri-path 1)
-                                   uri-path)]
-               (str (io/file (util/output-directory opts) relative-path)))
+      "file" (let [uri-path (.getPath uri)]
+               (if (.startsWith uri-path "/")
+                 (subs uri-path 1)
+                 uri-path))
       (str "<" source-uri ">"))))
 
 (defn stack-line->canonical-frame
   "Parses a stack line into a frame representation, returning nil
   if parse failed."
-  [stack-line opts]
-  {:pre  [(string? stack-line) (map? opts)]}
+  [stack-line]
+  {:pre  [(string? stack-line)]}
   (let [[function source-uri line column]
         (rest (re-matches #"(.*)@(.*):([0-9]+):([0-9]+)"
                 stack-line))]
     (if (and source-uri function line column)
-      {:file     (source-uri->file source-uri opts)
+      {:file     (source-uri->relative-path source-uri)
        :function function
        :line     (Long/parseLong line)
        :column   (Long/parseLong column)}
@@ -278,7 +292,7 @@
             (rest (re-matches #"(.*):([0-9]+):([0-9]+)"
                               stack-line))]
         (if (and source-uri line column)
-          {:file     (source-uri->file source-uri opts)
+          {:file     (source-uri->relative-path source-uri)
            :function nil
            :line     (Long/parseLong line)
            :column   (Long/parseLong column)}
@@ -298,7 +312,7 @@
   (let [stack-line->canonical-frame (memoize stack-line->canonical-frame)]
     (->> raw-stacktrace
          string/split-lines
-         (map #(stack-line->canonical-frame % opts))
+         (map stack-line->canonical-frame)
          (remove nil?)
          vec)))
 
@@ -343,7 +357,7 @@
 (defn form-ambly-import-script-path-js
   "Takes a path and forms a JavaScript `AMBLY_IMPORT_SCRIPT` command."
   [path]
-  {:pre [(or (string? path) (instance? File path))]}
+  {:pre [(string? path)]}
   (form-ambly-import-script-expr-js (str "'" path "'")))
 
 (defn- mount-exists?
@@ -355,16 +369,30 @@
   (let [file (io/file webdav-mount-point)]
     (or (.exists file) (.canRead file))))
 
-(defn- umount-webdav
+(defmulti umount-webdav
   "Unmounts WebDAV, returning true upon success."
-  [webdav-mount-point]
-  {:pre [(string? webdav-mount-point)]}
+  (fn [os webdav-mount-point] os))
+
+(defmethod umount-webdav :mac
+  [os webdav-mount-point]
+  {:pre [(keyword? os) (string? webdav-mount-point)]}
   (or
     (not (mount-exists? webdav-mount-point))
     (or
       (zero? (sh 5000 -1 "umount" webdav-mount-point))
       (zero? (sh 5000 -1 "umount" "-f" webdav-mount-point))
       (zero? (sh 1000 -1 "rmdir" webdav-mount-point)))))
+
+(defmethod umount-webdav :win
+  [os webdav-mount-point]
+  {:pre [(keyword? os) (string? webdav-mount-point)]}
+  (zero? (sh 5000 -1 "net" "use" webdav-mount-point "/delete")))
+
+(defmethod umount-webdav :unknown
+  [os webdav-mount-point]
+  {:pre [(string? webdav-mount-point)]}
+  (println "\nPlease manually unmount" webdav-mount-point)
+  true)
 
 (defn create-http-url
   "Takes an address and port and forms a URL."
@@ -374,28 +402,57 @@
                           address)]
     (str "http://" wrapped-address ":" port)))
 
-(defn- mount-webdav
-  "Mounts WebDAV, throwing upon failure."
-  [repl-env bonjour-name endpoint-address endpoint-port]
-  {:pre [(map? repl-env) (is-ambly-bonjour-name? bonjour-name)
+(defmulti mount-webdav
+  "Mounts WebDAV, returning the filesystem mount point,
+  otherwise throwing upon failure."
+  (fn [os bonjour-name endpoint-address endpoint-port] os))
+
+(defmethod mount-webdav :mac
+  [os bonjour-name endpoint-address endpoint-port]
+  {:pre [(keyword? os) (is-ambly-bonjour-name? bonjour-name)
          (string? endpoint-address) (number? endpoint-port)]}
   (let [webdav-endpoint (create-http-url endpoint-address endpoint-port)
         webdav-mount-point (str "/Volumes/Ambly-" (format "%08X" (hash webdav-endpoint)))
         output-dir (io/file webdav-mount-point)]
-    (when-not (umount-webdav webdav-mount-point)
+    (when-not (umount-webdav os webdav-mount-point)
       (throw (IOException. (str "Unable to unmount previous WebDAV mount at " webdav-mount-point))))
     (loop [tries 1]
       (if-not (or (mount-exists? webdav-mount-point) (.mkdirs output-dir))
         (throw (IOException. (str "Unable to create WebDAV mount point " webdav-mount-point))))
       (if (zero? (sh 1000 -1 "mount_webdav" webdav-endpoint webdav-mount-point))
-        (reset! (:webdav-mount-point repl-env) webdav-mount-point)
+        webdav-mount-point
         (if (= 4 tries)
           (throw (IOException. (str "Unable to mount WebDAV at " webdav-endpoint)))
           (do
-            (umount-webdav webdav-mount-point)
+            (umount-webdav os webdav-mount-point)
             (Thread/sleep (* tries 500))
-            (recur (inc tries))))))
-    webdav-mount-point))
+            (recur (inc tries))))))))
+
+(defn extract-drive-letter
+  "Takes the output from `net use ...` command and extracts
+  the assigned drive letter."
+  [output]
+  (str (second (re-matches #"Drive ([A-Z]?): is now connected to" output)) ":"))
+
+(defmethod mount-webdav :win
+  [os bonjour-name endpoint-address endpoint-port]
+  {:pre [(keyword? os) (is-ambly-bonjour-name? bonjour-name)
+         (string? endpoint-address) (number? endpoint-port)]}
+  (let [webdav-endpoint (create-http-url endpoint-address endpoint-port)
+        shell-result (shell/sh "net" "use" "*" webdav-endpoint)]
+   (or
+     (extract-drive-letter (subs (:out shell-result) 0 28))
+     (throw (IOException. (:err shell-result))))))
+
+(defmethod mount-webdav :unknown
+  [os bonjour-name endpoint-address endpoint-port]
+  {:pre [(keyword? os) (is-ambly-bonjour-name? bonjour-name)
+         (string? endpoint-address) (number? endpoint-port)]}
+  (let [webdav-endpoint (create-http-url endpoint-address endpoint-port)]
+    (println "Please manually mount" webdav-endpoint "and when done, enter")
+    (print "filesystem mount directory: ")
+    (flush)
+    (read-line)))
 
 (defn- set-up-socket
   [repl-env opts address port]
@@ -410,7 +467,7 @@
 (defn tear-down
   [repl-env]
   (when-let [webdav-mount-point @(:webdav-mount-point repl-env)]
-    (umount-webdav webdav-mount-point))
+    (umount-webdav (getOs) webdav-mount-point))
   (when-let [socket @(:socket repl-env)]
     (close-socket socket)))
 
@@ -423,7 +480,8 @@
           endpoint-address (local-address-if (:address endpoint))
           endpoint-port (:port endpoint)
           _ (reset! (:bonjour-name repl-env) bonjour-name)
-          webdav-mount-point (mount-webdav repl-env bonjour-name endpoint-address endpoint-port)
+          webdav-mount-point (mount-webdav (getOs) bonjour-name endpoint-address endpoint-port)
+          _ (reset! (:webdav-mount-point repl-env) webdav-mount-point)
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
           core (io/resource "cljs/core.cljs")]
@@ -451,14 +509,14 @@
           (jsc-eval repl-env
             (str "CLOSURE_IMPORT_SCRIPT = function(src) {"
               (form-ambly-import-script-expr-js
-                (str "'goog" File/separator "' + src"))
+                "'goog/' + src")
               "return true; };"))
           ;; bootstrap
           (jsc-eval repl-env
-            (form-ambly-import-script-path-js (io/file "goog" "base.js")))
+            (form-ambly-import-script-path-js "goog/base.js"))
           ;; load the deps file so we can goog.require cljs.core etc.
           (jsc-eval repl-env
-            (form-ambly-import-script-path-js (io/file "ambly_repl_deps.js")))
+            (form-ambly-import-script-path-js "ambly_repl_deps.js"))
           ;; monkey-patch isProvided_ to avoid useless warnings - David
           (jsc-eval repl-env
             (str "goog.isProvided_ = function(x) { return false; };"))
