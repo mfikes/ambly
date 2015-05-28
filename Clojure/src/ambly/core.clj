@@ -6,8 +6,7 @@
             [cljs.compiler :as comp]
             [cljs.repl :as repl]
             [cljs.closure :as closure]
-            [clojure.data.json :as json]
-            [clojure.java.shell :as shell])
+            [clojure.data.json :as json])
   (:import java.net.Socket
            java.lang.StringBuilder
            [java.io File BufferedReader BufferedWriter IOException]
@@ -30,22 +29,29 @@
 
 (defn sh
   "Executes a shell process. Allows up to timeout to complete, returning process
-  exit code. Otherwise forcibly terminates process and returns timeout-exit-value."
-  [timeout timeout-exit-value & args]
+  exit code or process output. Otherwise forcibly terminates process and returns
+  timeout-return-value."
+  [timeout timeout-return-value return-output? & args]
   {:pre [(number? timeout) (every? string? args)]}
   (let [process (.exec (Runtime/getRuntime) (string/join " " args))]
     (loop [time-remaining timeout]
       (Thread/sleep 100)
       (or
         (try
-          (.exitValue process)
+          (let [exit-value (.exitValue process)]
+            (if return-output?
+              (let [input-stream (.getInputStream process)
+                    output (slurp input-stream)]
+                (.close input-stream)
+                output)
+              exit-value))
           (catch IllegalThreadStateException _
             nil))
         (if (pos? time-remaining)
           (recur (- time-remaining 100))
           (do
             (.destroy process)
-            timeout-exit-value))))))
+            timeout-return-value))))))
 
 (defn- ip-address->inet-addr
   "Take a string representation of an IP address and returns a Java InetAddress
@@ -379,14 +385,14 @@
   (or
     (not (mount-exists? webdav-mount-point))
     (or
-      (zero? (sh 5000 -1 "umount" webdav-mount-point))
-      (zero? (sh 5000 -1 "umount" "-f" webdav-mount-point))
-      (zero? (sh 1000 -1 "rmdir" webdav-mount-point)))))
+      (zero? (sh 5000 -1 false "umount" webdav-mount-point))
+      (zero? (sh 5000 -1 false "umount" "-f" webdav-mount-point))
+      (zero? (sh 1000 -1 false "rmdir" webdav-mount-point)))))
 
 (defmethod umount-webdav :win
   [os webdav-mount-point]
   {:pre [(keyword? os) (string? webdav-mount-point)]}
-  (zero? (sh 5000 -1 "net" "use" webdav-mount-point "/delete")))
+  (zero? (sh 5000 -1 false "net" "use" webdav-mount-point "/delete")))
 
 (defmethod umount-webdav :unknown
   [os webdav-mount-point]
@@ -419,7 +425,7 @@
     (loop [tries 1]
       (if-not (or (mount-exists? webdav-mount-point) (.mkdirs output-dir))
         (throw (IOException. (str "Unable to create WebDAV mount point " webdav-mount-point))))
-      (if (zero? (sh 1000 -1 "mount_webdav" webdav-endpoint webdav-mount-point))
+      (if (zero? (sh 1000 -1 false "mount_webdav" webdav-endpoint webdav-mount-point))
         webdav-mount-point
         (if (= 4 tries)
           (throw (IOException. (str "Unable to mount WebDAV at " webdav-endpoint)))
@@ -439,10 +445,10 @@
   {:pre [(keyword? os) (is-ambly-bonjour-name? bonjour-name)
          (string? endpoint-address) (number? endpoint-port)]}
   (let [webdav-endpoint (create-http-url endpoint-address endpoint-port)
-        shell-result (shell/sh "net" "use" "*" webdav-endpoint)]
+        shell-result (sh 30000 "" true "net" "use" "*" webdav-endpoint)]
    (or
-     (extract-drive-letter (subs (:out shell-result) 0 28))
-     (throw (IOException. (:err shell-result))))))
+     (extract-drive-letter (subs shell-result 0 (min 28 (count shell-result))))
+     (throw (IOException. shell-result)))))
 
 (defmethod mount-webdav :unknown
   [os bonjour-name endpoint-address endpoint-port]
