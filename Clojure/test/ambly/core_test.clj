@@ -5,14 +5,6 @@
   (:import (java.net URL)
            (java.io File)))
 
-(deftest sh-test
-  (testing "Zero return value"
-    (is (= 0 (sh 1000 -1 "/bin/test" "a" "=" "a"))))
-  (testing "One return value"
-    (is (= 1 (sh 1000 -1 "/bin/test" "a" "=" "b"))))
-  (testing "Timeout"
-    (is (= :timeout (sh 10 :timeout "/bin/sleep" "1")))))
-
 (defn- form-ambly-bonjour-name
   [suffix]
   (str ambly-bonjour-name-prefix suffix))
