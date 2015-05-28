@@ -25,6 +25,7 @@
     (cond
       (substring-exists? os-name "mac") :mac
       (substring-exists? os-name "win") :win
+      (substring-exists? os-name "linux") :linux
       :else :unknown)))
 
 (defn sh
@@ -394,6 +395,11 @@
   {:pre [(keyword? os) (string? webdav-mount-point)]}
   (zero? (sh 5000 -1 false "net" "use" webdav-mount-point "/delete")))
 
+(defmethod umount-webdav :linux
+  [os webdav-mount-point]
+  {:pre [(string? webdav-mount-point)]}
+  (umount-webdav :unknown webdav-mount-point))
+
 (defmethod umount-webdav :unknown
   [os webdav-mount-point]
   {:pre [(string? webdav-mount-point)]}
@@ -449,6 +455,17 @@
    (or
      (extract-drive-letter (subs shell-result 0 (min 28 (count shell-result))))
      (throw (IOException. shell-result)))))
+
+(defmethod mount-webdav :linux
+  [os bonjour-name endpoint-address endpoint-port]
+  {:pre [(keyword? os) (is-ambly-bonjour-name? bonjour-name)
+         (string? endpoint-address) (number? endpoint-port)]}
+  (let [webdav-endpoint (create-http-url endpoint-address endpoint-port)]
+    (println)
+    (println "Example mount command (when prompted, hit enter for username/password):")
+    (println "  sudo mount.davfs -o uid=$UID" webdav-endpoint "/mnt/ambly")
+    (println)
+    (mount-webdav :unknown bonjour-name endpoint-address endpoint-port)))
 
 (defmethod mount-webdav :unknown
   [os bonjour-name endpoint-address endpoint-port]
