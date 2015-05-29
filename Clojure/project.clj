@@ -1,4 +1,4 @@
-(defproject org.omcljs/ambly "0.4.0"
+(defproject org.omcljs/ambly "0.5.0"
   :description "ClojureScript REPL into embedded JavaScriptCore."
   :url "https://github.com/omcljs/ambly"
   :license {:name "Eclipse Public License"
