@@ -156,33 +156,18 @@
     
     [ABYUtils evaluateScript:@"goog.require('cljs.core');" inContext:_context];
     
-    // TODO Is there a better way for the impl below that avoids making direct calls to
-    // ClojureScript compiled artifacts? (Complex and perhaps also fragile).
-    
      // redef goog.require to track loaded libs
-    [ABYUtils evaluateScript:@"cljs.core._STAR_loaded_libs_STAR_ = new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, ['cljs.core',null], null), null);\n"
-     "\n"
-     "goog.require = (function (name,reload){\n"
-     "   if(cljs.core.truth_((function (){var or__4112__auto__ = !(cljs.core.contains_QMARK_.call(null,cljs.core._STAR_loaded_libs_STAR_,name));\n"
-     "       if(or__4112__auto__){\n"
-     "           return or__4112__auto__;\n"
-     "       } else {\n"
-     "           return reload;\n"
-     "       }\n"
-     "   })())){\n"
-     "       cljs.core._STAR_loaded_libs_STAR_ = cljs.core.conj.call(null,(function (){var or__4112__auto__ = cljs.core._STAR_loaded_libs_STAR_;\n"
-     "           if(cljs.core.truth_(or__4112__auto__)){\n"
-     "               return or__4112__auto__;\n"
-     "           } else {\n"
-     "               return cljs.core.PersistentHashSet.EMPTY;\n"
-     "           }\n"
-     "       })(),name);\n"
-     "       \n"
-     "       return CLOSURE_IMPORT_SCRIPT((goog.dependencies_.nameToPath[name]));\n"
-     "   } else {\n"
-     "       return null;\n"
-     "   }\n"
-     "});" inContext:_context];
+    [ABYUtils evaluateScript:@"cljs.core._STAR_loaded_libs_STAR_ = cljs.core.into.call(null, cljs.core.PersistentHashSet.EMPTY, [\"cljs.core\"]);\n"
+     "goog.require = function (name, reload) {\n"
+     "    if(!cljs.core.contains_QMARK_(cljs.core._STAR_loaded_libs_STAR_, name) || reload) {\n"
+     "        var AMBLY_TMP = cljs.core.PersistentHashSet.EMPTY;\n"
+     "        if (cljs.core._STAR_loaded_libs_STAR_) {\n"
+     "            AMBLY_TMP = cljs.core._STAR_loaded_libs_STAR_;\n"
+     "        }\n"
+     "        cljs.core._STAR_loaded_libs_STAR_ = cljs.core.into.call(null, AMBLY_TMP, [name]);\n"
+     "        CLOSURE_IMPORT_SCRIPT(goog.dependencies_.nameToPath[name]);\n"
+     "    }\n"
+     "};" inContext:_context];
 }
 
 @end
