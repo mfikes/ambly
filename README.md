@@ -20,7 +20,7 @@ pod "Ambly", "~> 0.6.0"
 ### Prerequisites
 
 You must have Xcode installed as well as support for [CocoaPods](http://cocoapods.org). 
-You must have Java 7 or later installed along with [Leiningen](http://leiningen.org).
+You must have Java 7 or later installed along with [Leiningen](http://leiningen.org) or [Boot](http://boot-clj.com/).
 
 ### Demo App
 
@@ -30,7 +30,7 @@ Open `Ambly Demo.xcworkspace` in Xcode and run the app in the simulator or on a 
 
 ### REPL
 
-In `ambly/Clojure` run `script/repl` to start the REPL.
+In `ambly/Clojure` run `script/repl` to start the REPL if you're using Leiningen. If you're using Boot, run `$ boot ambly`. 
 
 Here is a sample REPL startup sequence, illustrating device auto-discovery:
 
