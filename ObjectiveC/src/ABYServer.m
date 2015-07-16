@@ -4,7 +4,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <CoreFoundation/CoreFoundation.h>
+#if TARGET_OS_IPHONE
 #include <UIKit/UIDevice.h>
+#endif
 #include "GCDWebDAVServer.h"
 
 /**
@@ -466,7 +468,9 @@ void handleConnect (
     // Start up the WebDAV server
     self.davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:self.compilerOutputDirectory.path];
     
+#if TARGET_OS_IPHONE
     NSString* appName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
+#endif
     
 #if TARGET_IPHONE_SIMULATOR
     
@@ -477,7 +481,11 @@ void handleConnect (
     
     NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ on %@ (%@)", appName, [UIDevice currentDevice].model, hostName];
 #else
+#if TARGET_OS_IPHONE
     NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ on %@", appName, [UIDevice currentDevice].name];
+#else
+    NSString* bonjourName = [NSString stringWithFormat:@"Ambly %@ on %@", [[NSProcessInfo processInfo] processName], [[NSHost currentHost] localizedName]];
+#endif
 #endif
     
     bonjourName = [self cleanseBonjourName:bonjourName];

@@ -7,8 +7,8 @@ Pod::Spec.new do |s|
   s.author                = 'omcljs'
   s.source                = { :git => 'https://github.com/omcljs/ambly.git', :tag => '0.6.0' }
   s.source_files          = 'ObjectiveC/src/*.{h,m}'
-  s.platform              = :ios
   s.ios.deployment_target = '8.0'
+  s.osx.deployment_target = '10.10'
   s.requires_arc          = true
   s.dependency "GCDWebServer/WebDAV", "~> 3.2.2"
 end
