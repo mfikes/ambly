@@ -105,8 +105,12 @@
              JSStringRef pathStrRef = JSValueToStringCopy(ctx, argv[0], NULL);
              NSString* path = (__bridge_transfer NSString *) JSStringCopyCFString( kCFAllocatorDefault, pathStrRef );
              JSStringRelease(pathStrRef);
-             
+
+#if TARGET_OS_IPHONE
              NSString* url = [NSURL fileURLWithPath:path].absoluteString;
+#else
+             NSString* url = [@"file:///" stringByAppendingString:path];
+#endif
              JSStringRef urlStringRef = JSStringCreateWithCFString((__bridge CFStringRef)url);
              
              NSString* readPath = [NSString stringWithFormat:@"%@/%@", compilerOutputDirectoryPath, path];
