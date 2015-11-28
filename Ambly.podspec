@@ -11,5 +11,5 @@ Pod::Spec.new do |s|
   s.tvos.deployment_target = '9.0'
   s.osx.deployment_target = '10.10'
   s.requires_arc          = true
-  s.dependency "GCDWebServer/WebDAV", :head
+  s.dependency "GCDWebServer/WebDAV", :git => 'https://github.com/swisspol/GCDWebServer', :commit 'c98941121a4b96a4fa4ad785790a4a3e119227a5'
 end
