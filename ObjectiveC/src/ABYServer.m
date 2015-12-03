@@ -95,6 +95,11 @@
     [self tearDown];
     JSGlobalContextRelease(_context);
     
+    if (self.davServer) {
+        [self.davServer stop];
+        self.davServer = nil;
+    }
+    
     if (self.socketsource) {
         CFRunLoopRemoveSource(
                               CFRunLoopGetCurrent(),
