@@ -74,6 +74,9 @@
 // Subsequent messages to be transmitted in FIFO order
 @property (strong, nonatomic) NSMutableArray* queuedMessages;
 
+@property (nonatomic, assign, readonly) CFRunLoopSourceRef socketsource;
+@property (nonatomic, assign, readonly) CFRunLoopSourceRef socketsource6;
+
 @end
 
 @implementation ABYServer
@@ -91,6 +94,20 @@
 {
     [self tearDown];
     JSGlobalContextRelease(_context);
+    
+    if (self.socketsource) {
+        CFRunLoopRemoveSource(
+                              CFRunLoopGetCurrent(),
+                              self.socketsource,
+                              kCFRunLoopDefaultMode);
+    }
+    
+    if (self.socketsource6) {
+        CFRunLoopRemoveSource(
+                              CFRunLoopGetCurrent(),
+                              self.socketsource6,
+                              kCFRunLoopDefaultMode);
+    }
 }
 
 -(BOOL)isReplConnected
@@ -423,24 +440,24 @@ void handleConnect (
     }
     
     
-    CFRunLoopSourceRef socketsource = CFSocketCreateRunLoopSource(
+    _socketsource = CFSocketCreateRunLoopSource(
                                                                   kCFAllocatorDefault,
                                                                   myipv4cfsock,
                                                                   0);
     
     CFRunLoopAddSource(
                        CFRunLoopGetCurrent(),
-                       socketsource,
+                       _socketsource,
                        kCFRunLoopDefaultMode);
     
-    CFRunLoopSourceRef socketsource6 = CFSocketCreateRunLoopSource(
+    _socketsource6 = CFSocketCreateRunLoopSource(
                                                                    kCFAllocatorDefault,
                                                                    myipv6cfsock,
                                                                    0);
     
     CFRunLoopAddSource(
                        CFRunLoopGetCurrent(),
-                       socketsource6,
+                       _socketsource6,
                        kCFRunLoopDefaultMode);
     
     
@@ -450,12 +467,12 @@ void handleConnect (
         // Clean up TCP
         CFRunLoopRemoveSource(
                               CFRunLoopGetCurrent(),
-                              socketsource6,
+                              _socketsource6,
                               kCFRunLoopDefaultMode);
         
         CFRunLoopRemoveSource(
                               CFRunLoopGetCurrent(),
-                              socketsource,
+                              _socketsource,
                               kCFRunLoopDefaultMode);
     }
     
