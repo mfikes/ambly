@@ -52,7 +52,7 @@ JSValueRef BlockFunctionCallAsFunction(JSContextRef ctx, JSObjectRef function, J
     }
     
     JSObjectRef jsObj = JSObjectMake(context, jsBlockFunctionClass, (void*)CFBridgingRetain(block));
-    CFBridgingRelease((__bridge CFTypeRef _Nullable)(block));
+    CFBridgingRelease((__bridge CFTypeRef)(block));
     return jsObj;
 }
 
