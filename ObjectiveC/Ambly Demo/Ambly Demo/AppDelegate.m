@@ -55,9 +55,14 @@ void uncaughtExceptionHandler(NSException *exception) {
 
 - (NSURL *)privateDocumentsDirectory
 {
-    NSURL *libraryDirectory = [[[NSFileManager defaultManager] URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask] lastObject];
-    
-    return [libraryDirectory URLByAppendingPathComponent:@"Private Documents"];
+    NSSearchPathDirectory directory;
+#ifdef TARGET_OS_TV
+    directory = NSCachesDirectory;
+#else
+    directory = NSLibraryDirectory;
+#endif
+    NSURL *userDirectory = [[[NSFileManager defaultManager] URLsForDirectory:directory inDomains:NSUserDomainMask] lastObject];
+    return [userDirectory URLByAppendingPathComponent:@"Private Documents"];
 }
 
 - (void)createDirectoriesUpTo:(NSURL*)directory

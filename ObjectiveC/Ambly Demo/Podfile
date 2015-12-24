@@ -1,4 +1,11 @@
 source 'https://github.com/CocoaPods/Specs.git'
-platform :ios, '8.0'
+
+target 'Ambly Demo' do
+  platform :ios, '8.0'
+end
+
+target 'Ambly Demo TV' do
+  platform :tvos, '9.0'
+end
 
 pod 'Ambly', :path => '../../'
