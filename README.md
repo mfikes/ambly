@@ -6,11 +6,17 @@ Ambly is a REPL designed for use when developing hybrid ClojureScript iOS apps.
 
 Ambly comprises a ClojureScript REPL implementation, along with Objective-C code interfacing JavaScriptCore.
 
-An iOS app is included, making it easy to give the REPL a spin. [Watch a demo.](http://youtu.be/TVDkYZJW2MY)
+An iOS/tvOS app is included, making it easy to give the REPL a spin. [Watch a demo.](http://youtu.be/TVDkYZJW2MY)
 
 ```
 platform :ios, '8.0'
-pod "Ambly", "~> 0.6.0"
+pod "Ambly", "~> 0.6.1"
+```
+
+To use with tvOS, just change or add the platform in your Podfile like so:
+
+```
+platform :tvos, '9.0'
 ```
 
 [![Clojars Project](http://clojars.org/org.omcljs/ambly/latest-version.svg)](http://clojars.org/org.omcljs/ambly)
@@ -40,6 +46,7 @@ $ lein run
 [1] Ambly Demo on iPod touch
 [2] Ambly Demo on iPad
 [3] Ambly Demo on iPhone Simulator (My-Mac-Pro)
+[4] Ambly Demo TV on Apple TV
 
 [R] Refresh
 
