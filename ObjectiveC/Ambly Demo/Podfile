@@ -1,11 +1,17 @@
 source 'https://github.com/CocoaPods/Specs.git'
 
-target 'Ambly Demo' do
+def import_pods 
+  pod 'Ambly', :path => '../../'
+end
+
+target :ios do
   platform :ios, '8.0'
+  link_with 'Ambly Demo'
+  import_pods
 end
 
-target 'Ambly Demo TV' do
+target :tvos do
   platform :tvos, '9.0'
+  link_with 'Ambly Demo TV'
+  import_pods
 end
-
-pod 'Ambly', :path => '../../'
