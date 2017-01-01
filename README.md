@@ -34,7 +34,7 @@ In `ambly/Clojure` run `script/repl` to start the REPL if you're using Leiningen
 Here is a sample REPL startup sequence, illustrating device auto-discovery:
 
 ```
-$ lein run 
+$ script/repl 
 
 [1] Ambly Demo on iPod touch
 [2] Ambly Demo on iPad
