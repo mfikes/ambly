@@ -7,8 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		855F04D62ACD927ABDA3C2CC /* libPods-tvos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3082F79AF202F3CCCBE1B8C8 /* libPods-tvos.a */; };
-		99E075F883BCC14B3CCE5853 /* libPods-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 056ACE426CC9C9D0659A0729 /* libPods-ios.a */; };
+		9C3CA788A95BF0A39045464C /* libPods-Ambly Demo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D44A93C108F9AAEE00206AEB /* libPods-Ambly Demo.a */; };
 		AA25B1891C2B5567002F61FD /* Main-TV.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA25B1871C2B5567002F61FD /* Main-TV.storyboard */; };
 		AA64222C1C28A5D7002F7170 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = ED387D241A602B56007E40A2 /* ViewController.m */; };
 		AA64222D1C28A5D7002F7170 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = ED387D211A602B56007E40A2 /* AppDelegate.m */; };
@@ -20,21 +19,19 @@
 		ED387D281A602B56007E40A2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ED387D261A602B56007E40A2 /* Main.storyboard */; };
 		ED387D2A1A602B56007E40A2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ED387D291A602B56007E40A2 /* Images.xcassets */; };
 		ED387D2D1A602B56007E40A2 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = ED387D2B1A602B56007E40A2 /* LaunchScreen.xib */; };
+		F3FE7A2AAFBD67D8B85CB628 /* libPods-Ambly Demo TV.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B4C579F5C171A4C56B3DC568 /* libPods-Ambly Demo TV.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		056ACE426CC9C9D0659A0729 /* libPods-ios.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ios.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		189D2BD4775C4255534FEA43 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
-		29CD8DBFD484A434EDF80A5F /* Pods-ios.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ios/Pods-ios.debug.xcconfig"; sourceTree = "<group>"; };
-		3082F79AF202F3CCCBE1B8C8 /* libPods-tvos.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-tvos.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		6761812092F1AA9376059624 /* Pods-tvos.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tvos.release.xcconfig"; path = "Pods/Target Support Files/Pods-tvos/Pods-tvos.release.xcconfig"; sourceTree = "<group>"; };
-		6FDF25EA2EBABFCD3931A8AF /* Pods-ios.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios.release.xcconfig"; path = "Pods/Target Support Files/Pods-ios/Pods-ios.release.xcconfig"; sourceTree = "<group>"; };
-		8421BD0F847CD3A5A6AB8276 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		086BCDFD6E3D04CCE287B304 /* Pods-Ambly Demo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Ambly Demo.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Ambly Demo/Pods-Ambly Demo.debug.xcconfig"; sourceTree = "<group>"; };
+		7C47AF90DB13ACDDDF689BEC /* Pods-Ambly Demo TV.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Ambly Demo TV.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Ambly Demo TV/Pods-Ambly Demo TV.debug.xcconfig"; sourceTree = "<group>"; };
 		AA25B1881C2B5567002F61FD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = "Base.lproj/Main-TV.storyboard"; sourceTree = "<group>"; };
 		AA64223A1C28A5D7002F7170 /* Ambly Demo TV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Ambly Demo TV.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA64223C1C28A8E5002F7170 /* Info-TV.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-TV.plist"; sourceTree = "<group>"; };
-		E0FE70D7629FF1EB446AB132 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
-		E60D990CC1FE48EC049C3ADC /* Pods-tvos.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tvos.debug.xcconfig"; path = "Pods/Target Support Files/Pods-tvos/Pods-tvos.debug.xcconfig"; sourceTree = "<group>"; };
+		B4C579F5C171A4C56B3DC568 /* libPods-Ambly Demo TV.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Ambly Demo TV.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BFAC56BC260AE396E578A5E6 /* Pods-Ambly Demo TV.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Ambly Demo TV.release.xcconfig"; path = "Pods/Target Support Files/Pods-Ambly Demo TV/Pods-Ambly Demo TV.release.xcconfig"; sourceTree = "<group>"; };
+		D44A93C108F9AAEE00206AEB /* libPods-Ambly Demo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Ambly Demo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D54E0B9C52A85127D67F904F /* Pods-Ambly Demo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Ambly Demo.release.xcconfig"; path = "Pods/Target Support Files/Pods-Ambly Demo/Pods-Ambly Demo.release.xcconfig"; sourceTree = "<group>"; };
 		ED387D191A602B56007E40A2 /* Ambly Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Ambly Demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED387D1D1A602B56007E40A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		ED387D1E1A602B56007E40A2 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -52,7 +49,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				855F04D62ACD927ABDA3C2CC /* libPods-tvos.a in Frameworks */,
+				F3FE7A2AAFBD67D8B85CB628 /* libPods-Ambly Demo TV.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -60,32 +57,29 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				99E075F883BCC14B3CCE5853 /* libPods-ios.a in Frameworks */,
+				9C3CA788A95BF0A39045464C /* libPods-Ambly Demo.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A8DB22792ED578804C15BB6F /* Pods */ = {
+		9B8F3EA3E814AF645F7274DD /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				E0FE70D7629FF1EB446AB132 /* Pods.debug.xcconfig */,
-				189D2BD4775C4255534FEA43 /* Pods.release.xcconfig */,
-				29CD8DBFD484A434EDF80A5F /* Pods-ios.debug.xcconfig */,
-				6FDF25EA2EBABFCD3931A8AF /* Pods-ios.release.xcconfig */,
-				E60D990CC1FE48EC049C3ADC /* Pods-tvos.debug.xcconfig */,
-				6761812092F1AA9376059624 /* Pods-tvos.release.xcconfig */,
+				086BCDFD6E3D04CCE287B304 /* Pods-Ambly Demo.debug.xcconfig */,
+				D54E0B9C52A85127D67F904F /* Pods-Ambly Demo.release.xcconfig */,
+				7C47AF90DB13ACDDDF689BEC /* Pods-Ambly Demo TV.debug.xcconfig */,
+				BFAC56BC260AE396E578A5E6 /* Pods-Ambly Demo TV.release.xcconfig */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
 		};
-		D05C0EBB13E1BA21D8E4B081 /* Frameworks */ = {
+		D7EC1830941EDB711537E636 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				8421BD0F847CD3A5A6AB8276 /* libPods.a */,
-				056ACE426CC9C9D0659A0729 /* libPods-ios.a */,
-				3082F79AF202F3CCCBE1B8C8 /* libPods-tvos.a */,
+				D44A93C108F9AAEE00206AEB /* libPods-Ambly Demo.a */,
+				B4C579F5C171A4C56B3DC568 /* libPods-Ambly Demo TV.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -95,8 +89,8 @@
 			children = (
 				ED387D1B1A602B56007E40A2 /* Ambly Demo */,
 				ED387D1A1A602B56007E40A2 /* Products */,
-				A8DB22792ED578804C15BB6F /* Pods */,
-				D05C0EBB13E1BA21D8E4B081 /* Frameworks */,
+				9B8F3EA3E814AF645F7274DD /* Pods */,
+				D7EC1830941EDB711537E636 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -142,12 +136,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA6422371C28A5D7002F7170 /* Build configuration list for PBXNativeTarget "Ambly Demo TV" */;
 			buildPhases = (
-				AA64222A1C28A5D7002F7170 /* Check Pods Manifest.lock */,
+				C08927E102C6EDA5091801A0 /* [CP] Check Pods Manifest.lock */,
 				AA64222B1C28A5D7002F7170 /* Sources */,
 				AA64222F1C28A5D7002F7170 /* Frameworks */,
 				AA6422311C28A5D7002F7170 /* Resources */,
-				AA6422351C28A5D7002F7170 /* Copy Pods Resources */,
-				AA6422361C28A5D7002F7170 /* Embed Pods Frameworks */,
+				F50170B549F4313FFA83A485 /* [CP] Embed Pods Frameworks */,
+				7AD7928BFAD97C42552F8D5E /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -162,12 +156,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = ED387D3C1A602B56007E40A2 /* Build configuration list for PBXNativeTarget "Ambly Demo" */;
 			buildPhases = (
-				DC1C3037EC37A1E5352A5CEA /* Check Pods Manifest.lock */,
+				0F557107049B2C6A164E4D4F /* [CP] Check Pods Manifest.lock */,
 				ED387D151A602B56007E40A2 /* Sources */,
 				ED387D161A602B56007E40A2 /* Frameworks */,
 				ED387D171A602B56007E40A2 /* Resources */,
-				E3E25DEFF116E0C0A264722F /* Copy Pods Resources */,
-				A8C9D50A03E601B71AEF3DAF /* Embed Pods Frameworks */,
+				65F286B5D5A1A7A55F1ABBFD /* [CP] Embed Pods Frameworks */,
+				49E219D058E2A39D6D9BDECB /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -234,94 +228,94 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		A8C9D50A03E601B71AEF3DAF /* Embed Pods Frameworks */ = {
+		0F557107049B2C6A164E4D4F /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Embed Pods Frameworks";
+			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ios/Pods-ios-frameworks.sh\"\n";
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
-		AA64222A1C28A5D7002F7170 /* Check Pods Manifest.lock */ = {
+		49E219D058E2A39D6D9BDECB /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Check Pods Manifest.lock";
+			name = "[CP] Copy Pods Resources";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Ambly Demo/Pods-Ambly Demo-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		AA6422351C28A5D7002F7170 /* Copy Pods Resources */ = {
+		65F286B5D5A1A7A55F1ABBFD /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Copy Pods Resources";
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-tvos/Pods-tvos-resources.sh\"\n";
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Ambly Demo/Pods-Ambly Demo-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		AA6422361C28A5D7002F7170 /* Embed Pods Frameworks */ = {
+		7AD7928BFAD97C42552F8D5E /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Embed Pods Frameworks";
+			name = "[CP] Copy Pods Resources";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-tvos/Pods-tvos-frameworks.sh\"\n";
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Ambly Demo TV/Pods-Ambly Demo TV-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		DC1C3037EC37A1E5352A5CEA /* Check Pods Manifest.lock */ = {
+		C08927E102C6EDA5091801A0 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Check Pods Manifest.lock";
+			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
-		E3E25DEFF116E0C0A264722F /* Copy Pods Resources */ = {
+		F50170B549F4313FFA83A485 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Copy Pods Resources";
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-ios/Pods-ios-resources.sh\"\n";
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Ambly Demo TV/Pods-Ambly Demo TV-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -379,7 +373,7 @@
 /* Begin XCBuildConfiguration section */
 		AA6422381C28A5D7002F7170 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E60D990CC1FE48EC049C3ADC /* Pods-tvos.debug.xcconfig */;
+			baseConfigurationReference = 7C47AF90DB13ACDDDF689BEC /* Pods-Ambly Demo TV.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "Brand Assets";
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -396,7 +390,7 @@
 		};
 		AA6422391C28A5D7002F7170 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6761812092F1AA9376059624 /* Pods-tvos.release.xcconfig */;
+			baseConfigurationReference = BFAC56BC260AE396E578A5E6 /* Pods-Ambly Demo TV.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "Brand Assets";
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -490,7 +484,7 @@
 		};
 		ED387D3D1A602B56007E40A2 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 29CD8DBFD484A434EDF80A5F /* Pods-ios.debug.xcconfig */;
+			baseConfigurationReference = 086BCDFD6E3D04CCE287B304 /* Pods-Ambly Demo.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = "Ambly Demo/Info.plist";
@@ -502,7 +496,7 @@
 		};
 		ED387D3E1A602B56007E40A2 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6FDF25EA2EBABFCD3931A8AF /* Pods-ios.release.xcconfig */;
+			baseConfigurationReference = D54E0B9C52A85127D67F904F /* Pods-Ambly Demo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = "Ambly Demo/Info.plist";

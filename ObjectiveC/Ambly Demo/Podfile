@@ -4,14 +4,12 @@ def import_pods
   pod 'Ambly', :path => '../../'
 end
 
-target :ios do
+target 'Ambly Demo' do
   platform :ios, '8.0'
-  link_with 'Ambly Demo'
   import_pods
 end
 
-target :tvos do
+target 'Ambly Demo TV' do
   platform :tvos, '9.0'
-  link_with 'Ambly Demo TV'
   import_pods
 end
