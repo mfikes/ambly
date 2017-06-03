@@ -9,10 +9,10 @@ Ambly comprises a ClojureScript REPL implementation, along with Objective-C code
 An iOS and tvOS demo app is included, making it easy to give the REPL a spin.
 
 ```
-pod "Ambly", "~> 0.7.0"
+pod "Ambly", "~> 1.0.0"
 ```
 
-[![Clojars Project](http://clojars.org/org.omcljs/ambly/latest-version.svg)](http://clojars.org/org.omcljs/ambly)
+[![Clojars Project](http://clojars.org/ambly/latest-version.svg)](http://clojars.org/ambly)
 
 ## Running
 
@@ -52,7 +52,7 @@ cljs.user=> (+ 3 4)
 7
 ```
 
-> Note: See [Connectivity](https://github.com/omcljs/ambly/wiki/Connectivity) for details, should any networking difficulty arise.
+> Note: See [Connectivity](https://github.com/mfikes/ambly/wiki/Connectivity) for details, should any networking difficulty arise.
 
 ### Manual REPL Startup
 
@@ -80,13 +80,8 @@ brew install rlwrap
 
 Then `script/repl` will automatically detect `rlwrap` and use it.
 
-## Contributing
+## License
 
-Please contact David Nolen via email to request an electronic Contributor
-Agreement. Pull requests will be accepted once your electronic CA has been signed and returned.
+Copyright © 2015–2017 Mike Fikes and Contributors
 
-## Copyright and license
-
-Copyright © 2015–2017 David Nolen
-
-Licensed under the EPL (see the file LICENSE).
+Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.

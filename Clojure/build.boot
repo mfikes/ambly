@@ -3,7 +3,7 @@
                   [org.clojure/clojurescript "0.0-3030"]
                   [adzerk/boot-cljs "0.0-3308-0"]
                   [com.github.rickyclarkson/jmdns "3.4.2-r353-1"]
-                  [org.omcljs/ambly "0.6.0"]])
+                  [ambly "1.0.0"]])
 
 (require
  '[adzerk.boot-cljs :refer [cljs]]

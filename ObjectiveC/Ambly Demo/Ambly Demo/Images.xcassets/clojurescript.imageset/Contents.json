@@ -2,18 +2,18 @@
   "images" : [
     {
       "idiom" : "universal",
-      "scale" : "1x",
-      "filename" : "omcljs1.png"
+      "filename" : "clojurescript1.png",
+      "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "scale" : "2x",
-      "filename" : "omcljs2.png"
+      "filename" : "clojurescript2.png",
+      "scale" : "2x"
     },
     {
       "idiom" : "universal",
-      "scale" : "3x",
-      "filename" : "omcljs3.png"
+      "filename" : "clojurescript3.png",
+      "scale" : "3x"
     }
   ],
   "info" : {
