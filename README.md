@@ -80,6 +80,14 @@ brew install rlwrap
 
 Then `script/repl` will automatically detect `rlwrap` and use it.
 
+## App Integration
+
+See [Integrating Ambly into Your App](https://github.com/mfikes/ambly/wiki/Integrating-Ambly-into-Your-App) for details.
+
+An example using Ambly to drive Ejecta is at [ClojureScript Ejecta](http://blog.fikesfarm.com/posts/2017-04-29-clojurescript-ejecta.html).
+
+Source for an example iOS app that makes use of Ambly is [Shrimp](https://github.com/mfikes/shrimp).
+
 ## License
 
 Copyright © 2015–2017 Mike Fikes and Contributors
