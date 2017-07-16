@@ -563,7 +563,7 @@
             '(set! (.-require js/goog)
                (fn [name]
                  (js/CLOSURE_IMPORT_SCRIPT
-                   (aget (.. js/goog -dependencies_ -nameToPath) name)))))
+                   (js* "~{}[~{}]" (.. js/goog -dependencies_ -nameToPath) name)))))
           ;; load cljs.core, setup printing
           (repl/evaluate-form repl-env env "<cljs repl>"
             '(do
@@ -578,7 +578,7 @@
                    (when (or (not (contains? *loaded-libs* name)) reload)
                      (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
                      (js/CLOSURE_IMPORT_SCRIPT
-                       (aget (.. js/goog -dependencies_ -nameToPath) name))))))))
+                       (js* "~{}[~{}]" (.. js/goog -dependencies_ -nameToPath) name))))))))
         (let [expected-clojurescript-version (cljs.util/clojurescript-version)
               actual-clojurescript-version (:value (jsc-eval repl-env "cljs.core._STAR_clojurescript_version_STAR_"))]
           (when-not (= expected-clojurescript-version actual-clojurescript-version)
