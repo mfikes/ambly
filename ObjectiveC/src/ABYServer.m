@@ -154,10 +154,9 @@
      
      ^JSValueRef(JSContextRef ctx, size_t argc, const JSValueRef argv[]) {
          
-         if (argc == 1 && JSValueGetType (ctx, argv[0]) == kJSTypeString)
+         if (argc == 1)
          {
-             JSStringRef messageStringRef = JSValueToStringCopy(ctx, argv[0], NULL);
-             NSString* message = (__bridge_transfer NSString *)JSStringCopyCFString(kCFAllocatorDefault, messageStringRef);
+             NSString* message = [ABYUtils stringForValue:argv[0] inContext:ctx];
              
              if ([weakSelf isReplConnected]) {
                  NSData* payload = [message dataUsingEncoding:NSUTF8StringEncoding];
@@ -165,8 +164,6 @@
              } else {
                  NSLog(@"%@", message);
              }
-             
-             JSStringRelease(messageStringRef);
          }
          
          return JSValueMakeUndefined(ctx);
@@ -177,9 +174,11 @@
     
     // If bootstrapping an app, the context may have already
     // been bootstrapped for ClojureScript. If so, set *print-fn*
-    // now. Otherwise, the REPL Clojure side will set *print-fn*
-    // after bootstrapping for ClojureScript over the TCP connection.
+    // and *print-err-fn* now. Otherwise, the REPL Clojure side
+    // will set them after bootstrapping for ClojureScript over the
+    // TCP connection.
     [ABYUtils evaluateScript:@"if (typeof cljs !== 'undefined') { cljs.core.set_print_fn_BANG_.call(null,AMBLY_PRINT_FN); }" inContext:_context];
+    [ABYUtils evaluateScript:@"if (typeof cljs !== 'undefined') { cljs.core.set_print_err_fn_BANG_.call(null,AMBLY_PRINT_FN); }" inContext:_context];
 }
 
 -(void)evaluateJavaScriptAndSendResponse:(NSString*)javaScript

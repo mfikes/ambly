@@ -568,7 +568,8 @@
           (repl/evaluate-form repl-env env "<cljs repl>"
             '(do
                (.require js/goog "cljs.core")
-               (set-print-fn! js/AMBLY_PRINT_FN)))
+               (set-print-fn! js/AMBLY_PRINT_FN)
+               (set-print-err-fn! js/AMBLY_PRINT_FN)))
           ;; redef goog.require to track loaded libs
           (repl/evaluate-form repl-env env "<cljs repl>"
             '(do
