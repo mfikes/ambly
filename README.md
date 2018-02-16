@@ -19,7 +19,7 @@ pod "Ambly", "~> 1.2.0"
 ### Prerequisites
 
 You must have Xcode installed as well as support for [CocoaPods](http://cocoapods.org). 
-You must have Java 7 or later installed along with [Leiningen](http://leiningen.org) or [Boot](http://boot-clj.com/).
+You must have Java 8 or later installed along with the [Clojure CLI tools](https://clojure.org/guides/deps_and_cli).
 
 ### Demo App
 
