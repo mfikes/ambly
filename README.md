@@ -29,12 +29,12 @@ Open `Ambly Demo.xcworkspace` in Xcode and run the app in the simulator or on a 
 
 ### REPL
 
-In `ambly/Clojure` run `script/repl` to start the REPL if you're using Leiningen. If you're using Boot, run `$ boot ambly`. 
+You can start the Ambly REPL by supplying `-re ambly` as an option to `cljs.main`.
 
-Here is a sample REPL startup sequence, illustrating device auto-discovery:
+Here is a sample REPL startup sequence in `ambly/Clojure`, illustrating device auto-discovery:
 
 ```
-$ script/repl 
+$ clj -m cljs.main -re ambly 
 
 [1] Ambly Demo on iPod touch
 [2] Ambly Demo on iPad
@@ -54,32 +54,6 @@ cljs.user=> (+ 3 4)
 
 > Note: See [Connectivity](https://github.com/mfikes/ambly/wiki/Connectivity) for details, should any networking difficulty arise.
 
-### Manual REPL Startup
-
-If you would like to manually start the Ambly REPL from a Clojure REPL, issue the following two forms:
-
-```clojure
-(require
-  '[cljs.repl :as repl]
-  '[ambly.core :as ambly])
-```
-
-```clojure
-(repl/repl (ambly/repl-env))
-```
-
-### rlwrap
-
-For a better REPL experience (keyboard input editing and history support), you can install
-[rlwrap](http://utopia.knoware.nl/~hlub/uck/rlwrap/) under OS X with
-[Homebrew](http://brew.sh/):
-
-```
-brew install rlwrap
-```
-
-Then `script/repl` will automatically detect `rlwrap` and use it.
-
 ## App Integration
 
 See [Integrating Ambly into Your App](https://github.com/mfikes/ambly/wiki/Integrating-Ambly-into-Your-App) for details.
@@ -90,6 +64,6 @@ Source for an example iOS app that makes use of Ambly is [Shrimp](https://github
 
 ## License
 
-Copyright © 2015–2017 Mike Fikes and Contributors
+Copyright © 2015–2018 Mike Fikes and Contributors
 
 Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.

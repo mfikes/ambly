@@ -582,7 +582,8 @@
                        (js* "~{}[~{}]" (.. js/goog -dependencies_ -nameToPath) name))))))))
         (let [expected-clojurescript-version (cljs.util/clojurescript-version)
               actual-clojurescript-version (:value (jsc-eval repl-env "cljs.core._STAR_clojurescript_version_STAR_"))]
-          (when-not (= expected-clojurescript-version actual-clojurescript-version)
+          (when (and (some? actual-clojurescript-version)
+                     (not= expected-clojurescript-version actual-clojurescript-version))
             (println
               (str "WARNING: " (bonjour-name->display-name bonjour-name)
                 "\n         is running ClojureScript " actual-clojurescript-version
