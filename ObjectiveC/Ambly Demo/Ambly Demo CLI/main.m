@@ -4,7 +4,7 @@
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         // insert code here...
-        NSLog(@"Running...");
+        NSLog(@"Ambly 1.3.0");
         App* app = [[App alloc] init];
         [app setup];
         [[NSRunLoop currentRunLoop] run];
