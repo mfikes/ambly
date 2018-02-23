@@ -13,3 +13,8 @@ target 'Ambly Demo TV' do
   platform :tvos, '9.0'
   import_pods
 end
+
+target 'Ambly Demo CLI' do
+  platform :osx, '10.10'
+  import_pods
+end
