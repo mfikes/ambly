@@ -1,5 +1,5 @@
 {:paths ["Clojure/src"]
  :deps
   {org.clojure/clojurescript {:git/url "https://github.com/clojure/clojurescript" 
-                              :sha "6f05654dccd3460e054790122f1d321cec172ca8"}
+                              :sha "f5a4a0998e5058b44ada51b4e4f57340e80e460f"}
    com.github.rickyclarkson/jmdns {:mvn/version "3.4.2-r353-1"}}}
