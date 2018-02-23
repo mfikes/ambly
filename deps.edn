@@ -1,2 +1,5 @@
-{:deps
-  {ambly/ambly {:local/root "Clojure"}}}
+{:paths ["Clojure/src"]
+ :deps
+  {org.clojure/clojurescript {:git/url "https://github.com/clojure/clojurescript" 
+                              :sha "6f05654dccd3460e054790122f1d321cec172ca8"}
+   com.github.rickyclarkson/jmdns {:mvn/version "3.4.2-r353-1"}}}

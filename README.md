@@ -31,7 +31,7 @@ Open `Ambly Demo.xcworkspace` in Xcode and run the app in the simulator or on a 
 
 You can start the Ambly REPL by supplying `-re ambly` as an option to `cljs.main`.
 
-Here is a sample REPL startup sequence in `ambly/Clojure`, illustrating device auto-discovery:
+Here is a sample REPL startup sequence, illustrating device auto-discovery:
 
 ```
 $ clj -m cljs.main -re ambly 
