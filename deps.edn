@@ -1,0 +1,2 @@
+{:deps
+  {ambly/ambly {:local/root "Clojure"}}}
