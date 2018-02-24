@@ -579,7 +579,9 @@
                    (when (or (not (contains? *loaded-libs* name)) reload)
                      (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
                      (js/CLOSURE_IMPORT_SCRIPT
-                       (js* "~{}[~{}]" (.. js/goog -dependencies_ -nameToPath) name))))))))
+                       (js* "~{}[~{}]" (.. js/goog -dependencies_ -nameToPath) name)))))))
+          (repl/evaluate-form repl-env env "<cljs repl>"
+            '(set! *print-newline* true)))
         (let [expected-clojurescript-version (cljs.util/clojurescript-version)
               actual-clojurescript-version (:value (jsc-eval repl-env "cljs.core._STAR_clojurescript_version_STAR_"))]
           (when (and (some? actual-clojurescript-version)
