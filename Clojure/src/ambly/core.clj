@@ -533,8 +533,7 @@
           (let [core-js (closure/compile core
                           (assoc opts
                             :output-dir webdav-mount-point
-                            :output-file
-                            (closure/src-file->target-file core)))
+                            :output-file (io/file "cljs" "core.js")))
                 deps (closure/add-dependencies opts core-js)]
             ;; output unoptimized code and the deps file
             ;; for all compiled namespaces
