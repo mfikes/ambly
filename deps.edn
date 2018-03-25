@@ -1,4 +1,4 @@
 {:paths ["Clojure/src"]
  :deps
-  {org.clojure/clojurescript {:mvn/version "1.10.191"}
+  {org.clojure/clojurescript {:mvn/version "1.10.238"}
    com.github.rickyclarkson/jmdns {:mvn/version "3.4.2-r353-1"}}}
