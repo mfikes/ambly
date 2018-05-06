@@ -156,7 +156,10 @@
     
     [ABYUtils evaluateScript:@"goog.isProvided_ = function(x) { return false; };" inContext:_context];
     
-    [ABYUtils evaluateScript:@"goog.require = function (name) { return CLOSURE_IMPORT_SCRIPT(goog.dependencies_.nameToPath[name]); };" inContext:_context];
+    [ABYUtils evaluateScript:@"goog.require = function (name) {\n"
+      " return CLOSURE_IMPORT_SCRIPT(goog.debugLoader_ ? \n"
+      "                               goog.debugLoader_.getPathFromDeps_(name) :\n"
+      "                               goog.dependencies_.nameToPath[name]); };" inContext:_context];
     
     [ABYUtils evaluateScript:@"goog.require('cljs.core');" inContext:_context];
     
@@ -169,7 +172,9 @@
      "            AMBLY_TMP = cljs.core._STAR_loaded_libs_STAR_;\n"
      "        }\n"
      "        cljs.core._STAR_loaded_libs_STAR_ = cljs.core.into.call(null, AMBLY_TMP, [name]);\n"
-     "        CLOSURE_IMPORT_SCRIPT(goog.dependencies_.nameToPath[name]);\n"
+     "        CLOSURE_IMPORT_SCRIPT(goog.debugLoader_? \n"
+     "                               goog.debugLoader_.getPathFromDeps_(name) :\n"
+     "                               goog.dependencies_.nameToPath[name]);\n"
      "    }\n"
      "};" inContext:_context];
 }
