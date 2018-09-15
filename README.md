@@ -9,7 +9,7 @@ Ambly comprises a ClojureScript REPL implementation, along with Objective-C code
 An iOS, macOS and tvOS demo apps are included, making it easy to give the REPL a spin.
 
 ```
-pod "Ambly", "~> 1.3.0"
+pod "Ambly", "~> 1.4.0"
 ```
 
 [![Clojars Project](http://clojars.org/ambly/latest-version.svg)](http://clojars.org/ambly)
