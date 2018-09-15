@@ -11,5 +11,5 @@ Pod::Spec.new do |s|
   s.tvos.deployment_target = '9.0'
   s.osx.deployment_target  = '10.10'
   s.requires_arc           = true
-  s.dependency "GCDWebServer/WebDAV", "3.3.2"
+  s.dependency "GCDWebServer/WebDAV", "3.4.2"
 end
