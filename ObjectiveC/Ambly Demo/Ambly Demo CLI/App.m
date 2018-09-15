@@ -26,7 +26,7 @@ void uncaughtExceptionHandler(NSException *exception) {
     // For release the app would load files from shipping bundle.
     
     // Set up the compiler output directory
-    NSURL* compilerOutputDirectory = [[self privateDocumentsDirectory] URLByAppendingPathComponent:@"cljs-out"];
+    NSURL* compilerOutputDirectory = [self temporaryDirectory];
     [self createDirectoriesUpTo:compilerOutputDirectory];
     
     // Set up our context
@@ -47,16 +47,10 @@ void uncaughtExceptionHandler(NSException *exception) {
     return YES;
 }
 
-- (NSURL *)privateDocumentsDirectory
+- (NSURL *)temporaryDirectory
 {
-    NSSearchPathDirectory directory;
-#ifdef TARGET_OS_TV
-    directory = NSCachesDirectory;
-#else
-    directory = NSLibraryDirectory;
-#endif
-    NSURL *userDirectory = [[[NSFileManager defaultManager] URLsForDirectory:directory inDomains:NSUserDomainMask] lastObject];
-    return [userDirectory URLByAppendingPathComponent:@"Private Documents"];
+    NSString *directoryName = [NSString stringWithFormat:@"%@_%@", @"Ambly", [[NSProcessInfo processInfo] globallyUniqueString]];
+    return [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:directoryName]];
 }
 
 - (void)createDirectoriesUpTo:(NSURL*)directory
