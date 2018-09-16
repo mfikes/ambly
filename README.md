@@ -58,6 +58,18 @@ cljs.user=> (+ 3 4)
 
 > Note: See [Connectivity](https://github.com/mfikes/ambly/wiki/Connectivity) for details, should any networking difficulty arise.
 
+### REPL Options
+
+#### :choose-first-discovered
+
+Determines whether the Ambly will attempt to automatically connect the first device discovered. Defaults to `false`.
+
+Example:
+
+```
+clj -m cljs.main -ro '{:choose-first-discovered true}' -re ambly -r
+```
+
 ## App Integration
 
 See [Integrating Ambly into Your App](https://github.com/mfikes/ambly/wiki/Integrating-Ambly-into-Your-App) for details.
