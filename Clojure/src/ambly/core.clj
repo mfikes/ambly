@@ -582,9 +582,7 @@
                      (js/CLOSURE_IMPORT_SCRIPT
                        (if (some? goog/debugLoader_)
                          (.getPathFromDeps_ goog/debugLoader_ name)
-                         (js* "~{}[~{}]" (.. js/goog -dependencies_ -nameToPath) name))))))))
-          (repl/evaluate-form repl-env env "<cljs repl>"
-            '(set! *print-newline* true)))
+                         (js* "~{}[~{}]" (.. js/goog -dependencies_ -nameToPath) name)))))))))
         (let [expected-clojurescript-version (cljs.util/clojurescript-version)
               actual-clojurescript-version (:value (jsc-eval repl-env "cljs.core._STAR_clojurescript_version_STAR_"))]
           (when (and (some? actual-clojurescript-version)
@@ -594,6 +592,8 @@
                 "\n         is running ClojureScript " actual-clojurescript-version
                 ", while the Ambly REPL is\n         set up to use ClojureScript "
                 expected-clojurescript-version ".\n")))))
+      (repl/evaluate-form repl-env env "<cljs repl>"
+        '(set! *print-newline* true))
       {:merge-opts {:output-dir webdav-mount-point}})
     (catch Throwable t
       (tear-down repl-env)
