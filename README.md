@@ -27,6 +27,12 @@ In `ambly/ObjectiveC/Ambly Demo` run `pod install`.
 
 Open `Ambly Demo.xcworkspace` in Xcode and run the app in the simulator or on a device.
 
+You'll need to choose a team in the 'Ambly Demo' target settings (and set the Bundle Identifier to something compatible with your team).
+
+![](.media/identity.png)
+
+![](.media/signing.png)
+
 ### Demo macOS App
 
 You can either build the `Ambly Demo CLI` project and install it, or download a prebuilt macOS binary from http://ambly.fikesfarm.com
