@@ -86,6 +86,6 @@ Source for an example iOS app that makes use of Ambly is [Shrimp](https://github
 
 ## License
 
-Copyright © 2015–2018 Mike Fikes and Contributors
+Copyright © 2015–2019 Mike Fikes and Contributors
 
 Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
