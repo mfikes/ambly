@@ -83,7 +83,12 @@ JSValueRef BlockFunctionCallAsFunction(JSContextRef ctx, JSObjectRef function, J
 +(JSValueRef)evaluateScript:(NSString*)script inContext:(JSContextRef)context
 {
     JSStringRef scriptStringRef = JSStringCreateWithCFString((__bridge CFStringRef)script);
-    JSValueRef rv = JSEvaluateScript(context, scriptStringRef, NULL, NULL, 0, NULL);
+    JSValueRef jsError = NULL;
+    JSValueRef rv = JSEvaluateScript(context, scriptStringRef, NULL, NULL, 0, &jsError);
+    if (jsError) {
+        NSLog(@"Ambly: An error occurred while evaluating JavaScript:\n%@",
+              [ABYUtils stringForValue:jsError inContext:context]);
+    }
     JSStringRelease(scriptStringRef);
     return rv;
 }
