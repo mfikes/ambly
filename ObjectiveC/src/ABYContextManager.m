@@ -69,6 +69,9 @@
          if (argc == 1 && JSValueGetType (ctx, argv[0]) == kJSTypeNumber)
          {
              int ms = (int)JSValueToNumber(ctx, argv[0], NULL);
+             if (ms < 4) {
+                 ms = 4;
+             }
              
              int32_t incremented = OSAtomicIncrement32(&counter);
              
