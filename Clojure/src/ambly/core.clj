@@ -520,7 +520,7 @@
           endpoint-address (local-address-if (:address endpoint))
           endpoint-port (:port endpoint)
           _ (reset! (:bonjour-name repl-env) bonjour-name)
-          webdav-mount-point (mount-webdav :unknown #_(getOs) bonjour-name endpoint-address endpoint-port)
+          webdav-mount-point "/tmp/AMBLY-FAKEMOUNT" #_(mount-webdav (getOs) bonjour-name endpoint-address endpoint-port)
           _ (reset! (:webdav-mount-point repl-env) webdav-mount-point)
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
@@ -587,7 +587,7 @@
                          (js* "~{}[~{}]" (.. js/goog -dependencies_ -nameToPath) name)))))))))
         (let [expected-clojurescript-version (cljs.util/clojurescript-version)
               actual-clojurescript-version (:value (jsc-eval repl-env "cljs.core._STAR_clojurescript_version_STAR_"))]
-          (when (and (some? actual-clojurescript-version)
+          #_(when (and (some? actual-clojurescript-version)
                      (not= expected-clojurescript-version actual-clojurescript-version))
             (println
               (str "WARNING: " (bonjour-name->display-name bonjour-name)
