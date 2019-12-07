@@ -509,6 +509,8 @@
   (when-let [socket @(:socket repl-env)]
     (close-socket socket)))
 
+;; dns-sd -P "Ambly ESP32 WROVER" _http._tcp local 53001 ambly.local 10.0.1.61
+
 (defn setup
   [repl-env opts]
   {:pre [(map? repl-env) (map? opts)]}
@@ -518,7 +520,7 @@
           endpoint-address (local-address-if (:address endpoint))
           endpoint-port (:port endpoint)
           _ (reset! (:bonjour-name repl-env) bonjour-name)
-          webdav-mount-point (mount-webdav (getOs) bonjour-name endpoint-address endpoint-port)
+          webdav-mount-point (mount-webdav :unknown #_(getOs) bonjour-name endpoint-address endpoint-port)
           _ (reset! (:webdav-mount-point repl-env) webdav-mount-point)
           output-dir (io/file webdav-mount-point)
           env (ana/empty-env)
@@ -526,7 +528,7 @@
       (println (str "\nConnecting to " (bonjour-name->display-name bonjour-name) " ...\n"))
       (set-up-socket repl-env opts endpoint-address (dec endpoint-port))
       (if (= "true" (:value (jsc-eval repl-env "typeof cljs === 'undefined'")))
-        (do
+        #_(do
           ;; compile cljs.core & its dependencies, goog/base.js must be available
           ;; for bootstrap to load, use new closure/compile as it can handle
           ;; resources in JARs
@@ -592,7 +594,7 @@
                 "\n         is running ClojureScript " actual-clojurescript-version
                 ", while the Ambly REPL is\n         set up to use ClojureScript "
                 expected-clojurescript-version ".\n")))))
-      (repl/evaluate-form repl-env env "<cljs repl>"
+      #_(repl/evaluate-form repl-env env "<cljs repl>"
         '(set! *print-newline* true))
       {:merge-opts {:output-dir webdav-mount-point}})
     (catch Throwable t
