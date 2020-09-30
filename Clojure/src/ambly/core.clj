@@ -10,7 +10,8 @@
   (:import java.net.Socket
            java.lang.StringBuilder
            [java.io File BufferedReader BufferedWriter IOException]
-           (javax.jmdns JmDNS ServiceListener)
+           (net.straylightlabs.hola.dns Domain)
+           (net.straylightlabs.hola.sd Query Service)
            (java.net URI InetAddress NetworkInterface Inet4Address)))
 
 (defn- substring-exists?
@@ -149,28 +150,16 @@
   [reg-type name-endpoint-map]
   {:pre [(string? reg-type)]
    :post [(fn? %)]}
-  (let [mdns-service (JmDNS/create)
-        service-listener
-        (reify ServiceListener
-          (serviceAdded [_ service-event]
-            (let [type (.getType service-event)
-                  name (.getName service-event)]
-              (when (and (= reg-type type) (is-ambly-bonjour-name? name))
-                (.requestServiceInfo mdns-service type name 1))))
-          (serviceRemoved [_ service-event]
-            (swap! name-endpoint-map dissoc (.getName service-event)))
-          (serviceResolved [_ service-event]
-            (let [type (.getType service-event)
-                  name (.getName service-event)]
-              (when (and (= reg-type type) (is-ambly-bonjour-name? name))
-                (let [entry {name (let [info (.getInfo service-event)]
-                                    {:address (.getHostAddress (.getAddress info))
-                                     :port    (.getPort info)})}]
-                  (swap! name-endpoint-map merge entry))))))]
-    (.addServiceListener mdns-service reg-type service-listener)
-    (fn []
-      (.removeServiceListener mdns-service reg-type service-listener)
-      (.close mdns-service))))
+  (let [service (Service/fromName reg-type)
+        query (Query/createFor service Domain/LOCAL)
+        results (.runOnce query)]
+    (doseq [instance results]
+      (let [name (.getName instance)
+            entry {name {:address (.getHostAddress (first (.getAddresses instance)))
+                         :port    (.getPort instance)}}]
+        (when (is-ambly-bonjour-name? name)
+          (swap! name-endpoint-map merge entry))))
+    (fn [])))
 
 (defn discover-and-choose-device
   "Looks for Ambly WebDAV devices advertised via Bonjour and presents
