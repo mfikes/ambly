@@ -46,6 +46,8 @@ Here is a sample REPL startup sequence, illustrating device auto-discovery:
 ```
 $ clj -m cljs.main -re ambly 
 
+Ambly binding to 10.0.1.41 for mDNS.
+
 [1] Ambly Demo on iPod touch
 [2] Ambly Demo on iPad
 [3] Ambly Demo on iPhone Simulator (My-Mac-Pro)
@@ -74,6 +76,14 @@ Example:
 
 ```
 clj -m cljs.main -ro '{:choose-first-discovered true}' -re ambly -r
+```
+
+#### :mdns-bind-address
+
+Specifies the address that Ambly binds to when using multicast DNS to search for devices.
+
+```
+clj -m cljs.main -ro '{:mdns-bind-address "10.0.0.1"}' -re ambly -r
 ```
 
 ## App Integration

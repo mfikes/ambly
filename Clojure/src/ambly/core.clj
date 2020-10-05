@@ -146,10 +146,14 @@
 (defn setup-mdns
   "Sets up mDNS to populate atom supplied in name-endpoint-map with discoveries.
   Returns a function that will tear down mDNS."
-  [reg-type name-endpoint-map]
-  {:pre [(string? reg-type)]
+  [mdns-bind-address reg-type name-endpoint-map]
+  {:pre [(or (nil? mdns-bind-address) (string? mdns-bind-address))
+         (string? reg-type)]
    :post [(fn? %)]}
-  (let [mdns-service (JmDNS/create)
+  (let [mdns-service (JmDNS/create (when mdns-bind-address
+                                     (InetAddress/getByName mdns-bind-address)))
+        _ (println "\nAmbly binding to"
+            (-> mdns-service .getInetAddress .getHostAddress) "for mDNS.")
         service-listener
         (reify ServiceListener
           (serviceAdded [_ service-event]
@@ -176,22 +180,23 @@
   "Looks for Ambly WebDAV devices advertised via Bonjour and presents
   a simple command-line UI letting user pick one, unless
   choose-first-discovered? is set to true in which case the UI is bypassed"
-  [choose-first-discovered? opts]
-  {:pre [(map? opts)]}
-  (let [reg-type "_http._tcp.local."
+  [repl-opts opts]
+  {:pre [(map? repl-opts) (map? opts)]}
+  (let [{:keys [choose-first-discovered mdns-bind-address]} repl-opts
+        reg-type "_http._tcp.local."
         name-endpoint-map (atom {})
         tear-down-mdns
         (loop [count 0
-               tear-down-mdns (setup-mdns reg-type name-endpoint-map)]
+               tear-down-mdns (setup-mdns mdns-bind-address reg-type name-endpoint-map)]
           (if (empty? @name-endpoint-map)
             (do
               (Thread/sleep 100)
               (when (= 20 count)
                 (println "\nSearching for devices ..."))
-              (if (zero? (rem (inc count) 100))
+              (if (zero? (rem (inc count) 1000))
                 (do
                   (tear-down-mdns)
-                  (recur (inc count) (setup-mdns reg-type name-endpoint-map)))
+                  (recur (inc count) (setup-mdns mdns-bind-address reg-type name-endpoint-map)))
                 (recur (inc count) tear-down-mdns)))
             tear-down-mdns))]
     (try
@@ -199,11 +204,11 @@
       (loop [current-name-endpoint-map @name-endpoint-map]
         (println)
         (print-discovered-devices current-name-endpoint-map opts)
-        (when-not choose-first-discovered?
+        (when-not choose-first-discovered
           (println "\n[R] Refresh\n")
           (print "Choice: ")
           (flush))
-        (let [choice (if choose-first-discovered? "1" (read-line))]
+        (let [choice (if choose-first-discovered "1" (read-line))]
           (if (= "r" (.toLowerCase choice))
             (recur @name-endpoint-map)
             (let [choices (name-endpoint-map->choice-list current-name-endpoint-map)
@@ -514,7 +519,7 @@
   {:pre [(map? repl-env) (map? opts)]}
   (try
     (let [_ (set-logging-level "javax.jmdns" java.util.logging.Level/OFF)
-          [bonjour-name endpoint] (discover-and-choose-device (:choose-first-discovered (:options repl-env)) opts)
+          [bonjour-name endpoint] (discover-and-choose-device (:options repl-env) opts)
           endpoint-address (local-address-if (:address endpoint))
           endpoint-port (:port endpoint)
           _ (reset! (:bonjour-name repl-env) bonjour-name)
