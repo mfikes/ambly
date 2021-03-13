@@ -141,9 +141,7 @@
 }
 
 -(void)bootstrapWithDepsFilePath:(NSString*)depsFilePath googBasePath:(NSString*)googBasePath
-{
-    // This implementation mirrors the bootstrapping code that is in -setup
-    
+{    
     // Setup CLOSURE_IMPORT_SCRIPT
     [ABYUtils evaluateScript:@"CLOSURE_IMPORT_SCRIPT = function(src) { AMBLY_IMPORT_SCRIPT('goog/' + src); return true; }" inContext:_context];
     
@@ -157,29 +155,7 @@
     NSAssert(depsScriptString != nil, @"The deps JavaScript text could not be loaded");
     [ABYUtils evaluateScript:depsScriptString inContext:_context];
     
-    [ABYUtils evaluateScript:@"goog.isProvided_ = function(x) { return false; };" inContext:_context];
-    
-    [ABYUtils evaluateScript:@"goog.require = function (name) {\n"
-      " return CLOSURE_IMPORT_SCRIPT(goog.debugLoader_ ? \n"
-      "                               goog.debugLoader_.getPathFromDeps_(name) :\n"
-      "                               goog.dependencies_.nameToPath[name]); };" inContext:_context];
-    
     [ABYUtils evaluateScript:@"goog.require('cljs.core');" inContext:_context];
-    
-     // redef goog.require to track loaded libs
-    [ABYUtils evaluateScript:@"cljs.core._STAR_loaded_libs_STAR_ = cljs.core.into.call(null, cljs.core.PersistentHashSet.EMPTY, [\"cljs.core\"]);\n"
-     "goog.require = function (name, reload) {\n"
-     "    if(!cljs.core.contains_QMARK_(cljs.core._STAR_loaded_libs_STAR_, name) || reload) {\n"
-     "        var AMBLY_TMP = cljs.core.PersistentHashSet.EMPTY;\n"
-     "        if (cljs.core._STAR_loaded_libs_STAR_) {\n"
-     "            AMBLY_TMP = cljs.core._STAR_loaded_libs_STAR_;\n"
-     "        }\n"
-     "        cljs.core._STAR_loaded_libs_STAR_ = cljs.core.into.call(null, AMBLY_TMP, [name]);\n"
-     "        CLOSURE_IMPORT_SCRIPT(goog.debugLoader_? \n"
-     "                               goog.debugLoader_.getPathFromDeps_(name) :\n"
-     "                               goog.dependencies_.nameToPath[name]);\n"
-     "    }\n"
-     "};" inContext:_context];
 }
 
 @end

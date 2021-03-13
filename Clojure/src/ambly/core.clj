@@ -514,6 +514,35 @@
   (when-let [socket @(:socket repl-env)]
     (close-socket socket)))
 
+(defn maybe-monkey-patch-goog [repl-env env]
+  ;; monkey-patch isProvided_ to allow reloading namespaces at the REPL
+  (repl/evaluate-form repl-env env "<cljs repl>"
+    '(set! goog/isProvided_ (constantly false)))
+  ;; monkey-patch goog.require
+  (repl/evaluate-form repl-env env "<cljs repl>"
+    '(do
+       (when-not goog/require__
+         (set! goog/require__ goog/require))
+       (set! goog/require
+         (fn [src reload]
+           (when (= reload "reload-all")
+             (set! goog/cljsReloadAll_ true))
+           (when (or reload goog/cljsReloadAll_)
+             (if goog/debugLoader_
+               (let [path (.getPathFromDeps_ goog/debugLoader_ src)]
+                 (.remove goog/object (.-written_ goog/debugLoader_) path)
+                 (.remove goog/object (.-written_ goog/debugLoader_) (str goog/basePath path)))
+               (let [path (.get goog/object (.-nameToPath goog/dependencies_) src)]
+                 (.remove goog/object (.-visited goog/dependencies_) path)
+                 (.remove goog/object (.-written goog/dependencies_) path)
+                 (.remove goog/object (.-visited goog/dependencies_) (str goog/basePath path)))))
+           (let [ret (goog/require__ src)]
+             (when (= reload "reload-all")
+               (set! goog/cljsReloadAll_ false))
+             (if (goog/isInModuleLoader_)
+               (.getInternal_ goog/module src)
+               ret)))))))
+
 (defn setup
   [repl-env opts]
   {:pre [(map? repl-env) (map? opts)]}
@@ -559,44 +588,25 @@
           ;; load the deps file so we can goog.require cljs.core etc.
           (jsc-eval repl-env
             (form-ambly-import-script-path-js "ambly_repl_deps.js"))
-          ;; monkey-patch isProvided_ to avoid useless warnings - David
-          (jsc-eval repl-env
-            (str "goog.isProvided_ = function(x) { return false; };"))
-          ;; monkey-patch goog.require, skip all the loaded checks
           (repl/evaluate-form repl-env env "<cljs repl>"
-            '(set! (.-require js/goog)
-               (fn [name]
-                 (js/CLOSURE_IMPORT_SCRIPT
-                   (if (some? goog/debugLoader_)
-                     (.getPathFromDeps_ goog/debugLoader_ name)
-                     (js* "~{}[~{}]" (.. js/goog -dependencies_ -nameToPath) name))))))
-          ;; load cljs.core, setup printing
+            '(.require js/goog "cljs.core"))
+          (maybe-monkey-patch-goog repl-env env)
+          ;; setup printing
           (repl/evaluate-form repl-env env "<cljs repl>"
             '(do
-               (.require js/goog "cljs.core")
                (set-print-fn! js/AMBLY_PRINT_FN)
-               (set-print-err-fn! js/AMBLY_PRINT_FN)))
-          ;; redef goog.require to track loaded libs
-          (repl/evaluate-form repl-env env "<cljs repl>"
-            '(do
-               (set! *loaded-libs* #{"cljs.core"})
-               (set! (.-require js/goog)
-                 (fn [name reload]
-                   (when (or (not (contains? *loaded-libs* name)) reload)
-                     (set! *loaded-libs* (conj (or *loaded-libs* #{}) name))
-                     (js/CLOSURE_IMPORT_SCRIPT
-                       (if (some? goog/debugLoader_)
-                         (.getPathFromDeps_ goog/debugLoader_ name)
-                         (js* "~{}[~{}]" (.. js/goog -dependencies_ -nameToPath) name)))))))))
-        (let [expected-clojurescript-version (cljs.util/clojurescript-version)
-              actual-clojurescript-version (:value (jsc-eval repl-env "cljs.core._STAR_clojurescript_version_STAR_"))]
-          (when (and (some? actual-clojurescript-version)
-                     (not= expected-clojurescript-version actual-clojurescript-version))
-            (println
-              (str "WARNING: " (bonjour-name->display-name bonjour-name)
-                "\n         is running ClojureScript " actual-clojurescript-version
-                ", while the Ambly REPL is\n         set up to use ClojureScript "
-                expected-clojurescript-version ".\n")))))
+               (set-print-err-fn! js/AMBLY_PRINT_FN))))
+        (do
+          (maybe-monkey-patch-goog repl-env env)
+          (let [expected-clojurescript-version (cljs.util/clojurescript-version)
+                actual-clojurescript-version   (:value (jsc-eval repl-env "cljs.core._STAR_clojurescript_version_STAR_"))]
+            (when (and (some? actual-clojurescript-version)
+                       (not= expected-clojurescript-version actual-clojurescript-version))
+              (println
+                (str "WARNING: " (bonjour-name->display-name bonjour-name)
+                  "\n         is running ClojureScript " actual-clojurescript-version
+                  ", while the Ambly REPL is\n         set up to use ClojureScript "
+                  expected-clojurescript-version ".\n"))))))
       (repl/evaluate-form repl-env env "<cljs repl>"
         '(set! *print-newline* true))
       {:merge-opts {:output-dir webdav-mount-point}})
