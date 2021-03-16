@@ -179,10 +179,10 @@
 (defn discover-and-choose-device
   "Looks for Ambly WebDAV devices advertised via Bonjour and presents
   a simple command-line UI letting user pick one, unless
-  choose-first-discovered? is set to true in which case the UI is bypassed"
+  choose-first-discovered is set to true in which case the UI is bypassed"
   [repl-opts opts]
   {:pre [(map? repl-opts) (map? opts)]}
-  (let [{:keys [choose-first-discovered mdns-bind-address]} repl-opts
+  (let [{:keys [choose-first-discovered mdns-bind-address] :or {choose-first-discovered true}} repl-opts
         reg-type "_http._tcp.local."
         name-endpoint-map (atom {})
         tear-down-mdns

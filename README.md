@@ -44,7 +44,7 @@ You can start the Ambly REPL by supplying `-re ambly` as an option to `cljs.main
 Here is a sample REPL startup sequence, illustrating device auto-discovery:
 
 ```
-$ clj -m cljs.main -re ambly 
+$ clj -m cljs.main -ro '{:choose-first-discovered false}' -re ambly -r
 
 Ambly binding to 10.0.1.41 for mDNS.
 
@@ -70,12 +70,12 @@ cljs.user=> (+ 3 4)
 
 #### :choose-first-discovered
 
-Determines whether the Ambly will attempt to automatically connect the first device discovered. Defaults to `false`.
+Determines whether the Ambly will attempt to automatically connect the first device discovered. Defaults to `true`.
 
 Example:
 
 ```
-clj -m cljs.main -ro '{:choose-first-discovered true}' -re ambly -r
+clj -m cljs.main -ro '{:choose-first-discovered false}' -re ambly -r
 ```
 
 #### :mdns-bind-address
