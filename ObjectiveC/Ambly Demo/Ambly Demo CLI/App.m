@@ -36,6 +36,7 @@ void uncaughtExceptionHandler(NSException *exception) {
     [self.contextManager setUpConsoleLog];
     [self.contextManager setUpTimerFunctionality];
     [self.contextManager setUpAmblyImportScript];
+    [self.contextManager setUpAmblySetLastModified];
     
     self.replServer = [[ABYServer alloc] initWithContext:self.contextManager.context
                                  compilerOutputDirectory:compilerOutputDirectory];

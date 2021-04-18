@@ -43,6 +43,11 @@
 - (void)setUpAmblyImportScript;
 
 /**
+ Sets up `AMBLY_SET_LAST_MODIFIED` capability for the managed context.
+ */
+-(void)setUpAmblySetLastModified;
+
+/**
  Bootstraps the JavaScript environment so that goog require is set up to work properly.
  Intended for use in dev when an app bundles up JavaScript files compiled using :optimizations :none.
 

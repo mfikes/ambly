@@ -140,6 +140,42 @@
     
 }
 
+-(void)setUpAmblySetLastModified
+{
+    NSString* compilerOutputDirectoryPath = self.compilerOutputDirectory.path;
+
+    [ABYUtils installGlobalFunctionWithBlock:
+     
+     ^JSValueRef(JSContextRef ctx, size_t argc, const JSValueRef argv[]) {
+         
+         if (argc == 2
+             && JSValueGetType (ctx, argv[0]) == kJSTypeString
+             && JSValueGetType (ctx, argv[1]) == kJSTypeNumber)
+         {
+             JSStringRef pathStrRef = JSValueToStringCopy(ctx, argv[0], NULL);
+             NSString* path = (__bridge_transfer NSString *) JSStringCopyCFString( kCFAllocatorDefault, pathStrRef );
+             JSStringRelease(pathStrRef);
+
+             double timestamp = JSValueToNumber(ctx, argv[1], NULL);
+             NSDate* lastModifiedDate = [NSDate dateWithTimeIntervalSince1970:timestamp/1000.0];
+             
+             NSString* fullPath = [NSString stringWithFormat:@"%@/%@", compilerOutputDirectoryPath, path];
+             
+             NSLog(@"SetLastModified: %@ %f", fullPath, timestamp);
+             
+             NSDictionary* attr = [NSDictionary dictionaryWithObjectsAndKeys: lastModifiedDate, NSFileModificationDate, NULL];
+
+             [[NSFileManager defaultManager] setAttributes: attr ofItemAtPath: fullPath error: NULL];
+         }
+         
+         return JSValueMakeUndefined(ctx);
+     }
+                                        name:@"AMBLY_SET_LAST_MODIFIED"
+                                     argList:@"path,timestamp"
+                                   inContext:_context];
+    
+}
+
 -(void)bootstrapWithDepsFilePath:(NSString*)depsFilePath googBasePath:(NSString*)googBasePath
 {    
     // Setup CLOSURE_IMPORT_SCRIPT

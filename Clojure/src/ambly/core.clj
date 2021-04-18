@@ -609,7 +609,12 @@
                   expected-clojurescript-version ".\n"))))))
       (repl/evaluate-form repl-env env "<cljs repl>"
         '(set! *print-newline* true))
-      {:merge-opts {:output-dir webdav-mount-point}})
+      {:merge-opts {:output-dir        webdav-mount-point
+                    :set-last-modified (fn [^File file last-modified]
+                                         (repl/evaluate-form repl-env env "<cljs repl>"
+                                           `(js/AMBLY_SET_LAST_MODIFIED
+                                              ~(subs (str file) (count webdav-mount-point))
+                                              ~last-modified)))}})
     (catch Throwable t
       (tear-down repl-env)
       (throw t))))
