@@ -48,7 +48,12 @@
     
     
     [ABYUtils evaluateScript:@"var console = {}" inContext:_context];
-    [ABYUtils evaluateScript:@"console.log = AMBLY_NSLOG" inContext:_context];
+    [ABYUtils evaluateScript:@"console.log   = AMBLY_NSLOG" inContext:_context];
+    [ABYUtils evaluateScript:@"console.trace = AMBLY_NSLOG" inContext:_context];
+    [ABYUtils evaluateScript:@"console.debug = AMBLY_NSLOG" inContext:_context];
+    [ABYUtils evaluateScript:@"console.info  = AMBLY_NSLOG" inContext:_context];
+    [ABYUtils evaluateScript:@"console.warn  = AMBLY_NSLOG" inContext:_context];
+    [ABYUtils evaluateScript:@"console.error = AMBLY_NSLOG" inContext:_context];
 
 }
 
