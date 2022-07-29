@@ -96,6 +96,6 @@ Source for an example iOS app that makes use of Ambly is [Shrimp](https://github
 
 ## License
 
-Ambly™ Copyright © 2015–2021 Mike Fikes and Contributors
+Ambly™ Copyright © 2015–2022 Mike Fikes and Contributors
 
 Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
