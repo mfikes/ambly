@@ -57,7 +57,7 @@
 
 }
 
-- (void)setUpTimerFunctionality
+- (void)setUpTimerFunctionalityWithCallbackQueue:(dispatch_queue_t)callbackQueue
 {
     
     static volatile int32_t counter = 0;
@@ -82,7 +82,7 @@
              
              NSString *str = [NSString stringWithFormat:@"timer%d", incremented];
              
-             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, ms * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, ms * NSEC_PER_MSEC), callbackQueue, ^{
                  [ABYUtils evaluateScript:[NSString stringWithFormat:@"runTimeout(\"%@\");", str] inContext:weakSelf.context];
              });
              
@@ -98,6 +98,11 @@
                                      argList:@"ms"
                                    inContext:_context];
     
+}
+
+- (void)setUpTimerFunctionality
+{
+    [self setUpTimerFunctionalityWithCallbackQueue:dispatch_get_main_queue()];
 }
 
 -(void)setUpAmblyImportScript
