@@ -33,7 +33,12 @@
 - (void)setUpConsoleLog;
 
 /**
- Sets up timer functionality for the managed context.
+ Sets up timer functionality for the managed context. Callbacks occur on the specified queue.
+ */
+- (void)setUpTimerFunctionalityWithCallbackQueue:(dispatch_queue_t)callbackQueue;
+
+/**
+ Sets up timer functionality for the managed context. Callbacks occur on the main queue.
  */
 - (void)setUpTimerFunctionality;
 
